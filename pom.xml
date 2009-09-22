@@ -1,11 +1,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <parent>
-    <groupId>org.exoplatform.jcr</groupId>
-    <artifactId>jcrext-parent</artifactId>
-    <version>1.12.0-SNAPSHOT</version>
+    <groupId>org.exoplatform</groupId>
+    <artifactId>parent</artifactId>
+    <version>1.1.1</version>
   </parent>
+
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>exo.jcr.component.services</artifactId>
+  <artifactId>exo-jcr-services</artifactId>
   <packaging>jar</packaging>
   <name>eXo JCR Ext Services</name>
   <url>http://www.exoplatform.org</url>
@@ -23,6 +24,55 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <dependency>
+      <groupId>org.exoplatform.core</groupId>
+      <artifactId>exo.core.component.script.groovy</artifactId>
+      <version>${org.exoplatform.core.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.exoplatform.ws</groupId>
+      <artifactId>exo.ws.rest.core</artifactId>
+      <version>${org.exoplatform.ws.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.exoplatform.ws</groupId>
+      <artifactId>exo.ws.rest.ext</artifactId>
+      <version>${org.exoplatform.ws.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.exoplatform.ws</groupId>
+      <artifactId>exo.ws.commons</artifactId>
+      <version>${org.exoplatform.ws.version}</version>
+      <scope>compile</scope>
+    </dependency>        
+    <dependency>
+      <groupId>org.exoplatform.jcr</groupId>
+      <artifactId>exo.jcr.component.ext</artifactId>
+      <version>${org.exoplatform.jcr.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>commons-chain</groupId>
+      <artifactId>commons-chain</artifactId>
+      <version>1.0</version>
+      <scope>compile</scope>
+    </dependency>    
+    <dependency>
+      <groupId>jgroups</groupId>
+      <artifactId>jgroups</artifactId>
+      <version>2.5.2</version>
+      <scope>compile</scope>
+    </dependency>    
+    <dependency>
+      <groupId>hsqldb</groupId>
+      <artifactId>hsqldb</artifactId>
+      <version>1.8.0.7</version>
+      <scope>test</scope>
+    </dependency>    
   </dependencies>
   <build>
     <sourceDirectory>src/main/java</sourceDirectory>
@@ -61,11 +111,24 @@
         <configuration>
           <testFailureIgnore>${exo.test.failure.ignore}</testFailureIgnore>
           <forkMode>${exo.test.forkMode}</forkMode>
-          <includes>
-            <include>**/audit/*Test.java</include>        
-          </includes>
         </configuration>
       </plugin>
     </plugins>
   </build>  
+  <profiles>
+    <profile>
+      <id>default</id>
+      <activation>
+        <property>
+          <name>default</name>
+        </property>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <org.exoplatform.core.version>2.3.0-Beta01</org.exoplatform.core.version>
+        <org.exoplatform.ws.version>2.1.0-Beta01</org.exoplatform.ws.version>
+        <org.exoplatform.jcr.version>1.12.0-Beta01</org.exoplatform.jcr.version>
+      </properties>
+    </profile>
+  </profiles>
 </project>
