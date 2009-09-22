@@ -11,6 +11,13 @@
   <name>eXo JCR Ext Services</name>
   <url>http://www.exoplatform.org</url>
   <description>eXo JCR Ext Services</description>
+  
+  <scm>
+    <connection>scm:svn:http://svn.exoplatform.org/projects/jcr-services/trunk/</connection>
+    <developerConnection>scm:svn:http://svn.exoplatform.org/projects/jcr-services/trunk/</developerConnection>
+    <url>http://fisheye.exoplatform.org/browse/projects/jcr-services/trunk</url>
+  </scm>
+  
   <dependencies>
     <dependency>
       <groupId>org.exoplatform.jcr</groupId>
