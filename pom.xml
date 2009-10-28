@@ -10,7 +10,7 @@
   <packaging>jar</packaging>
   <name>eXo JCR Ext Services</name>
   <url>http://www.exoplatform.org</url>
-  <description>eXo JCR Ext Services</description>
+  <description>eXo JCR :: Ext :: Services</description>
   
   <scm>
     <connection>scm:svn:http://svn.exoplatform.org/projects/jcr-services/trunk/</connection>
