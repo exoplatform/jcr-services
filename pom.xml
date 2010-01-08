@@ -7,6 +7,7 @@
 
   <modelVersion>4.0.0</modelVersion>
   <artifactId>exo-jcr-services</artifactId>
+  <version>1.12.0-Beta05-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>eXo JCR :: Ext :: Services</name>
   <url>http://www.exoplatform.org</url>
@@ -69,6 +70,12 @@
       <scope>compile</scope>
     </dependency>    
     <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>1.3</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
       <groupId>jgroups</groupId>
       <artifactId>jgroups</artifactId>
       <version>2.5.2</version>
@@ -102,6 +109,7 @@
         <includes>
           <include>**/*.properties</include>
           <include>**/*.xml</include>
+          <include>login.conf</include>
         </includes>
       </testResource>
       <testResource>
@@ -132,9 +140,9 @@
         <activeByDefault>true</activeByDefault>
       </activation>
       <properties>
-        <org.exoplatform.core.version>2.3.0-Beta01</org.exoplatform.core.version>
-        <org.exoplatform.ws.version>2.1.0-Beta01</org.exoplatform.ws.version>
-        <org.exoplatform.jcr.version>1.12.0-Beta01</org.exoplatform.jcr.version>
+        <org.exoplatform.core.version>2.3.0-Beta05</org.exoplatform.core.version>
+        <org.exoplatform.ws.version>2.1.0-Beta05</org.exoplatform.ws.version>
+        <org.exoplatform.jcr.version>1.12.0-Beta05</org.exoplatform.jcr.version>
       </properties>
     </profile>
   </profiles>
