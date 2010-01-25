@@ -113,7 +113,7 @@ public class TestMembershipImpl extends BaseStandaloneTest {
   public void testFindMembershipsByGroup() throws Exception {
     try {
       Group g = gHandler.findGroupById("/platform/users");
-      assertEquals(mHandler.findMembershipsByGroup(g).size(), 5);
+      assertEquals(mHandler.findMembershipsByGroup(g).size(), 4);
 
       g = gHandler.createGroupInstance();
       g.setGroupName("not-existed-group");
@@ -130,7 +130,7 @@ public class TestMembershipImpl extends BaseStandaloneTest {
    */
   public void testFindMembershipsByUser() throws Exception {
     try {
-      assertEquals(mHandler.findMembershipsByUser("john").size(), 5);
+      assertEquals(mHandler.findMembershipsByUser("john").size(), 3);
       assertEquals(mHandler.findMembershipsByUser("not-existed-user").size(), 0);
 
     } catch (Exception e) {
@@ -294,7 +294,7 @@ public class TestMembershipImpl extends BaseStandaloneTest {
    */
   public void testFindGroupByMembership() throws Exception {
     try {
-      assertEquals(gHandler.findGroupByMembership("john", "manager").size(), 2);
+      assertEquals(gHandler.findGroupByMembership("john", "manager").size(), 1);
       assertEquals(gHandler.findGroupByMembership("not-existed-john", "manager").size(), 0);
       assertEquals(gHandler.findGroupByMembership("john", "not-existed-manager").size(), 0);
     } catch (Exception e) {
@@ -308,7 +308,7 @@ public class TestMembershipImpl extends BaseStandaloneTest {
    */
   public void testFindGroupsOfUser() throws Exception {
     try {
-      assertEquals(gHandler.findGroupsOfUser("james").size(), 2);
+      assertEquals(gHandler.findGroupsOfUser("john").size(), 3);
       assertEquals(gHandler.findGroupsOfUser("not-existed-james").size(), 0);
     } catch (Exception e) {
       e.printStackTrace();
@@ -321,7 +321,7 @@ public class TestMembershipImpl extends BaseStandaloneTest {
    */
   public void testFindUsersByGroup() throws Exception {
     try {
-      assertEquals(uHandler.findUsersByGroup("/platform/users").getAll().size(), 5);
+      assertEquals(uHandler.findUsersByGroup("/platform/users").getAll().size(), 4);
       assertEquals(uHandler.findUsersByGroup("/not-existed-group").getAll().size(), 0);
     } catch (Exception e) {
       e.printStackTrace();

@@ -120,7 +120,7 @@ public class TestOrganizationService extends BaseStandaloneTest {
 
     Query query = new Query();
     PageList users = uHandler.findUsers(query);
-    assertTrue("Expect 6 user found ", users.getAvailable() == 6);
+    assertTrue("Expect 5 user found ", users.getAvailable() == 5);
 
     /* Update user's information */
     u.setFirstName("Exo(Update)");
@@ -134,7 +134,7 @@ public class TestOrganizationService extends BaseStandaloneTest {
 
     PageList piterator = uHandler.getUserPageList(10);
     // assertTrue (piterator.currentPage().size() == 2) ;
-    assertEquals(6, piterator.currentPage().size()); // [PN] was 2, but from
+    assertEquals(5, piterator.currentPage().size()); // [PN] was 2, but from
     // where?
 
     /*

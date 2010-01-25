@@ -118,8 +118,6 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
    */
   private void createMembership(Session session, Membership m, boolean broadcast) throws Exception {
     try {
-      createAnyMembershipType(session, m.getMembershipType(), broadcast);
-
       if (!session.itemExists(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_EXO_USERS
           + "/" + m.getUserName())) {
         return;

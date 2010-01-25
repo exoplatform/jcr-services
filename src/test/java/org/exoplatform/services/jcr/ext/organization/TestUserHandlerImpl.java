@@ -153,7 +153,7 @@ public class TestUserHandlerImpl extends BaseStandaloneTest {
    */
   public void testGetUserPageList() throws Exception {
     try {
-      assertEquals(uHandler.getUserPageList(10).getAll().size(), 5);
+      assertEquals(uHandler.getUserPageList(10).getAll().size(), 4);
     } catch (Exception e) {
       e.printStackTrace();
       fail("Exception should not be thrown.");
