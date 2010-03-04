@@ -319,6 +319,19 @@ public class TestMembershipImpl extends BaseStandaloneTest {
   /**
    * Find users by group and check it count.
    */
+  public void testFindUsersByGroupId() throws Exception {
+    try {
+      assertEquals(uHandler.findUsersByGroupId("/platform/users").getSize(), 4);
+      assertEquals(uHandler.findUsersByGroupId("/not-existed-group").getSize(), 0);
+    } catch (Exception e) {
+      e.printStackTrace();
+      fail("Exception should not be thrown");
+    }
+  }
+
+  /**
+   * Find users by group and check it count.
+   */
   public void testFindUsersByGroup() throws Exception {
     try {
       assertEquals(uHandler.findUsersByGroup("/platform/users").getAll().size(), 4);
@@ -327,7 +340,6 @@ public class TestMembershipImpl extends BaseStandaloneTest {
       e.printStackTrace();
       fail("Exception should not be thrown");
     }
-
   }
 
   /**

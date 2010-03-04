@@ -20,6 +20,7 @@ import java.util.Calendar;
 
 import org.exoplatform.services.jcr.ext.BaseStandaloneTest;
 import org.exoplatform.services.organization.OrganizationService;
+import org.exoplatform.services.organization.Query;
 import org.exoplatform.services.organization.User;
 import org.exoplatform.services.organization.UserHandler;
 
@@ -82,6 +83,69 @@ public class TestUserHandlerImpl extends BaseStandaloneTest {
     } catch (Exception e) {
       e.printStackTrace();
       fail("Exception should not be thrown.");
+    }
+  }
+
+  /**
+   * Find users using query and check it count.
+   */
+  public void testFindUsersByQuery() throws Exception {
+    try {
+      createUser("tolik");
+      Query query = new Query();
+
+      query.setEmail("email@test");
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
+      query.setEmail(null);
+
+      query.setUserName("*tolik*");
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
+
+      query.setUserName("*tolik");
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
+
+      query.setUserName("tolik*");
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
+
+      query.setUserName("tolik");
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
+
+      query.setUserName("tol");
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 0);
+      query.setUserName(null);
+
+      query.setFirstName("first");
+      query.setLastName("last");
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
+      query.setFirstName(null);
+      query.setLastName(null);
+
+      Calendar calc = Calendar.getInstance();
+      calc.set(2007, 1, 1);
+      query.setFromLoginDate(calc.getTime());
+      query.setUserName("*tolik*");
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
+
+      calc.set(2009, 1, 1);
+      query.setFromLoginDate(calc.getTime());
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 0);
+      query.setFromLoginDate(null);
+
+      calc.set(2007, 1, 1);
+      query.setToLoginDate(calc.getTime());
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 0);
+
+      calc.set(2009, 1, 1);
+      query.setToLoginDate(calc.getTime());
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
+      query.setUserName(null);
+      query.setToLoginDate(null);
+
+    } catch (Exception e) {
+      e.printStackTrace();
+      fail("Exception should not be thrown.");
+    } finally {
+      uHandler.removeUser("tolik", true);
     }
   }
 
@@ -154,6 +218,18 @@ public class TestUserHandlerImpl extends BaseStandaloneTest {
   public void testGetUserPageList() throws Exception {
     try {
       assertEquals(uHandler.getUserPageList(10).getAll().size(), 4);
+    } catch (Exception e) {
+      e.printStackTrace();
+      fail("Exception should not be thrown.");
+    }
+  }
+
+  /**
+   * Get users page list.
+   */
+  public void testFindAllUsers() throws Exception {
+    try {
+      assertEquals(uHandler.findAllUsers().getSize(), 4);
     } catch (Exception e) {
       e.printStackTrace();
       fail("Exception should not be thrown.");
