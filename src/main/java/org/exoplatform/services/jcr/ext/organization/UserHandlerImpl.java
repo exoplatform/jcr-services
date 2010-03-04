@@ -26,7 +26,9 @@ import javax.jcr.Session;
 
 import org.exoplatform.services.log.Log;
 import org.exoplatform.commons.utils.LazyPageList;
+import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.organization.Query;
 import org.exoplatform.services.organization.User;
 import org.exoplatform.services.organization.UserEventListener;
 import org.exoplatform.services.organization.UserHandler;
@@ -306,6 +308,27 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler {
    */
   public LazyPageList getUserPageList(int pageSize) throws Exception {
     return new LazyPageList(new SimpleJCRUserListAccess(service), pageSize);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public ListAccess<User> findAllUsers() throws Exception {
+    return new SimpleJCRUserListAccess(service);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public ListAccess<User> findUsersByGroupId(String groupId) throws Exception {
+    return new UserByGroupJCRUserListAccess(service, groupId);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public ListAccess<User> findUsersByQuery(Query query) throws Exception {
+    return new UserByQueryJCRUserListAccess(service, query);
   }
 
   /**

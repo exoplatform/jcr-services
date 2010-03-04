@@ -47,6 +47,7 @@ import org.exoplatform.services.jcr.config.RepositoryConfigurationException;
 import org.exoplatform.services.jcr.core.ExtendedNode;
 import org.exoplatform.services.jcr.core.ExtendedPropertyType;
 import org.exoplatform.services.jcr.dataflow.ItemState;
+import org.exoplatform.services.jcr.dataflow.persistent.PersistedPropertyData;
 import org.exoplatform.services.jcr.datamodel.Identifier;
 import org.exoplatform.services.jcr.datamodel.IllegalNameException;
 import org.exoplatform.services.jcr.datamodel.InternalQName;
@@ -70,6 +71,7 @@ import org.exoplatform.services.jcr.impl.dataflow.TransientPropertyData;
 import org.exoplatform.services.jcr.impl.dataflow.TransientValueData;
 import org.exoplatform.services.jcr.impl.dataflow.ValueDataConvertor;
 import org.exoplatform.services.jcr.impl.dataflow.session.SessionChangesLog;
+import org.exoplatform.services.jcr.util.IdGenerator;
 import org.exoplatform.services.log.ExoLogger;
 import org.picocontainer.Startable;
 import org.w3c.dom.Document;
@@ -203,10 +205,6 @@ public class AuditServiceImpl implements AuditService, Startable {
     }
 
     // exo:auditRecord
-    TransientNodeData arNode = TransientNodeData.createNodeData(auditHistory,
-                                                                new InternalQName(null,
-                                                                                  auditRecordName),
-                                                                AuditService.EXO_AUDITRECORD);
     List<AccessControlEntry> access = new ArrayList<AccessControlEntry>();
     access.add(new AccessControlEntry(SystemIdentity.ANY, PermissionType.SET_PROPERTY));
     access.add(new AccessControlEntry(SystemIdentity.ANY, PermissionType.READ));
@@ -218,8 +216,16 @@ public class AuditServiceImpl implements AuditService, Startable {
     AccessControlList exoAuditRecordAccessControlList = new AccessControlList(session.getUserID(),
                                                                               access);
 
-    arNode.setACL(exoAuditRecordAccessControlList);
-    arNode.setOrderNumber(Integer.parseInt(auditRecordName));
+    TransientNodeData arNode = new TransientNodeData(QPath.makeChildPath(auditHistory.getQPath(),
+                                                                         new InternalQName(null,
+                                                                                           auditRecordName)),
+                                                     IdGenerator.generate(),
+                                                     -1,
+                                                     AuditService.EXO_AUDITRECORD,
+                                                     new InternalQName[0],
+                                                     Integer.parseInt(auditRecordName),
+                                                     auditHistory.getIdentifier(),
+                                                     exoAuditRecordAccessControlList);
 
     // exo:auditRecord
     dataManager.update(new ItemState(arNode,
@@ -231,32 +237,28 @@ public class AuditServiceImpl implements AuditService, Startable {
     TransientPropertyData arPrType = TransientPropertyData.createPropertyData(arNode,
                                                                               Constants.JCR_PRIMARYTYPE,
                                                                               PropertyType.NAME,
-                                                                              false);
-    arPrType.setValue(new TransientValueData(arNode.getPrimaryTypeName()));
-
+                                                                              false,
+                                                                              new TransientValueData(arNode.getPrimaryTypeName()));
     // exo:user
     TransientPropertyData arUser = TransientPropertyData.createPropertyData(arNode,
                                                                             AuditService.EXO_AUDITRECORD_USER,
                                                                             PropertyType.STRING,
-                                                                            false);
-    arUser.setValue(new TransientValueData(session.getUserID()));
-
+                                                                            false,
+                                                                            new TransientValueData(session.getUserID()));
     // exo:created
     TransientPropertyData arCreated = TransientPropertyData.createPropertyData(arNode,
                                                                                AuditService.EXO_AUDITRECORD_CREATED,
                                                                                PropertyType.DATE,
-                                                                               false);
-    arCreated.setValue(new TransientValueData(dataManager.getTransactManager()
-                                                         .getStorageDataManager()
-                                                         .getCurrentTime()));
-
+                                                                               false,
+                                                                               new TransientValueData(dataManager.getTransactManager()
+                                                                                                                 .getStorageDataManager()
+                                                                                                                 .getCurrentTime()));
     // exo:eventType
     TransientPropertyData arEventType = TransientPropertyData.createPropertyData(arNode,
                                                                                  AuditService.EXO_AUDITRECORD_EVENTTYPE,
                                                                                  PropertyType.LONG,
-                                                                                 false);
-
-    arEventType.setValue(new TransientValueData(eventType));
+                                                                                 false,
+                                                                                 new TransientValueData(eventType));
 
     // jcr:primaryType
     dataManager.update(new ItemState(arPrType,
@@ -292,8 +294,8 @@ public class AuditServiceImpl implements AuditService, Startable {
       TransientPropertyData propertyNameData = TransientPropertyData.createPropertyData(arNode,
                                                                                         EXO_AUDITRECORD_PROPERTYNAME,
                                                                                         PropertyType.STRING,
-                                                                                        false);
-      propertyNameData.setValue(new TransientValueData(((ItemImpl) item).getInternalName()));
+                                                                                        false,
+                                                                                        new TransientValueData(((ItemImpl) item).getInternalName()));
       dataManager.update(new ItemState(propertyNameData,
                                        ItemState.ADDED,
                                        true,
@@ -301,7 +303,8 @@ public class AuditServiceImpl implements AuditService, Startable {
     }
 
     if (vancestor != null) {
-      // auditale node under a version control, set related properties to the audit record
+      // auditale node under a version control, set related properties to the
+      // audit record
 
       String versionUUID; // currebt base version UUID
       String versionName; // currebt base version name + labels
@@ -354,11 +357,18 @@ public class AuditServiceImpl implements AuditService, Startable {
     }
 
     // Update lastRecord
-    TransientPropertyData pLastRecord = (TransientPropertyData) auditSession.getDataManager()
-                                                                            .getItemData(QPath.makeChildPath(auditHistory.getQPath(),
-                                                                                                             EXO_AUDITHISTORY_LASTRECORD));
+    PropertyData pLastRecord = (PropertyData) auditSession.getDataManager()
+                                                          .getItemData(QPath.makeChildPath(auditHistory.getQPath(),
+                                                                                           EXO_AUDITHISTORY_LASTRECORD));
 
-    pLastRecord.setValue(new TransientValueData(String.valueOf(auditRecordName)));
+    pLastRecord = new TransientPropertyData(pLastRecord.getQPath(),
+                                            pLastRecord.getIdentifier(),
+                                            pLastRecord.getPersistedVersion(),
+                                            pLastRecord.getType(),
+                                            pLastRecord.getParentIdentifier(),
+                                            pLastRecord.isMultiValued(),
+                                            new TransientValueData(String.valueOf(auditRecordName)));
+
     dataManager.update(new ItemState(pLastRecord,
                                      ItemState.UPDATED,
                                      true,
@@ -387,10 +397,6 @@ public class AuditServiceImpl implements AuditService, Startable {
 
     InternalQName aiName = new InternalQName(null, ((ItemImpl) node).getData().getIdentifier());
     // exo:auditHistory
-    TransientNodeData ahNode = TransientNodeData.createNodeData(storage,
-                                                                aiName,
-                                                                AuditService.EXO_AUDITHISTORY);
-
     List<AccessControlEntry> access = new ArrayList<AccessControlEntry>();
     access.add(new AccessControlEntry(SystemIdentity.ANY, PermissionType.ADD_NODE));
     access.add(new AccessControlEntry(SystemIdentity.ANY, PermissionType.READ));
@@ -403,34 +409,39 @@ public class AuditServiceImpl implements AuditService, Startable {
     AccessControlList exoAuditHistoryAccessControlList = new AccessControlList(session.getUserID(),
                                                                                access);
 
-    ahNode.setACL(exoAuditHistoryAccessControlList);
-    ahNode.setMixinTypeNames(new InternalQName[] { Constants.MIX_REFERENCEABLE,
-        Constants.EXO_PRIVILEGEABLE });
+    TransientNodeData ahNode = new TransientNodeData(QPath.makeChildPath(storage.getQPath(), aiName),
+                                                     IdGenerator.generate(),
+                                                     -1,
+                                                     AuditService.EXO_AUDITHISTORY,
+                                                     new InternalQName[] {
+                                                         Constants.MIX_REFERENCEABLE,
+                                                         Constants.EXO_PRIVILEGEABLE },
+                                                     0,
+                                                     storage.getIdentifier(),
+                                                     exoAuditHistoryAccessControlList);
 
     // jcr:primaryType
     TransientPropertyData aPrType = TransientPropertyData.createPropertyData(ahNode,
                                                                              Constants.JCR_PRIMARYTYPE,
                                                                              PropertyType.NAME,
-                                                                             false);
-    aPrType.setValue(new TransientValueData(ahNode.getPrimaryTypeName()));
-
+                                                                             false,
+                                                                             new TransientValueData(ahNode.getPrimaryTypeName()));
     // jcr:uuid
     TransientPropertyData ahUuid = TransientPropertyData.createPropertyData(ahNode,
                                                                             Constants.JCR_UUID,
                                                                             PropertyType.STRING,
-                                                                            false);
-    ahUuid.setValue(new TransientValueData(ahNode.getIdentifier()));
-
+                                                                            false,
+                                                                            new TransientValueData(ahNode.getIdentifier()));
     // jcr:mixinTypes
-    TransientPropertyData ahMixinTypes = TransientPropertyData.createPropertyData(ahNode,
-                                                                                  Constants.JCR_MIXINTYPES,
-                                                                                  PropertyType.NAME,
-                                                                                  false);
-
     List<ValueData> mixValues = new ArrayList<ValueData>();
     mixValues.add(new TransientValueData(Constants.MIX_REFERENCEABLE));
     mixValues.add(new TransientValueData(Constants.EXO_PRIVILEGEABLE));
-    ahMixinTypes.setValues(mixValues);
+
+    TransientPropertyData ahMixinTypes = TransientPropertyData.createPropertyData(ahNode,
+                                                                                  Constants.JCR_MIXINTYPES,
+                                                                                  PropertyType.NAME,
+                                                                                  true,
+                                                                                  mixValues);
 
     // EXO_PERMISSIONS
     List<ValueData> permsValues = new ArrayList<ValueData>();
@@ -448,23 +459,21 @@ public class AuditServiceImpl implements AuditService, Startable {
     TransientPropertyData ahTargetNode = TransientPropertyData.createPropertyData(ahNode,
                                                                                   AuditService.EXO_AUDITHISTORY_TARGETNODE,
                                                                                   PropertyType.REFERENCE,
-                                                                                  false);
-    ahTargetNode.setValue(new TransientValueData(((ItemImpl) node).getData().getIdentifier()));
-
+                                                                                  false,
+                                                                                  new TransientValueData(((ItemImpl) node).getData()
+                                                                                                                          .getIdentifier()));
     // exo:lastRecord
     TransientPropertyData ahLastRecord = TransientPropertyData.createPropertyData(ahNode,
                                                                                   AuditService.EXO_AUDITHISTORY_LASTRECORD,
                                                                                   PropertyType.STRING,
-                                                                                  false);
-    ahLastRecord.setValue(new TransientValueData("0"));
-
+                                                                                  false,
+                                                                                  new TransientValueData("0"));
     // node exo:auditHistory
     TransientPropertyData pAuditHistory = TransientPropertyData.createPropertyData((NodeData) ((ItemImpl) node).getData(),
                                                                                    AuditService.EXO_AUDITHISTORY,
                                                                                    PropertyType.STRING,
-                                                                                   false);
-    pAuditHistory.setValue(new TransientValueData(new Identifier(ahNode.getIdentifier())));
-
+                                                                                   false,
+                                                                                   new TransientValueData(new Identifier(ahNode.getIdentifier())));
     session.getTransientNodesManager().update(new ItemState(ahNode,
                                                             ItemState.ADDED,
                                                             true,
@@ -673,11 +682,6 @@ public class AuditServiceImpl implements AuditService, Startable {
         // immediatelly!
         // nodeData: /exo:audit with UUID = AUDIT_STORAGE_ID
         // its primaryType exo:auditStorage
-        TransientNodeData exoAuditNode = TransientNodeData.createNodeData((NodeData) ((NodeImpl) (session.getRootNode())).getData(),
-                                                                          AuditService.EXO_AUDIT,
-                                                                          AuditService.EXO_AUDITSTORAGE,
-                                                                          AuditService.AUDIT_STORAGE_ID);
-
         List<AccessControlEntry> access = new ArrayList<AccessControlEntry>();
         access.add(new AccessControlEntry(SystemIdentity.ANY, PermissionType.ADD_NODE));
 
@@ -690,36 +694,41 @@ public class AuditServiceImpl implements AuditService, Startable {
         AccessControlList exoAuditAccessControlList = new AccessControlList(SystemIdentity.SYSTEM,
                                                                             access);
 
-        exoAuditNode.setACL(exoAuditAccessControlList);
-
         InternalQName[] mixins = new InternalQName[] { Constants.EXO_PRIVILEGEABLE,
             Constants.MIX_REFERENCEABLE };
-        exoAuditNode.setMixinTypeNames(mixins);
+
+        TransientNodeData exoAuditNode = new TransientNodeData(QPath.makeChildPath(Constants.ROOT_PATH,
+                                                                                   AuditService.EXO_AUDIT),
+                                                               AuditService.AUDIT_STORAGE_ID,
+                                                               -1,
+                                                               AuditService.EXO_AUDITSTORAGE,
+                                                               mixins,
+                                                               0,
+                                                               Constants.ROOT_UUID,
+                                                               exoAuditAccessControlList);
 
         // jcr:primaryType
         TransientPropertyData exoAuditPrType = TransientPropertyData.createPropertyData(exoAuditNode,
                                                                                         Constants.JCR_PRIMARYTYPE,
                                                                                         PropertyType.NAME,
-                                                                                        false);
-        exoAuditPrType.setValue(new TransientValueData(exoAuditNode.getPrimaryTypeName()));
-
+                                                                                        false,
+                                                                                        new TransientValueData(exoAuditNode.getPrimaryTypeName()));
         // jcr:uuid
         TransientPropertyData exoAuditUuid = TransientPropertyData.createPropertyData(exoAuditNode,
                                                                                       Constants.JCR_UUID,
                                                                                       PropertyType.STRING,
-                                                                                      false);
-        exoAuditUuid.setValue(new TransientValueData(exoAuditNode.getIdentifier()));
-
+                                                                                      false,
+                                                                                      new TransientValueData(exoAuditNode.getIdentifier()));
         // jcr:mixinTypes
-        TransientPropertyData exoAuditMixinTypes = TransientPropertyData.createPropertyData(exoAuditNode,
-                                                                                            Constants.JCR_MIXINTYPES,
-                                                                                            PropertyType.NAME,
-                                                                                            true);
         List<ValueData> mixValues = new ArrayList<ValueData>();
         mixValues.add(new TransientValueData(Constants.MIX_REFERENCEABLE));
         mixValues.add(new TransientValueData(Constants.EXO_PRIVILEGEABLE));
-        exoAuditMixinTypes.setValues(mixValues);
 
+        TransientPropertyData exoAuditMixinTypes = TransientPropertyData.createPropertyData(exoAuditNode,
+                                                                                            Constants.JCR_MIXINTYPES,
+                                                                                            PropertyType.NAME,
+                                                                                            true,
+                                                                                            mixValues);
         // EXO_PERMISSIONS
 
         List<ValueData> permsValues = new ArrayList<ValueData>();
@@ -755,8 +764,7 @@ public class AuditServiceImpl implements AuditService, Startable {
   /**
    * Write parameters to RegistryService.
    * 
-   * @param sessionProvider
-   *          The SessionProvider
+   * @param sessionProvider The SessionProvider
    * @throws ParserConfigurationException
    * @throws SAXException
    * @throws IOException
@@ -782,8 +790,7 @@ public class AuditServiceImpl implements AuditService, Startable {
   /**
    * Read parameters from RegistryService.
    * 
-   * @param sessionProvider
-   *          The SessionProvider
+   * @param sessionProvider The SessionProvider
    * @throws RepositoryException
    * @throws PathNotFoundException
    * @throws RepositoryConfigurationException
@@ -806,10 +813,8 @@ public class AuditServiceImpl implements AuditService, Startable {
   /**
    * Get attribute value.
    * 
-   * @param element
-   *          The element to get attribute value
-   * @param attr
-   *          The attribute name
+   * @param element The element to get attribute value
+   * @param attr The attribute name
    * @return Value of attribute if present and null in other case
    */
   private String getAttributeSmart(Element element, String attr) {
@@ -819,12 +824,9 @@ public class AuditServiceImpl implements AuditService, Startable {
   /**
    * Set attribute value. If value is null the attribute will be removed.
    * 
-   * @param element
-   *          The element to set attribute value
-   * @param attr
-   *          The attribute name
-   * @param value
-   *          The value of attribute
+   * @param element The element to set attribute value
+   * @param attr The attribute name
+   * @param value The value of attribute
    */
   private void setAttributeSmart(Element element, String attr, String value) {
     if (value == null) {
