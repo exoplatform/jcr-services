@@ -47,12 +47,13 @@ import org.xml.sax.SAXException;
 
 /**
  * Created by The eXo Platform SAS. <br/>
- * 
  * Initialization will be performed via OrganizationServiceJCRInitializer. <br/>
  * Date: 24.07.2008
  * 
- * @author <a href="mailto:peter.nedonosko@exoplatform.com.ua">Peter Nedonosko</a>
- * @version $Id$
+ * @author <a href="mailto:peter.nedonosko@exoplatform.com.ua">Peter
+ *         Nedonosko</a>
+ * @version $Id: JCROrganizationServiceImpl.java 33732 2009-07-08 15:00:43Z
+ *          pnedonosko $
  */
 public class JCROrganizationServiceImpl extends BaseOrganizationService implements Startable {
 
@@ -124,12 +125,10 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
   /**
    * JCROrganizationServiceImpl constructor. Without registry service.
    * 
-   * @param params
-   *          The initialization parameters
-   * @param repositoryService
-   *          The repository service
-   * @throws ConfigurationException
-   *           The exception is thrown if can not initialize service
+   * @param params The initialization parameters
+   * @param repositoryService The repository service
+   * @throws ConfigurationException The exception is thrown if can not
+   *           initialize service
    */
   public JCROrganizationServiceImpl(InitParams params, RepositoryService repositoryService) throws ConfigurationException {
     this(params, repositoryService, null);
@@ -138,14 +137,11 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
   /**
    * JCROrganizationServiceImpl constructor.
    * 
-   * @param initParams
-   *          The initialization parameters
-   * @param repositoryService
-   *          The repository service
-   * @param registryService
-   *          The registry service
-   * @throws ConfigurationException
-   *           The exception is thrown if can not initialize service
+   * @param initParams The initialization parameters
+   * @param repositoryService The repository service
+   * @param registryService The registry service
+   * @throws ConfigurationException The exception is thrown if can not
+   *           initialize service
    */
   public JCROrganizationServiceImpl(InitParams initParams,
                                     RepositoryService repositoryService,
@@ -233,8 +229,7 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
    * Return org-service actual storage path.
    * 
    * @return org-service storage path
-   * @throws RepositoryException
-   *           if any Exception is occurred
+   * @throws RepositoryException if any Exception is occurred
    */
   String getStoragePath() throws RepositoryException {
     if (storagePath == null) {
@@ -245,11 +240,11 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
   }
 
   /**
-   * Return system Session to org-service storage workspace. For internal use only.
+   * Return system Session to org-service storage workspace. For internal use
+   * only.
    * 
    * @return system session
-   * @throws RepositoryException
-   *           if any Exception is occurred
+   * @throws RepositoryException if any Exception is occurred
    */
   Session getStorageSession() throws RepositoryException {
     try {
@@ -263,10 +258,8 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
   /**
    * Read parameters from RegistryService.
    * 
-   * @param sessionProvider
-   *          The SessionProvider
-   * @throws RepositoryException
-   *           if any Exception is occurred
+   * @param sessionProvider The SessionProvider
+   * @throws RepositoryException if any Exception is occurred
    */
   private void readParamsFromRegistryService(SessionProvider sessionProvider) throws PathNotFoundException,
                                                                              RepositoryException {
@@ -299,8 +292,7 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
   /**
    * Write parameters to RegistryService.
    * 
-   * @param sessionProvider
-   *          The SessionProvider
+   * @param sessionProvider The SessionProvider
    * @throws ParserConfigurationException
    * @throws SAXException
    * @throws IOException
@@ -354,10 +346,8 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
   /**
    * Get attribute value.
    * 
-   * @param element
-   *          The element to get attribute value
-   * @param attr
-   *          The attribute name
+   * @param element The element to get attribute value
+   * @param attr The attribute name
    * @return Value of attribute if present and null in other case
    */
   private String getAttributeSmart(Element element, String attr) {
@@ -367,12 +357,9 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
   /**
    * Set attribute value. If value is null the attribute will be removed.
    * 
-   * @param element
-   *          The element to set attribute value
-   * @param attr
-   *          The attribute name
-   * @param value
-   *          The value of attribute
+   * @param element The element to set attribute value
+   * @param attr The attribute name
+   * @param value The value of attribute
    */
   private void setAttributeSmart(Element element, String attr, String value) {
     if (value == null) {
@@ -388,9 +375,8 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
   private void checkParams() {
     // repository
     try {
-      repository = repositoryName != null
-          ? repositoryService.getRepository(repositoryName)
-          : repositoryService.getDefaultRepository();
+      repository = repositoryName != null ? repositoryService.getRepository(repositoryName)
+                                         : repositoryService.getCurrentRepository();
     } catch (Exception e) {
       throw new RuntimeException("Can not get repository", e);
     }
