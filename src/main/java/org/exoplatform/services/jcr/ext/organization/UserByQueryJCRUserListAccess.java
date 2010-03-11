@@ -20,6 +20,7 @@ import java.util.Date;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
@@ -32,150 +33,163 @@ import org.exoplatform.services.organization.User;
  * @author <a href="mailto:anatoliy.bazko@exoplatform.com.ua">Anatoliy Bazko</a>
  * @version $Id: UserByQueryJCRUserListAccess.java 111 2008-11-11 11:11:11Z $
  */
-public class UserByQueryJCRUserListAccess extends JCRUserListAccess {
+public class UserByQueryJCRUserListAccess extends JCRUserListAccess
+{
 
-  /**
-   * The query.
-   */
-  private org.exoplatform.services.organization.Query query;
+   /**
+    * The query.
+    */
+   private org.exoplatform.services.organization.Query query;
 
-  /**
-   * JCRUserListAccess constructor.
-   * 
-   * @param service
-   *          The JCROrganizationService
-   * @param query
-   *          The query
-   */
-  public UserByQueryJCRUserListAccess(JCROrganizationServiceImpl service,
-                                      org.exoplatform.services.organization.Query query) {
-    super(service);
-    this.query = query;
-  }
+   /**
+    * User handler.
+    */
+   private UserHandlerImpl uHandler;
 
-  /**
-   * {@inheritDoc}
-   */
-  protected int getSize(Session session) throws Exception {
-    try {
-      int result = 0;
+   /**
+    * JCRUserListAccess constructor.
+    * 
+    * @param service The JCROrganizationService
+    * @param query The query
+    */
+   public UserByQueryJCRUserListAccess(JCROrganizationServiceImpl service,
+      org.exoplatform.services.organization.Query query)
+   {
+      super(service);
+      this.query = query;
+      this.uHandler = new UserHandlerImpl(service);
+   }
 
-      String where = "jcr:path LIKE '" + "%" + "'";
-      if (query.getEmail() != null) {
-        where += " AND " + ("exo:email LIKE '" + query.getEmail().replace('*', '%') + "'");
-      }
-      if (query.getFirstName() != null) {
-        where += " AND " + ("exo:firstName LIKE '" + query.getFirstName().replace('*', '%') + "'");
-      }
-      if (query.getLastName() != null) {
-        where += " AND " + ("exo:lastName LIKE '" + query.getLastName().replace('*', '%') + "'");
-      }
+   /**
+    * {@inheritDoc}
+    */
+   protected int getSize(Session session) throws Exception
+   {
+      try
+      {
+         int result = 0;
 
-      UserHandlerImpl uHandler = new UserHandlerImpl(service);
+         Node storageNode = (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_EXO_USERS);
+         NodeIterator results = storageNode.getNodes();
 
-      String statement = "select * from exo:user " + (where.length() == 0 ? "" : "where " + where);
-      Query uQuery = session.getWorkspace().getQueryManager().createQuery(statement, Query.SQL);
-      QueryResult uRes = uQuery.execute();
+         while (results.hasNext())
+         {
+            Node uNode = results.nextNode();
 
-      for (NodeIterator results = uRes.getNodes(); results.hasNext();) {
-        Node uNode = results.nextNode();
-
-        if (query.getUserName() == null || isNameLike(uNode.getName(), query.getUserName())) {
-          Date lastLoginTime = uHandler.readDateProperty(uNode, UserHandlerImpl.EXO_LAST_LOGIN_TIME);
-          if ((query.getFromLoginDate() == null || (lastLoginTime != null && query.getFromLoginDate()
-                                                                                  .getTime() <= lastLoginTime.getTime()))
-              && (query.getToLoginDate() == null || (lastLoginTime != null && query.getToLoginDate()
-                                                                                   .getTime() >= lastLoginTime.getTime()))) {
-            result++;
-          }
-        }
-      }
-
-      return result;
-    } catch (Exception e) {
-      throw new OrganizationServiceException("Can not get list size", e);
-    }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  protected User[] load(Session session, int index, int length) throws Exception {
-    if (index < 0)
-      throw new IllegalArgumentException("Illegal index: index must be a positive number");
-
-    if (length < 0)
-      throw new IllegalArgumentException("Illegal length: length must be a positive number");
-
-    try {
-      User[] users = new User[length];
-
-      String where = "jcr:path LIKE '" + "%" + "'";
-      if (query.getEmail() != null) {
-        where += " AND " + ("exo:email LIKE '" + query.getEmail().replace('*', '%') + "'");
-      }
-      if (query.getFirstName() != null) {
-        where += " AND " + ("exo:firstName LIKE '" + query.getFirstName().replace('*', '%') + "'");
-      }
-      if (query.getLastName() != null) {
-        where += " AND " + ("exo:lastName LIKE '" + query.getLastName().replace('*', '%') + "'");
-      }
-
-      UserHandlerImpl uHandler = new UserHandlerImpl(service);
-
-      String statement = "select * from exo:user " + (where.length() == 0 ? "" : "where " + where);
-      Query uQuery = session.getWorkspace().getQueryManager().createQuery(statement, Query.SQL);
-      QueryResult uRes = uQuery.execute();
-
-      NodeIterator results = uRes.getNodes();
-
-      for (int p = 0, counter = 0; counter < length;) {
-        if (!results.hasNext())
-          throw new IllegalArgumentException("Illegal index or length: sum of the index and the length cannot be greater than the list size");
-
-        Node uNode = results.nextNode();
-
-        if (query.getUserName() == null || isNameLike(uNode.getName(), query.getUserName())) {
-          Date lastLoginTime = uHandler.readDateProperty(uNode, UserHandlerImpl.EXO_LAST_LOGIN_TIME);
-          if ((query.getFromLoginDate() == null || (lastLoginTime != null && query.getFromLoginDate()
-                                                                                  .getTime() <= lastLoginTime.getTime()))
-              && (query.getToLoginDate() == null || (lastLoginTime != null && query.getToLoginDate()
-                                                                                   .getTime() >= lastLoginTime.getTime()))) {
-            if (p++ >= index) {
-              users[counter++] = uHandler.readObjectFromNode(uNode);
+            if (checkQuery(uNode))
+            {
+               result++;
             }
-          }
-        }
+         }
+
+         return result;
+      }
+      catch (Exception e)
+      {
+         throw new OrganizationServiceException("Can not get list size", e);
+      }
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   protected User[] load(Session session, int index, int length) throws Exception
+   {
+      if (index < 0)
+         throw new IllegalArgumentException("Illegal index: index must be a positive number");
+
+      if (length < 0)
+         throw new IllegalArgumentException("Illegal length: length must be a positive number");
+
+      try
+      {
+         User[] users = new User[length];
+
+         Node storageNode = (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_EXO_USERS);
+         NodeIterator results = storageNode.getNodes();
+
+         for (int p = 0, counter = 0; counter < length;)
+         {
+            if (!results.hasNext())
+               throw new IllegalArgumentException(
+                  "Illegal index or length: sum of the index and the length cannot be greater than the list size");
+
+            Node uNode = results.nextNode();
+
+            if (!checkQuery(uNode))
+            {
+               continue;
+            }
+
+            if (p++ >= index)
+            {
+               users[counter++] = uHandler.readObjectFromNode(uNode);
+            }
+         }
+
+         return users;
+      }
+      catch (Exception e)
+      {
+         throw new OrganizationServiceException("Can not load users", e);
+      }
+   }
+
+   private boolean checkQuery(Node uNode) throws Exception
+   {
+      if (query.getUserName() != null && !isLike(uNode.getName(), query.getUserName(), true))
+      {
+         return false;
       }
 
-      return users;
-    } catch (Exception e) {
-      throw new OrganizationServiceException("Can not load users", e);
-    }
-  }
+      if (query.getFirstName() != null
+         && !isLike(uHandler.readStringProperty(uNode, UserHandlerImpl.EXO_FIRST_NAME), query.getFirstName(), true))
+      {
+         return false;
+      }
 
-  private boolean isNameLike(String userName, String queryName) {
-    boolean startWith = false;
-    boolean endWith = false;
+      if (query.getLastName() != null
+         && !isLike(uHandler.readStringProperty(uNode, UserHandlerImpl.EXO_LAST_NAME), query.getLastName(), true))
+      {
+         return false;
+      }
 
-    if (queryName.startsWith("*")) {
-      startWith = true;
-      queryName = queryName.substring(1);
-    }
+      if (query.getEmail() != null
+         && !isLike(uHandler.readStringProperty(uNode, UserHandlerImpl.EXO_EMAIL), query.getEmail(), false))
+      {
+         return false;
+      }
 
-    if (queryName.endsWith("*")) {
-      endWith = true;
-      queryName = queryName.substring(0, queryName.length() - 1);
-    }
+      Date lastLoginTime = uHandler.readDateProperty(uNode, UserHandlerImpl.EXO_LAST_LOGIN_TIME);
+      if (query.getFromLoginDate() != null && query.getFromLoginDate().getTime() > lastLoginTime.getTime())
+      {
+         return false;
+      }
 
-    if (startWith && endWith) {
-      return userName.indexOf(queryName) != -1;
-    } else if (startWith) {
-      return userName.startsWith(queryName);
-    } else if (endWith) {
-      return userName.endsWith(queryName);
-    } else {
-      return userName.equals(queryName);
-    }
-  }
+      if (query.getToLoginDate() != null && query.getToLoginDate().getTime() < lastLoginTime.getTime())
+      {
+         return false;
+      }
+
+      return true;
+   }
+
+   private boolean isLike(String jcrField, String queryField, boolean caseSensitive)
+   {
+      return caseSensitive ? jcrField.toUpperCase().indexOf(removeAsterisk(queryField.toUpperCase())) != -1 : jcrField
+         .indexOf(removeAsterisk(queryField)) != -1;
+   }
+
+   private String removeAsterisk(String str)
+   {
+      if (str.startsWith("*"))
+      {
+         str = str.substring(1);
+      }
+      if (str.endsWith("*"))
+      {
+         str = str.substring(0, str.length() - 1);
+      }
+      return str;
+   }
 }
