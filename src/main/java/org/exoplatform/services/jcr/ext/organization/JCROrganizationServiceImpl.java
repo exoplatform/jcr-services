@@ -33,6 +33,7 @@ import org.exoplatform.container.configuration.ConfigurationException;
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.container.xml.ValueParam;
 import org.exoplatform.services.jcr.RepositoryService;
+import org.exoplatform.services.jcr.config.RepositoryConfigurationException;
 import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.services.jcr.ext.registry.RegistryEntry;
@@ -82,11 +83,6 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
     * The service's name.
     */
    private static final String SERVICE_NAME = "JCROrganization";
-
-   /**
-    * Manageable repository.
-    */
-   protected ManageableRepository repository;
 
    /**
     * Repository service.
@@ -278,11 +274,23 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
    {
       try
       {
-         return repository.getSystemSession(storageWorkspace);
+         ManageableRepository repository = getWorkingRepository();
+
+         String workspaceName = storageWorkspace;
+         if (workspaceName == null)
+         {
+            workspaceName = repository.getConfiguration().getDefaultWorkspaceName();
+         }
+
+         return repository.getSystemSession(workspaceName);
       }
       catch (NullPointerException e)
       {
          throw new RepositoryException("Can not get system session because JCROrganizationService is not started", e);
+      }
+      catch (RepositoryConfigurationException e)
+      {
+         throw new RepositoryException("Can not get system session", e);
       }
    }
 
@@ -374,7 +382,8 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
       ValueParam paramStoragePath = initParams.getValueParam(STORAGE_PATH);
       storagePath = paramStoragePath != null ? paramStoragePath.getValue() : null;
 
-      storageWorkspace = initParams.getValueParam(STORAGE_WORKSPACE).getValue();
+      ValueParam paramStorageWorkspace = initParams.getValueParam(STORAGE_WORKSPACE);
+      storageWorkspace = paramStorageWorkspace != null ? paramStorageWorkspace.getValue() : null;
 
       if (repositoryName != null)
       {
@@ -428,26 +437,6 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
     */
    private void checkParams()
    {
-      // repository
-      try
-      {
-         repository =
-            repositoryName != null ? repositoryService.getRepository(repositoryName) : repositoryService
-               .getCurrentRepository();
-      }
-      catch (Exception e)
-      {
-         throw new RuntimeException("Can not get repository", e);
-      }
-
-      repositoryName = ((RepositoryImpl)repository).getName();
-
-      // workspace
-      if (storageWorkspace == null)
-      {
-         storageWorkspace = repository.getConfiguration().getDefaultWorkspaceName();
-      }
-
       // path
       if (storagePath != null)
       {
@@ -462,4 +451,9 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
       }
    }
 
+   private ManageableRepository getWorkingRepository() throws RepositoryException, RepositoryConfigurationException
+   {
+      return repositoryName != null ? repositoryService.getRepository(repositoryName) : repositoryService
+         .getCurrentRepository();
+   }
 }
