@@ -7,7 +7,7 @@
 
   <modelVersion>4.0.0</modelVersion>
   <artifactId>exo-jcr-services</artifactId>
-  <version>1.12.1-GA-SNAPSHOT</version>
+  <version>1.12.2-GA-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>eXo JCR :: Ext :: Services</name>
   <url>http://www.exoplatform.org</url>
@@ -145,9 +145,9 @@
         <activeByDefault>true</activeByDefault>
       </activation>
       <properties>
-        <org.exoplatform.core.version>2.3.0-GA</org.exoplatform.core.version>
-        <org.exoplatform.ws.version>2.1.0-GA</org.exoplatform.ws.version>
-        <org.exoplatform.jcr.version>1.12.0-GA</org.exoplatform.jcr.version>
+        <org.exoplatform.core.version>2.3.2-GA-SNAPSHOT</org.exoplatform.core.version>
+        <org.exoplatform.ws.version>2.1.2-GA-SNAPSHOT</org.exoplatform.ws.version>
+        <org.exoplatform.jcr.version>1.12.2-GA-SNAPSHOT</org.exoplatform.jcr.version>
       </properties>
     </profile>
   </profiles>
