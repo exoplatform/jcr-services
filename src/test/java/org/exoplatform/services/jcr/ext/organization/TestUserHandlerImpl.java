@@ -17,11 +17,14 @@
 package org.exoplatform.services.jcr.ext.organization;
 
 import java.util.Calendar;
+import java.util.List;
 
 import org.exoplatform.services.jcr.ext.BaseStandaloneTest;
 import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.services.organization.Query;
 import org.exoplatform.services.organization.User;
+import org.exoplatform.services.organization.UserEventListener;
+import org.exoplatform.services.organization.UserEventListenerHandler;
 import org.exoplatform.services.organization.UserHandler;
 
 /**
@@ -344,6 +347,20 @@ public class TestUserHandlerImpl extends BaseStandaloneTest
       finally
       {
          uHandler.removeUser("user", true);
+      }
+   }
+
+   public void testGetListeners() throws Exception
+   {
+      List<UserEventListener> list = ((UserEventListenerHandler)uHandler).getUserListeners();
+      try
+      {
+         list.clear();
+         fail("Exception should not be thrown");
+      }
+      catch (Exception e)
+      {
+
       }
    }
 

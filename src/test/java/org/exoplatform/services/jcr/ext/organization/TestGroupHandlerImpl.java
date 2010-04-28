@@ -18,8 +18,14 @@ package org.exoplatform.services.jcr.ext.organization;
 
 import org.exoplatform.services.jcr.ext.BaseStandaloneTest;
 import org.exoplatform.services.organization.Group;
+import org.exoplatform.services.organization.GroupEventListener;
+import org.exoplatform.services.organization.GroupEventListenerHandler;
 import org.exoplatform.services.organization.GroupHandler;
 import org.exoplatform.services.organization.OrganizationService;
+import org.exoplatform.services.organization.UserEventListener;
+import org.exoplatform.services.organization.UserEventListenerHandler;
+
+import java.util.List;
 
 /**
  * Created by The eXo Platform SAS.
@@ -27,232 +33,294 @@ import org.exoplatform.services.organization.OrganizationService;
  * @author <a href="mailto:anatoliy.bazko@exoplatform.com.ua">Anatoliy Bazko</a>
  * @version $Id: TestOrganizationService.java 111 2008-11-11 11:11:11Z $
  */
-public class TestGroupHandlerImpl extends BaseStandaloneTest {
+public class TestGroupHandlerImpl extends BaseStandaloneTest
+{
 
-  private GroupHandler        gHandler;
+   private GroupHandler gHandler;
 
-  private OrganizationService organizationService;
+   private OrganizationService organizationService;
 
-  /**
-   * {@inheritDoc}
-   */
-  public void setUp() throws Exception {
-    super.setUp();
-    organizationService = (OrganizationService) container.getComponentInstanceOfType(OrganizationService.class);
-    gHandler = organizationService.getGroupHandler();
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public void setUp() throws Exception
+   {
+      super.setUp();
+      organizationService = (OrganizationService)container.getComponentInstanceOfType(OrganizationService.class);
+      gHandler = organizationService.getGroupHandler();
+   }
 
-  /**
-   * Find group by id and check it properties.
-   */
-  public void testFindGroupById() throws Exception {
-    try {
-      Group g = gHandler.findGroupById("/platform/administrators");
-      assertNotNull(g);
-      assertEquals(g.getDescription(), "the /platform/administrators group");
-      assertEquals(g.getGroupName(), "administrators");
-      assertEquals(g.getId(), "/platform/administrators");
-      assertEquals(g.getLabel(), "Administrators");
-      assertEquals(g.getParentId(), "/platform");
+   /**
+    * Find group by id and check it properties.
+    */
+   public void testFindGroupById() throws Exception
+   {
+      try
+      {
+         Group g = gHandler.findGroupById("/platform/administrators");
+         assertNotNull(g);
+         assertEquals(g.getDescription(), "the /platform/administrators group");
+         assertEquals(g.getGroupName(), "administrators");
+         assertEquals(g.getId(), "/platform/administrators");
+         assertEquals(g.getLabel(), "Administrators");
+         assertEquals(g.getParentId(), "/platform");
 
-      assertNull(gHandler.findGroupById("/not-existed-group"));
+         assertNull(gHandler.findGroupById("/not-existed-group"));
 
-    } catch (Exception e) {
-      e.printStackTrace();
-      fail("Exception should not be thrown.");
-    }
-  }
+      }
+      catch (Exception e)
+      {
+         e.printStackTrace();
+         fail("Exception should not be thrown.");
+      }
+   }
 
-  /**
-   * Find group by id and check it properties.
-   */
-  public void testFindGroupsByUser() throws Exception {
-    try {
-      // Hibernate org service returns
-      // [Group[/organization/management/executive-board|executive-board],
-      // Group[/platform/administrators|administrators], Group[/platform/users|users]]
-      // JCR returns
-      // [[groupId=/platform/administrators][groupName=administrators][parentId=/platform],
-      // [groupId=/platform/users][groupName=users][parentId=/platform],
-      // [groupId=/organization/management/executive-board][groupName=executive-board][parentId=/
-      // organization/management],
-      // [groupId=/organization/management/executive-board][groupName=executive-board][parentId=/
-      // organization/management],
-      // [groupId=/organization/management/executive-board][groupName=executive-board][parentId=/
-      // organization/management]]
-      assertEquals(gHandler.findGroupsOfUser("john").size(), 3);
-    } catch (Exception e) {
-      e.printStackTrace();
-      fail("Exception should not be thrown.");
-    }
-  }
+   /**
+    * Find group by id and check it properties.
+    */
+   public void testFindGroupsByUser() throws Exception
+   {
+      try
+      {
+         // Hibernate org service returns
+         // [Group[/organization/management/executive-board|executive-board],
+         // Group[/platform/administrators|administrators], Group[/platform/users|users]]
+         // JCR returns
+         // [[groupId=/platform/administrators][groupName=administrators][parentId=/platform],
+         // [groupId=/platform/users][groupName=users][parentId=/platform],
+         // [groupId=/organization/management/executive-board][groupName=executive-board][parentId=/
+         // organization/management],
+         // [groupId=/organization/management/executive-board][groupName=executive-board][parentId=/
+         // organization/management],
+         // [groupId=/organization/management/executive-board][groupName=executive-board][parentId=/
+         // organization/management]]
+         assertEquals(gHandler.findGroupsOfUser("john").size(), 3);
+      }
+      catch (Exception e)
+      {
+         e.printStackTrace();
+         fail("Exception should not be thrown.");
+      }
+   }
 
-  /**
-   * Find groups by specific parent and check it count.
-   */
-  public void testFindGroups() throws Exception {
-    try {
-      assertEquals(gHandler.findGroups(null).size(), 4);
-      assertEquals(gHandler.findGroups(gHandler.findGroupById("/organization/operations")).size(),
-                   2);
-      assertEquals(gHandler.findGroups(gHandler.findGroupById("/organization/management/executive-board"))
-                           .size(),
-                   0);
+   /**
+    * Find groups by specific parent and check it count.
+    */
+   public void testFindGroups() throws Exception
+   {
+      try
+      {
+         assertEquals(gHandler.findGroups(null).size(), 4);
+         assertEquals(gHandler.findGroups(gHandler.findGroupById("/organization/operations")).size(), 2);
+         assertEquals(gHandler.findGroups(gHandler.findGroupById("/organization/management/executive-board")).size(), 0);
 
-      // find from not existed group
-      createGroup("/organization/management/executive-board", "group1", "label", "desc");
-      Group g = gHandler.findGroupById("/organization/management/executive-board/group1");
-      gHandler.removeGroup(g, true);
-      assertEquals(gHandler.findGroups(g).size(), 0);
+         // find from not existed group
+         createGroup("/organization/management/executive-board", "group1", "label", "desc");
+         Group g = gHandler.findGroupById("/organization/management/executive-board/group1");
+         gHandler.removeGroup(g, true);
+         assertEquals(gHandler.findGroups(g).size(), 0);
 
-    } catch (Exception e) {
-      e.printStackTrace();
-      fail("Exception should not be thrown.");
-    }
-  }
+      }
+      catch (Exception e)
+      {
+         e.printStackTrace();
+         fail("Exception should not be thrown.");
+      }
+   }
 
-  /**
-   * Get all groups and check it count.
-   */
-  public void testGetAllGroups() throws Exception {
-    try {
-      assertEquals(gHandler.getAllGroups().size(), 16);
-    } catch (Exception e) {
-      e.printStackTrace();
-      fail("Exception should not be thrown.");
-    }
-  }
+   /**
+    * Get all groups and check it count.
+    */
+   public void testGetAllGroups() throws Exception
+   {
+      try
+      {
+         assertEquals(gHandler.getAllGroups().size(), 16);
+      }
+      catch (Exception e)
+      {
+         e.printStackTrace();
+         fail("Exception should not be thrown.");
+      }
+   }
 
-  /**
-   * Create new group and try to remove it.
-   */
-  public void testRemoveGroup() throws Exception {
-    try {
-      createGroup("/organization", "group1", "label", "desc");
-      createGroup("/organization/group1", "group2", "label", "desc");
+   /**
+    * Create new group and try to remove it.
+    */
+   public void testRemoveGroup() throws Exception
+   {
+      try
+      {
+         createGroup("/organization", "group1", "label", "desc");
+         createGroup("/organization/group1", "group2", "label", "desc");
 
-      gHandler.removeGroup(gHandler.findGroupById("/organization/group1"), true);
-      assertNull(gHandler.findGroupById("/organization/group1"));
-      assertNull(gHandler.findGroupById("/organization/group1/group2"));
+         gHandler.removeGroup(gHandler.findGroupById("/organization/group1"), true);
+         assertNull(gHandler.findGroupById("/organization/group1"));
+         assertNull(gHandler.findGroupById("/organization/group1/group2"));
 
-      // create in root
-      createGroup(null, "group1", "label", "desc");
-      createGroup("/group1", "group2", "label", "desc");
+         // create in root
+         createGroup(null, "group1", "label", "desc");
+         createGroup("/group1", "group2", "label", "desc");
 
-      gHandler.removeGroup(gHandler.findGroupById("/group1"), true);
-      assertNull(gHandler.findGroupById("/group1"));
-      assertNull(gHandler.findGroupById("/group1/group2"));
+         gHandler.removeGroup(gHandler.findGroupById("/group1"), true);
+         assertNull(gHandler.findGroupById("/group1"));
+         assertNull(gHandler.findGroupById("/group1/group2"));
 
-    } catch (Exception e) {
-      e.printStackTrace();
-      fail("Exception should not be thrown.");
-    }
-
-    try {
-      createGroup("/organization", "group1", "label", "desc");
-      gHandler.removeGroup(gHandler.findGroupById("/organization/group1"), true);
-      gHandler.removeGroup(gHandler.findGroupById("/organization/group1"), true);
-      fail("Exception should be thrown");
-    } catch (Exception e) {
-    }
-  }
-
-  /**
-   * Add child group.
-   */
-  public void testAddChild() throws Exception {
-    try {
-      Group parent = gHandler.createGroupInstance();
-      parent.setGroupName("parentGroup");
-
-      Group child = gHandler.createGroupInstance();
-      child.setGroupName("group");
-
-      try {
-        gHandler.addChild(parent, child, false);
-        fail("Exception should be thrown.");
-      } catch (Exception e) {
+      }
+      catch (Exception e)
+      {
+         e.printStackTrace();
+         fail("Exception should not be thrown.");
       }
 
-      // add parent group
-      gHandler.addChild(null, parent, false);
-      assertNotNull(gHandler.findGroupById("/parentGroup"));
+      try
+      {
+         createGroup("/organization", "group1", "label", "desc");
+         gHandler.removeGroup(gHandler.findGroupById("/organization/group1"), true);
+         gHandler.removeGroup(gHandler.findGroupById("/organization/group1"), true);
+         fail("Exception should be thrown");
+      }
+      catch (Exception e)
+      {
+      }
+   }
 
-      // add child group
-      gHandler.addChild(parent, child, false);
-      assertNotNull(gHandler.findGroupById("/parentGroup/group"));
+   /**
+    * Add child group.
+    */
+   public void testAddChild() throws Exception
+   {
+      try
+      {
+         Group parent = gHandler.createGroupInstance();
+         parent.setGroupName("parentGroup");
 
-    } catch (Exception e) {
-      e.printStackTrace();
-      fail("Exception should not be thrown.");
-    } finally {
-      gHandler.removeGroup(gHandler.findGroupById("/parentGroup"), true);
-    }
-  }
+         Group child = gHandler.createGroupInstance();
+         child.setGroupName("group");
 
-  /**
-   * Create group.
-   */
-  public void testCreateGroup() throws Exception {
-    try {
-      Group group = gHandler.createGroupInstance();
-      group.setGroupName("group");
-      gHandler.createGroup(group, true);
-      assertNotNull(gHandler.findGroupById("/group"));
+         try
+         {
+            gHandler.addChild(parent, child, false);
+            fail("Exception should be thrown.");
+         }
+         catch (Exception e)
+         {
+         }
 
-    } catch (Exception e) {
-      e.printStackTrace();
-      fail("Exception should not be thrown.");
-    } finally {
-      gHandler.removeGroup(gHandler.findGroupById("/group"), true);
-    }
-  }
+         // add parent group
+         gHandler.addChild(null, parent, false);
+         assertNotNull(gHandler.findGroupById("/parentGroup"));
 
-  /**
-   * Create new group, change properties and save. Then try to check it.
-   */
-  public void testSaveGroup() throws Exception {
-    try {
-      createGroup("/organization", "group1", "label", "desc");
+         // add child group
+         gHandler.addChild(parent, child, false);
+         assertNotNull(gHandler.findGroupById("/parentGroup/group"));
 
-      Group g = gHandler.findGroupById("/organization/group1");
-      g.setDescription("newDesc");
-      gHandler.saveGroup(g, true);
+      }
+      catch (Exception e)
+      {
+         e.printStackTrace();
+         fail("Exception should not be thrown.");
+      }
+      finally
+      {
+         gHandler.removeGroup(gHandler.findGroupById("/parentGroup"), true);
+      }
+   }
 
-      // check
-      g = gHandler.findGroupById("/organization/group1");
-      assertEquals(g.getDescription(), "newDesc");
+   /**
+    * Create group.
+    */
+   public void testCreateGroup() throws Exception
+   {
+      try
+      {
+         Group group = gHandler.createGroupInstance();
+         group.setGroupName("group");
+         gHandler.createGroup(group, true);
+         assertNotNull(gHandler.findGroupById("/group"));
 
-    } catch (Exception e) {
-      e.printStackTrace();
-      fail("Exception should not be thrown.");
-    } finally {
-      gHandler.removeGroup(gHandler.findGroupById("/organization/group1"), true);
-    }
-  }
+      }
+      catch (Exception e)
+      {
+         e.printStackTrace();
+         fail("Exception should not be thrown.");
+      }
+      finally
+      {
+         gHandler.removeGroup(gHandler.findGroupById("/group"), true);
+      }
+   }
 
-  /**
-   * Create new group.
-   */
-  private void createGroup(String parentId, String name, String label, String desc) {
-    try {
-      Group parent = gHandler.findGroupById(parentId);
+   /**
+    * Create new group, change properties and save. Then try to check it.
+    */
+   public void testSaveGroup() throws Exception
+   {
+      try
+      {
+         createGroup("/organization", "group1", "label", "desc");
 
-      Group child = gHandler.createGroupInstance();
-      child.setGroupName(name);
-      child.setLabel(label);
-      child.setDescription(desc);
-      gHandler.addChild(parent, child, true);
-    } catch (Exception e) {
-      e.printStackTrace();
-      fail("Exception should not be thrown.");
-    }
-  }
+         Group g = gHandler.findGroupById("/organization/group1");
+         g.setDescription("newDesc");
+         gHandler.saveGroup(g, true);
 
-  /**
-   * {@inheritDoc}
-   */
-  protected void tearDown() throws Exception {
-    super.tearDown();
-  }
+         // check
+         g = gHandler.findGroupById("/organization/group1");
+         assertEquals(g.getDescription(), "newDesc");
+
+      }
+      catch (Exception e)
+      {
+         e.printStackTrace();
+         fail("Exception should not be thrown.");
+      }
+      finally
+      {
+         gHandler.removeGroup(gHandler.findGroupById("/organization/group1"), true);
+      }
+   }
+
+   public void testGetListeners() throws Exception
+   {
+      List<GroupEventListener> list = ((GroupEventListenerHandler)gHandler).getGroupListeners();
+      try
+      {
+         list.clear();
+         fail("Exception should not be thrown");
+      }
+      catch (Exception e)
+      {
+
+      }
+   }
+
+   /**
+    * Create new group.
+    */
+   private void createGroup(String parentId, String name, String label, String desc)
+   {
+      try
+      {
+         Group parent = gHandler.findGroupById(parentId);
+
+         Group child = gHandler.createGroupInstance();
+         child.setGroupName(name);
+         child.setLabel(label);
+         child.setDescription(desc);
+         gHandler.addChild(parent, child, true);
+      }
+      catch (Exception e)
+      {
+         e.printStackTrace();
+         fail("Exception should not be thrown.");
+      }
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   protected void tearDown() throws Exception
+   {
+      super.tearDown();
+   }
 }
