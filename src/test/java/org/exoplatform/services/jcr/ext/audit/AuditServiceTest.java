@@ -157,6 +157,7 @@ public class AuditServiceTest extends BaseStandaloneTest
       // Should not be autocreated
       ExtendedNode node = (ExtendedNode)rootNode.addNode("mixin", "nt:unstructured");
       node.addMixin("exo:auditable");
+
       String auditHistoryUUID = node.getProperty("exo:auditHistory").getString();
       Node auditHistory = session.getNodeByUUID(auditHistoryUUID);
 
@@ -547,6 +548,31 @@ public class AuditServiceTest extends BaseStandaloneTest
       assertTrue(service.hasHistory(node));
       assertTrue(service.hasHistory(childNode));
       assertFalse(service.hasHistory(childNode2));
+      node.remove();
+      session.save();
+   }
+
+   /**
+    * Test add audit with existing node
+    * 
+    * @throws Exception
+    */
+   public void testAddAuditWithExistingNode() throws Exception
+   {
+      NodeImpl rootNode = (NodeImpl)session.getRootNode().getNode(ROOT_PATH);
+
+      ExtendedNode node = (ExtendedNode)rootNode.addNode("test_add_audit_existing_node", "nt:unstructured");
+      node.addMixin("exo:auditable");
+      service.createHistory(node);
+      session.save();
+      String auditHistoryUUID = node.getProperty("exo:auditHistory").getString();
+      Node auditHistory = session.getNodeByUUID(auditHistoryUUID);
+
+      assertTrue(auditHistory.isNodeType("exo:auditHistory"));
+      assertEquals(auditHistory.getProperty("exo:targetNode").getString(), node.getUUID());
+
+      session.save();
+      service.removeHistory(node);
       node.remove();
       session.save();
    }
