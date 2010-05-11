@@ -550,29 +550,6 @@ public class AuditServiceTest extends BaseStandaloneTest
       node.remove();
       session.save();
    }
-   
-   /**
-    * Test add audit with existing node
-    * 
-    * @throws Exception
-    */
-   public void testAddAuditWithExistingNode() throws Exception {
-       NodeImpl rootNode = (NodeImpl)session.getRootNode().getNode(ROOT_PATH);
-        
-       ExtendedNode node = (ExtendedNode)rootNode.addNode("test_add_audit_existing_node", "nt:unstructured");
-       node.addMixin("exo:auditable");
-       session.save();
-       String auditHistoryUUID = node.getProperty("exo:auditHistory").getString();
-       Node auditHistory = session.getNodeByUUID(auditHistoryUUID);
-        
-       assertTrue(auditHistory.isNodeType("exo:auditHistory"));
-       assertEquals(auditHistory.getProperty("exo:targetNode").getString(), node.getUUID());
-        
-       session.save();
-       service.removeHistory(node);
-       node.remove();
-       session.save();
-   }
 
    @Override
    protected void tearDown() throws Exception
