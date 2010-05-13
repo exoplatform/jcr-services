@@ -34,6 +34,7 @@ import org.exoplatform.services.jcr.access.PermissionType;
 import org.exoplatform.services.jcr.access.SystemIdentity;
 import org.exoplatform.services.jcr.core.ExtendedNode;
 import org.exoplatform.services.jcr.datamodel.InternalQName;
+import org.exoplatform.services.jcr.datamodel.ItemData;
 import org.exoplatform.services.jcr.ext.BaseStandaloneTest;
 import org.exoplatform.services.jcr.impl.core.NodeImpl;
 import org.exoplatform.services.jcr.impl.ext.action.SessionActionCatalog;
@@ -559,7 +560,10 @@ public class AuditServiceTest extends BaseStandaloneTest
     */
    public void testAddAuditWithExistingNode() throws Exception
    {
-      NodeImpl rootNode = (NodeImpl)session.getRootNode().getNode(ROOT_PATH);
+      ItemData storage = session.getTransientNodesManager().getItemData(AuditService.AUDIT_STORAGE_ID);     
+	  session.getTransientNodesManager().delete(storage);
+	  
+	  NodeImpl rootNode = (NodeImpl)session.getRootNode().getNode(ROOT_PATH);
 
       ExtendedNode node = (ExtendedNode)rootNode.addNode("test_add_audit_existing_node", "nt:unstructured");
       node.addMixin("exo:auditable");
