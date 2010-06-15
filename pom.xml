@@ -150,9 +150,9 @@
         <activeByDefault>true</activeByDefault>
       </activation>
       <properties>
-        <org.exoplatform.core.version>2.3.2-GA-SNAPSHOT</org.exoplatform.core.version>
-        <org.exoplatform.ws.version>2.1.2-GA-SNAPSHOT</org.exoplatform.ws.version>
-        <org.exoplatform.jcr.version>1.12.2-GA-SNAPSHOT</org.exoplatform.jcr.version>
+        <org.exoplatform.core.version>2.3.2-GA</org.exoplatform.core.version>
+        <org.exoplatform.ws.version>2.1.2-GA</org.exoplatform.ws.version>
+        <org.exoplatform.jcr.version>1.12.2-GA</org.exoplatform.jcr.version>
       </properties>
     </profile>
   </profiles>
