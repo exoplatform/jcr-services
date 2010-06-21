@@ -18,6 +18,8 @@ package org.exoplatform.services.jcr.ext.audit;
 
 import java.util.Calendar;
 
+import javax.jcr.Value;
+
 import org.exoplatform.services.jcr.datamodel.InternalQName;
 import org.exoplatform.services.jcr.observation.ExtendedEventType;
 
@@ -38,6 +40,10 @@ public class AuditRecord implements Comparable<AuditRecord> {
 
   private final InternalQName propertyName;
 
+  private final Value[]       oldValue;
+
+  private final Value[]       newValue;
+
   private final String        version;
 
   private final String        versionName;
@@ -46,12 +52,16 @@ public class AuditRecord implements Comparable<AuditRecord> {
                      int eventType,
                      Calendar date,
                      InternalQName propertyName,
+                     Value[] oldValue,
+                     Value[] newValue,
                      String version,
                      String versionName) {
     this.userId = userId;
     this.eventType = eventType;
     this.date = date;
     this.propertyName = propertyName;
+    this.oldValue = oldValue;
+    this.newValue = newValue;
     this.version = version;
     this.versionName = versionName;
   }
@@ -76,31 +86,38 @@ public class AuditRecord implements Comparable<AuditRecord> {
     return propertyName;
   }
 
+  public Value[] getNewValues() {
+    return newValue;
+  }
+
+  public Value[] getOldValues() {
+    return oldValue;
+  }
+
   public int compareTo(AuditRecord otherRecord) {
     return date.compareTo(otherRecord.getDate());
   }
 
   /**
    * Returns version UUID related to this audit record. <br/>
-   * 
    * Use Session.getNodeByUUID(String) to obtain the version Node instance. <br/>
-   * 
    * NOTE: Version UUID will has no sense if version will be removed.
    * 
-   * @return String with version UUID or null if auditable node was not mix:versionable at the audit
-   *         record time
+   * @return String with version UUID or null if auditable node was not
+   *         mix:versionable at the audit record time
    */
   public String getVersion() {
     return version;
   }
 
   /**
-   * Returns version name related to this audit record. Version name for information purpose only. <br/>
-   * 
+   * Returns version name related to this audit record. Version name for
+   * information purpose only. <br/>
    * NOTE: Version name can be helpful after the version will be removed.
    * 
-   * @return String in format VERSION_NAME 'VERSION_LABEL_1' 'VERSION_LABEL_2' ... 'VERSION_LABEL_N'
-   *         or null if auditable node was not mix:versionable at the audit record time
+   * @return String in format VERSION_NAME 'VERSION_LABEL_1' 'VERSION_LABEL_2'
+   *         ... 'VERSION_LABEL_N' or null if auditable node was not
+   *         mix:versionable at the audit record time
    */
   public String getVersionName() {
     return versionName;

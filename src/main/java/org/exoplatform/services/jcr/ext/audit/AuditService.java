@@ -63,6 +63,12 @@ public interface AuditService {
   public static final InternalQName EXO_AUDITRECORD_AUDITVERSIONNAME = new InternalQName(Constants.NS_EXO_URI,
                                                                                          "auditVersionName");
 
+  public static final InternalQName EXO_AUDITRECORD_OLDVALUE         = new InternalQName(Constants.NS_EXO_URI,
+                                                                                         "oldValue");
+
+  public static final InternalQName EXO_AUDITRECORD_NEWVALUE         = new InternalQName(Constants.NS_EXO_URI,
+                                                                                         "newValue");
+
   public static final InternalQName EXO_AUDITHISTORY                 = new InternalQName(Constants.NS_EXO_URI,
                                                                                          "auditHistory");
 
@@ -95,7 +101,7 @@ public interface AuditService {
    * @param eventType
    * @throws RepositoryException
    */
-  void addRecord(Item item, int eventType) throws RepositoryException;
+  void addRecord(Item currentItem, Item previousItem, int eventType) throws RepositoryException;
 
   /**
    * Get node audit history.
@@ -103,8 +109,7 @@ public interface AuditService {
    * @param item
    * @return audit history of this item
    * @throws RepositoryException
-   * @throws UnsupportedOperationException
-   *           if item(parent) is not auditable
+   * @throws UnsupportedOperationException if item(parent) is not auditable
    */
   AuditHistory getHistory(Node node) throws RepositoryException, UnsupportedOperationException;
 

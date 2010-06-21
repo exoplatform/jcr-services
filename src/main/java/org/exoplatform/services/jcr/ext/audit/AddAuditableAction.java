@@ -36,14 +36,15 @@ public class AddAuditableAction implements Action {
 
   public boolean execute(Context ctx) throws Exception {
 
-    ItemImpl item = (ItemImpl) ctx.get("currentItem");
+    ItemImpl currentItem = (ItemImpl) ctx.get("currentItem");
+    ItemImpl previousItem = (ItemImpl) ctx.get("previousItem");
     int event = (Integer) ctx.get("event");
 
     Node node;
-    if (item.isNode())
-      node = (Node) item;
+    if (currentItem.isNode())
+      node = (Node) currentItem;
     else
-      node = item.getParent();
+      node = currentItem.getParent();
 
     AuditService auditService = (AuditService) ((ExoContainer) ctx.get("exocontainer")).getComponentInstanceOfType(AuditService.class);
     if (node.canAddMixin("exo:auditable")) {
@@ -62,10 +63,10 @@ public class AddAuditableAction implements Action {
 
       }
 
-      auditService.addRecord(item, event);
+      auditService.addRecord(previousItem, currentItem, event);
       if (log.isDebugEnabled()) {
         log.debug("Record '" + ExtendedEventType.nameFromValue(event) + "' added for "
-            + item.getPath());
+            + currentItem.getPath());
       }
       return true;
     }
