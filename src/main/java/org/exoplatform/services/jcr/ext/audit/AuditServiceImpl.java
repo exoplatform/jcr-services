@@ -29,9 +29,7 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.Value;
 import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.observation.Event;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -49,6 +47,7 @@ import org.exoplatform.services.jcr.config.RepositoryConfigurationException;
 import org.exoplatform.services.jcr.core.ExtendedNode;
 import org.exoplatform.services.jcr.core.ExtendedPropertyType;
 import org.exoplatform.services.jcr.dataflow.ItemState;
+import org.exoplatform.services.jcr.dataflow.persistent.PersistedPropertyData;
 import org.exoplatform.services.jcr.datamodel.Identifier;
 import org.exoplatform.services.jcr.datamodel.IllegalNameException;
 import org.exoplatform.services.jcr.datamodel.InternalQName;
@@ -64,7 +63,6 @@ import org.exoplatform.services.jcr.ext.registry.RegistryService;
 import org.exoplatform.services.jcr.impl.Constants;
 import org.exoplatform.services.jcr.impl.core.ItemImpl;
 import org.exoplatform.services.jcr.impl.core.NodeImpl;
-import org.exoplatform.services.jcr.impl.core.PropertyImpl;
 import org.exoplatform.services.jcr.impl.core.SessionDataManager;
 import org.exoplatform.services.jcr.impl.core.SessionImpl;
 import org.exoplatform.services.jcr.impl.core.value.ValueFactoryImpl;
@@ -176,21 +174,21 @@ public class AuditServiceImpl implements AuditService, Startable {
     }
   }
 
-  public void addRecord(Item previousItem, Item currentItem, int eventType) throws RepositoryException {
+  public void addRecord(Item item, int eventType) throws RepositoryException {
 
-    checkIfAuditable(currentItem);
+    checkIfAuditable(item);
 
-    AuditSession auditSession = new AuditSession(currentItem);
-    SessionImpl session = (SessionImpl) currentItem.getSession();
+    AuditSession auditSession = new AuditSession(item);
+    SessionImpl session = (SessionImpl) item.getSession();
 
     SessionDataManager dataManager = auditSession.getDataManager();
 
     NodeData auditHistory = auditSession.getAuditHistoryNodeData();
     if (auditHistory == null)
-      throw new PathNotFoundException("Audit history not found for " + currentItem.getPath());
+      throw new PathNotFoundException("Audit history not found for " + item.getPath());
 
     if (auditHistory == null) {
-      throw new RepositoryException("Audit history for " + currentItem.getPath() + "not found");
+      throw new RepositoryException("Audit history for  " + item.getPath() + "not found");
     }
 
     // make path to the AUDITHISTORY_LASTRECORD property
@@ -233,7 +231,7 @@ public class AuditServiceImpl implements AuditService, Startable {
     dataManager.update(new ItemState(arNode,
                                      ItemState.ADDED,
                                      true,
-                                     ((ItemImpl) currentItem).getInternalPath()), true);
+                                     ((ItemImpl) item).getInternalPath()), true);
 
     // jcr:primaryType
     TransientPropertyData arPrType = TransientPropertyData.createPropertyData(arNode,
@@ -266,84 +264,50 @@ public class AuditServiceImpl implements AuditService, Startable {
     dataManager.update(new ItemState(arPrType,
                                      ItemState.ADDED,
                                      true,
-                                     ((ItemImpl) currentItem).getInternalPath()), true);
+                                     ((ItemImpl) item).getInternalPath()), true);
 
     // exo:user
     dataManager.update(new ItemState(arUser,
                                      ItemState.ADDED,
                                      true,
-                                     ((ItemImpl) currentItem).getInternalPath()), true);
+                                     ((ItemImpl) item).getInternalPath()), true);
 
     // exo:created
     dataManager.update(new ItemState(arCreated,
                                      ItemState.ADDED,
                                      true,
-                                     ((ItemImpl) currentItem).getInternalPath()), true);
+                                     ((ItemImpl) item).getInternalPath()), true);
 
     // exo:eventType
     dataManager.update(new ItemState(arEventType,
                                      ItemState.ADDED,
                                      true,
-                                     ((ItemImpl) currentItem).getInternalPath()), true);
-
-    if (!currentItem.isNode()) {
-      int propertyType = ((Property) currentItem).getType();
-
-      if (propertyType != PropertyType.BINARY) {
-
-        // exo:newValue
-        TransientPropertyData arNewValue = TransientPropertyData.createPropertyData(arNode,
-                                                                                    AuditService.EXO_AUDITRECORD_NEWVALUE,
-                                                                                    propertyType,
-                                                                                    ((PropertyImpl) currentItem).isMultiValued(),
-                                                                                    ((PropertyData) ((PropertyImpl) currentItem).getData()).getValues());
-
-        dataManager.update(new ItemState(arNewValue,
-                                         ItemState.ADDED,
-                                         true,
-                                         ((ItemImpl) currentItem).getInternalPath()), true);
-
-        if (eventType == Event.PROPERTY_CHANGED) {
-
-          // exo:oldValue
-          TransientPropertyData arOldValue = TransientPropertyData.createPropertyData(arNode,
-                                                                                      AuditService.EXO_AUDITRECORD_OLDVALUE,
-                                                                                      propertyType,
-                                                                                      ((PropertyImpl) previousItem).isMultiValued(),
-                                                                                      ((PropertyData) ((PropertyImpl) previousItem).getData()).getValues());
-
-          dataManager.update(new ItemState(arOldValue,
-                                           ItemState.ADDED,
-                                           true,
-                                           ((ItemImpl) previousItem).getInternalPath()), true);
-        }
-      }
-    }
+                                     ((ItemImpl) item).getInternalPath()), true);
 
     NodeData vancestor; // nearest versionable ancestor
-    if (currentItem.isNode()) {
-      vancestor = ((NodeImpl) currentItem).getVersionableAncestor();
+    if (item.isNode()) {
+      vancestor = ((NodeImpl) item).getVersionableAncestor();
     } else {
-      vancestor = ((NodeImpl) ((Property) currentItem).getParent()).getVersionableAncestor();
+      vancestor = ((NodeImpl) ((Property) item).getParent()).getVersionableAncestor();
 
       // exo:propertyName
       TransientPropertyData propertyNameData = TransientPropertyData.createPropertyData(arNode,
                                                                                         EXO_AUDITRECORD_PROPERTYNAME,
                                                                                         PropertyType.STRING,
                                                                                         false,
-                                                                                        new TransientValueData(((ItemImpl) currentItem).getInternalName()));
+                                                                                        new TransientValueData(((ItemImpl) item).getInternalName()));
       dataManager.update(new ItemState(propertyNameData,
                                        ItemState.ADDED,
                                        true,
-                                       ((ItemImpl) currentItem).getInternalPath()), true);
+                                       ((ItemImpl) item).getInternalPath()), true);
     }
 
     if (vancestor != null) {
-      // auditable node under a version control, set related properties to the
+      // auditale node under a version control, set related properties to the
       // audit record
 
-      String versionUUID; // current base version UUID
-      String versionName; // current base version name + labels
+      String versionUUID; // currebt base version UUID
+      String versionName; // currebt base version name + labels
 
       PropertyData bvProp = (PropertyData) dataManager.getItemData(vancestor,
                                                                    new QPathEntry(Constants.JCR_BASEVERSION,
@@ -385,11 +349,11 @@ public class AuditServiceImpl implements AuditService, Startable {
       dataManager.update(new ItemState(auditVersion,
                                        ItemState.ADDED,
                                        true,
-                                       ((ItemImpl) currentItem).getInternalPath()), true);
+                                       ((ItemImpl) item).getInternalPath()), true);
       dataManager.update(new ItemState(auditVersionName,
                                        ItemState.ADDED,
                                        true,
-                                       ((ItemImpl) currentItem).getInternalPath()), true);
+                                       ((ItemImpl) item).getInternalPath()), true);
     }
 
     // Update lastRecord
@@ -408,11 +372,11 @@ public class AuditServiceImpl implements AuditService, Startable {
     dataManager.update(new ItemState(pLastRecord,
                                      ItemState.UPDATED,
                                      true,
-                                     ((ItemImpl) currentItem).getInternalPath()), true);
+                                     ((ItemImpl) item).getInternalPath()), true);
 
     if (log.isDebugEnabled())
       log.debug("Add audit record: " + " Item path="
-          + ((ItemImpl) currentItem).getLocation().getInternalPath().getAsString() + " User="
+          + ((ItemImpl) item).getLocation().getInternalPath().getAsString() + " User="
           + session.getUserID() + " EventType=" + eventType);
   }
 
@@ -575,13 +539,11 @@ public class AuditServiceImpl implements AuditService, Startable {
       // Search all auditRecords
       List<NodeData> auditRecordsNodeData = dm.getChildNodesData(auditHistory);
       for (NodeData nodeData : auditRecordsNodeData) {
-        // Searching properties
+        // Serching properties
         List<PropertyData> auditRecordNodeData = dm.getChildPropertiesData(nodeData);
         // define variables
         String user = null;
         InternalQName propertyName = null;
-        Value[] oldValue = null;
-        Value[] newValue = null;
         int eventType = -1;
         Calendar date = null;
         // version stuff
@@ -613,18 +575,6 @@ public class AuditServiceImpl implements AuditService, Startable {
                                    .getName()
                                    .equals(AuditService.EXO_AUDITRECORD_AUDITVERSIONNAME)) {
               versionName = ValueDataConvertor.readString(value);
-            } else if (propertyData.getQPath()
-                                   .getName()
-                                   .equals(AuditService.EXO_AUDITRECORD_OLDVALUE)) {
-              oldValue = new Value[propertyData.getValues().size()];
-              for (int i = 0; i < propertyData.getValues().size(); i++)
-                oldValue[i] = vf.loadValue(propertyData.getValues().get(i), propertyData.getType());
-            } else if (propertyData.getQPath()
-                                   .getName()
-                                   .equals(AuditService.EXO_AUDITRECORD_NEWVALUE)) {
-              newValue = new Value[propertyData.getValues().size()];
-              for (int i = 0; i < propertyData.getValues().size(); i++)
-                newValue[i] = vf.loadValue(propertyData.getValues().get(i), propertyData.getType());
             }
           }
         } catch (UnsupportedEncodingException e) {
@@ -637,14 +587,7 @@ public class AuditServiceImpl implements AuditService, Startable {
           throw new RepositoryException(e);
         }
         // add audit record
-        auditRecords.add(new AuditRecord(user,
-                                         eventType,
-                                         date,
-                                         propertyName,
-                                         oldValue,
-                                         newValue,
-                                         version,
-                                         versionName));
+        auditRecords.add(new AuditRecord(user, eventType, date, propertyName, version, versionName));
       }
       return new AuditHistory(node, auditRecords);
 

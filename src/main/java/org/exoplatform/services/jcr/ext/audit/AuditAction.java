@@ -34,15 +34,14 @@ public class AuditAction implements Action {
 
   public boolean execute(Context ctx) throws Exception {
 
-    ItemImpl currentItem = (ItemImpl) ctx.get("currentItem");
-    ItemImpl previousItem = (ItemImpl) ctx.get("previousItem");
+    ItemImpl item = (ItemImpl) ctx.get("currentItem");
     int event = (Integer) ctx.get("event");
 
     NodeImpl node;
-    if (currentItem.isNode())
-      node = (NodeImpl) currentItem;
+    if (item.isNode())
+      node = (NodeImpl) item;
     else
-      node = currentItem.getParent();
+      node = item.getParent();
 
     if (node.isNodeType(AuditService.EXO_AUDITABLE)) {
       AuditService auditService = (AuditService) ((ExoContainer) ctx.get("exocontainer")).getComponentInstanceOfType(AuditService.class);
@@ -50,10 +49,10 @@ public class AuditAction implements Action {
       if (!auditService.hasHistory(node))
         auditService.createHistory(node);
 
-      auditService.addRecord(previousItem, currentItem, event);
+      auditService.addRecord(item, event);
       if (log.isDebugEnabled()) {
         log.debug("Record '" + ExtendedEventType.nameFromValue(event) + "' added for "
-            + currentItem.getPath());
+            + item.getPath());
       }
       return true;
     }
