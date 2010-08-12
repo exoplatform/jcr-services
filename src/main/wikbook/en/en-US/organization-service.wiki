@@ -1,0 +1,43 @@
+h1. JCR Organization service
+
+This is an implementation of the exo.core.component.organization.api API. The information will be stored in the root node exo:organization of the workspace. The workspace name has to be configured in the configuration file (see below).
+
+* You need to comment out the previous initialization of the organization service, e.g. DummyOrganizationService
+{code:xml}
+<!--component>
+  <type>org.exoplatform.services.organization.impl.mock.DummyOrganizationService</type>
+</component-->
+{code}
+
+* Add jcr organization service
+{code:xml}
+<component>
+  <key>org.exoplatform.services.organization.OrganizationService</key>
+  <type>org.exoplatform.services.jcr.ext.organization.JCROrganizationServiceImpl</type>
+  <init-params>
+    <value-param>
+      <name>storage-workspace</name>
+      <description>Workspace in default repository where organization storage will be created</description>
+      <value>ws</value>
+    </value-param>
+  </init-params>
+</component>
+{code}
+ 
+where storage-workspace is the name of the workspace in the default repository where the organization storage will be created.
+
+Sice eXo JCR 1.11 you can add two new params:
+{code:xml}
+<value-param>
+  <name>repository</name>
+  <description>The name of repository where organization storage will be created</description>
+  <value>db1</value>
+</value-param>
+<value-param>
+  <name>storage-path</name>
+  <description>The relative path where organization storage will be created</description>
+  <value>/exo:organization</value>
+</value-param>
+{code}
+
+where repository is the name of the repository where the organization storage will be created storage-path - the relative path to the stored data
