@@ -69,7 +69,7 @@ public class UserByQueryJCRUserListAccess extends JCRUserListAccess
       {
          int result = 0;
 
-         Node storageNode = (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_EXO_USERS);
+         Node storageNode = (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_JOS_USERS);
          NodeIterator results = storageNode.getNodes();
 
          while (results.hasNext())
@@ -105,7 +105,7 @@ public class UserByQueryJCRUserListAccess extends JCRUserListAccess
       {
          User[] users = new User[length];
 
-         Node storageNode = (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_EXO_USERS);
+         Node storageNode = (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_JOS_USERS);
          NodeIterator results = storageNode.getNodes();
 
          for (int p = 0, counter = 0; counter < length;)
@@ -143,24 +143,24 @@ public class UserByQueryJCRUserListAccess extends JCRUserListAccess
       }
 
       if (query.getFirstName() != null
-         && !isLike(uHandler.readStringProperty(uNode, UserHandlerImpl.EXO_FIRST_NAME), query.getFirstName(), true))
+         && !isLike(uHandler.readStringProperty(uNode, UserHandlerImpl.JOS_FIRST_NAME), query.getFirstName(), true))
       {
          return false;
       }
 
       if (query.getLastName() != null
-         && !isLike(uHandler.readStringProperty(uNode, UserHandlerImpl.EXO_LAST_NAME), query.getLastName(), true))
+         && !isLike(uHandler.readStringProperty(uNode, UserHandlerImpl.JOS_LAST_NAME), query.getLastName(), true))
       {
          return false;
       }
 
       if (query.getEmail() != null
-         && !isLike(uHandler.readStringProperty(uNode, UserHandlerImpl.EXO_EMAIL), query.getEmail(), false))
+         && !isLike(uHandler.readStringProperty(uNode, UserHandlerImpl.JOS_EMAIL), query.getEmail(), false))
       {
          return false;
       }
 
-      Date lastLoginTime = uHandler.readDateProperty(uNode, UserHandlerImpl.EXO_LAST_LOGIN_TIME);
+      Date lastLoginTime = uHandler.readDateProperty(uNode, UserHandlerImpl.JOS_LAST_LOGIN_TIME);
       if (query.getFromLoginDate() != null && query.getFromLoginDate().getTime() > lastLoginTime.getTime())
       {
          return false;

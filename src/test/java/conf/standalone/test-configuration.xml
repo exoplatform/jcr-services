@@ -71,6 +71,7 @@
           <properties-param>
             <name>namespaces</name>
             <property name="dc" value="http://purl.org/dc/elements/1.1/"/>
+            <property name="jos" value="http://www.exoplatform.com/jcr-services/organization-service/1.0/"/>
           </properties-param>
         </init-params>
       </component-plugin>

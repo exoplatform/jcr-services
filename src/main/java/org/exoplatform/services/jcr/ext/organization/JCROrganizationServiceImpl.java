@@ -19,16 +19,6 @@
  */
 package org.exoplatform.services.jcr.ext.organization;
 
-import java.io.IOException;
-
-import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.exoplatform.services.log.Log;
 import org.exoplatform.container.configuration.ConfigurationException;
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.container.xml.ValueParam;
@@ -38,13 +28,22 @@ import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.services.jcr.ext.registry.RegistryEntry;
 import org.exoplatform.services.jcr.ext.registry.RegistryService;
-import org.exoplatform.services.jcr.impl.core.RepositoryImpl;
 import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
 import org.exoplatform.services.organization.BaseOrganizationService;
 import org.picocontainer.Startable;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
+
+import java.io.IOException;
+
+import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Created by The eXo Platform SAS. <br/>
@@ -216,11 +215,11 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
          catch (PathNotFoundException e)
          {
             // will create new
-            Node storage = session.getRootNode().addNode(storagePath.substring(1), "exo:organizationStorage");
+            Node storage = session.getRootNode().addNode(storagePath.substring(1), "jos:organizationStorage");
 
-            storage.addNode("exo:users", "exo:organizationUsers");
-            storage.addNode("exo:groups", "exo:organizationGroups");
-            storage.addNode("exo:membershipTypes", "exo:organizationMembershipTypes");
+            storage.addNode(UserHandlerImpl.STORAGE_JOS_USERS, "jos:organizationUsers");
+            storage.addNode(GroupHandlerImpl.STORAGE_JOS_GROUPS, "jos:organizationGroups");
+            storage.addNode(MembershipTypeHandlerImpl.STORAGE_JOS_MEMBERSHIP_TYPES, "jos:organizationMembershipTypes");
 
             session.save(); // storage done configure
 

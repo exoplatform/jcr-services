@@ -16,6 +16,16 @@
  */
 package org.exoplatform.services.jcr.ext.organization;
 
+import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
+import org.exoplatform.services.organization.Group;
+import org.exoplatform.services.organization.Membership;
+import org.exoplatform.services.organization.MembershipEventListener;
+import org.exoplatform.services.organization.MembershipEventListenerHandler;
+import org.exoplatform.services.organization.MembershipHandler;
+import org.exoplatform.services.organization.MembershipType;
+import org.exoplatform.services.organization.User;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,16 +39,6 @@ import javax.jcr.Session;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 import javax.naming.InvalidNameException;
-
-import org.exoplatform.services.log.Log;
-import org.exoplatform.services.log.ExoLogger;
-import org.exoplatform.services.organization.Group;
-import org.exoplatform.services.organization.Membership;
-import org.exoplatform.services.organization.MembershipEventListener;
-import org.exoplatform.services.organization.MembershipEventListenerHandler;
-import org.exoplatform.services.organization.MembershipHandler;
-import org.exoplatform.services.organization.MembershipType;
-import org.exoplatform.services.organization.User;
 
 /**
  * Created by The eXo Platform SAS. NOTE: Check if nodetypes and/or existing
@@ -54,13 +54,13 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
    /**
     * The membership type property that contain reference to linked group.
     */
-   public static final String EXO_GROUP = "exo:group";
+   public static final String JOS_GROUP = "jos:group";
 
    /**
     * The membership type property that contain reference to linked membership
     * type.
     */
-   public static final String EXO_MEMBERSHIP_TYPE = "exo:membershipType";
+   public static final String JOS_MEMBERSHIP_TYPE = "jos:membershipType";
 
    /**
     * The list of listeners to broadcast the events.
@@ -125,28 +125,28 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
    {
       try
       {
-         if (!session.itemExists(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_EXO_USERS + "/"
+         if (!session.itemExists(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_JOS_USERS + "/"
             + m.getUserName()))
          {
             return;
          }
 
-         if (!session.itemExists(service.getStoragePath() + "/" + GroupHandlerImpl.STORAGE_EXO_GROUPS + m.getGroupId()))
+         if (!session.itemExists(service.getStoragePath() + "/" + GroupHandlerImpl.STORAGE_JOS_GROUPS + m.getGroupId()))
          {
             return;
          }
 
          if (!session.itemExists(service.getStoragePath() + "/"
-            + MembershipTypeHandlerImpl.STORAGE_EXO_MEMBERSHIP_TYPES + "/" + m.getMembershipType()))
+            + MembershipTypeHandlerImpl.STORAGE_JOS_MEMBERSHIP_TYPES + "/" + m.getMembershipType()))
          {
             return;
          }
 
          Node uNode =
-            (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_EXO_USERS + "/"
+            (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_JOS_USERS + "/"
                + m.getUserName());
 
-         Node mNode = uNode.addNode(UserHandlerImpl.EXO_MEMBERSHIP);
+         Node mNode = uNode.addNode(UserHandlerImpl.JOS_MEMBERSHIP);
 
          if (broadcast)
          {
@@ -278,14 +278,14 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
             {
 
                Node uNode =
-                  (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_EXO_USERS + "/"
+                  (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_JOS_USERS + "/"
                      + userName);
-               for (NodeIterator mNodes = uNode.getNodes(UserHandlerImpl.EXO_MEMBERSHIP); mNodes.hasNext();)
+               for (NodeIterator mNodes = uNode.getNodes(UserHandlerImpl.JOS_MEMBERSHIP); mNodes.hasNext();)
                {
                   Node mNode = mNodes.nextNode();
 
-                  if (readStringProperty(mNode, EXO_GROUP).equals(groupUUId)
-                     && readStringProperty(mNode, EXO_MEMBERSHIP_TYPE).equals(membershipTypeUUId))
+                  if (readStringProperty(mNode, JOS_GROUP).equals(groupUUId)
+                     && readStringProperty(mNode, JOS_MEMBERSHIP_TYPE).equals(membershipTypeUUId))
                   {
                      if (membership != null)
                      {
@@ -353,7 +353,8 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
          String groupUUID = getGroupUUID(session, group.getId());
          if (groupUUID != null)
          {
-            String statement = "select * from exo:userMembership where exo:group='" + groupUUID + "'";
+            String statement =
+               "select * from jos:userMembership where " + MembershipHandlerImpl.JOS_GROUP + "='" + groupUUID + "'";
             Query mQuery = session.getWorkspace().getQueryManager().createQuery(statement, Query.SQL);
             QueryResult mRes = mQuery.execute();
             for (NodeIterator mNodes = mRes.getNodes(); mNodes.hasNext();)
@@ -407,10 +408,10 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
       try
       {
          Node uNode =
-            (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_EXO_USERS + "/" + userName);
+            (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_JOS_USERS + "/" + userName);
 
          // find membership
-         for (NodeIterator mNodes = uNode.getNodes(UserHandlerImpl.EXO_MEMBERSHIP); mNodes.hasNext();)
+         for (NodeIterator mNodes = uNode.getNodes(UserHandlerImpl.JOS_MEMBERSHIP); mNodes.hasNext();)
          {
             types.add(readObjectFromNode(session, mNodes.nextNode()));
          }
@@ -469,15 +470,15 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
          if (groupUUId != null)
          {
             Node uNode =
-               (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_EXO_USERS + "/"
+               (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_JOS_USERS + "/"
                   + userName);
 
-            for (NodeIterator mNodes = uNode.getNodes(UserHandlerImpl.EXO_MEMBERSHIP); mNodes.hasNext();)
+            for (NodeIterator mNodes = uNode.getNodes(UserHandlerImpl.JOS_MEMBERSHIP); mNodes.hasNext();)
             {
                Node mNode = mNodes.nextNode();
 
                // check group and add
-               if (readStringProperty(mNode, EXO_GROUP).equals(groupUUId))
+               if (readStringProperty(mNode, JOS_GROUP).equals(groupUUId))
                {
                   types.add(readObjectFromNode(session, mNode));
                }
@@ -659,9 +660,9 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
       try
       {
          Node uNode =
-            (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_EXO_USERS + "/" + userName);
+            (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_JOS_USERS + "/" + userName);
 
-         for (NodeIterator mNodes = uNode.getNodes(UserHandlerImpl.EXO_MEMBERSHIP); mNodes.hasNext();)
+         for (NodeIterator mNodes = uNode.getNodes(UserHandlerImpl.JOS_MEMBERSHIP); mNodes.hasNext();)
          {
             Node mNode = mNodes.nextNode();
             Membership membership = readObjectFromNode(session, mNode);
@@ -720,7 +721,7 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
    {
       try
       {
-         String mtPath = service.getStoragePath() + "/" + MembershipTypeHandlerImpl.STORAGE_EXO_MEMBERSHIP_TYPES;
+         String mtPath = service.getStoragePath() + "/" + MembershipTypeHandlerImpl.STORAGE_JOS_MEMBERSHIP_TYPES;
          return (type != null && type.length() != 0 && session.itemExists(mtPath + "/" + type) ? ((Node)session
             .getItem(mtPath + "/" + type)).getUUID() : null);
 
@@ -744,7 +745,7 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
    {
       try
       {
-         String gPath = service.getStoragePath() + "/" + GroupHandlerImpl.STORAGE_EXO_GROUPS;
+         String gPath = service.getStoragePath() + "/" + GroupHandlerImpl.STORAGE_JOS_GROUPS;
          return (groupId != null && groupId.length() != 0 && session.itemExists(gPath + groupId) ? ((Node)session
             .getItem(gPath + groupId)).getUUID() : null);
 
@@ -790,7 +791,7 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
       try
       {
          Node gNode = session.getNodeByUUID(UUID);
-         return readStringProperty(gNode, GroupHandlerImpl.EXO_GROUP_ID);
+         return readStringProperty(gNode, GroupHandlerImpl.JOS_GROUP_ID);
       }
       catch (Exception e)
       {
@@ -811,7 +812,7 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
    private void createAnyMembershipType(Session session, String name, boolean broadcast) throws Exception
    {
       if (name.equals("*")
-         && !session.itemExists(service.getStoragePath() + "/" + MembershipTypeHandlerImpl.STORAGE_EXO_MEMBERSHIP_TYPES
+         && !session.itemExists(service.getStoragePath() + "/" + MembershipTypeHandlerImpl.STORAGE_JOS_MEMBERSHIP_TYPES
             + "/" + name))
       {
 
@@ -835,8 +836,8 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
    {
       try
       {
-         String groupUUID = readStringProperty(node, EXO_GROUP);
-         String membershipTypeUUID = readStringProperty(node, EXO_MEMBERSHIP_TYPE);
+         String groupUUID = readStringProperty(node, JOS_GROUP);
+         String membershipTypeUUID = readStringProperty(node, JOS_MEMBERSHIP_TYPE);
 
          String groupId = getGroupId(session, groupUUID);
          String membershipType = getMembershipType(session, membershipTypeUUID);
@@ -866,8 +867,8 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
          String groupUUId = getGroupUUID(session, m.getGroupId());
          String membershipTypeUUId = getMembershipTypeUUID(session, m.getMembershipType());
 
-         node.setProperty(EXO_GROUP, groupUUId);
-         node.setProperty(EXO_MEMBERSHIP_TYPE, membershipTypeUUId);
+         node.setProperty(JOS_GROUP, groupUUId);
+         node.setProperty(JOS_MEMBERSHIP_TYPE, membershipTypeUUId);
 
       }
       catch (Exception e)
