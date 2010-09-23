@@ -16,6 +16,16 @@
  */
 package org.exoplatform.services.jcr.ext.organization;
 
+import org.exoplatform.commons.utils.LazyPageList;
+import org.exoplatform.commons.utils.ListAccess;
+import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
+import org.exoplatform.services.organization.Query;
+import org.exoplatform.services.organization.User;
+import org.exoplatform.services.organization.UserEventListener;
+import org.exoplatform.services.organization.UserEventListenerHandler;
+import org.exoplatform.services.organization.UserHandler;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -24,16 +34,6 @@ import java.util.List;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.Session;
-
-import org.exoplatform.services.log.Log;
-import org.exoplatform.commons.utils.LazyPageList;
-import org.exoplatform.commons.utils.ListAccess;
-import org.exoplatform.services.log.ExoLogger;
-import org.exoplatform.services.organization.Query;
-import org.exoplatform.services.organization.User;
-import org.exoplatform.services.organization.UserEventListener;
-import org.exoplatform.services.organization.UserEventListenerHandler;
-import org.exoplatform.services.organization.UserHandler;
 
 /**
  * Created by The eXo Platform SAS. Date: 24.07.2008
@@ -48,47 +48,47 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
    /**
     * The user property that contain the date of creation.
     */
-   public static final String EXO_CREATED_DATE = "exo:createdDate";
+   public static final String JOS_CREATED_DATE = "jos:createdDate";
 
    /**
     * The user property that contain email.
     */
-   public static final String EXO_EMAIL = "exo:email";
+   public static final String JOS_EMAIL = "jos:email";
 
    /**
     * The user property that contain fist name.
     */
-   public static final String EXO_FIRST_NAME = "exo:firstName";
+   public static final String JOS_FIRST_NAME = "jos:firstName";
 
    /**
     * The user property that contain last login time.
     */
-   public static final String EXO_LAST_LOGIN_TIME = "exo:lastLoginTime";
+   public static final String JOS_LAST_LOGIN_TIME = "jos:lastLoginTime";
 
    /**
     * The user property that contain last name.
     */
-   public static final String EXO_LAST_NAME = "exo:lastName";
+   public static final String JOS_LAST_NAME = "jos:lastName";
 
    /**
     * The child node to storage membership properties.
     */
-   public static final String EXO_MEMBERSHIP = "exo:membership";
+   public static final String JOS_MEMBERSHIP = "jos:membership";
 
    /**
     * The user property that contain password.
     */
-   public static final String EXO_PASSWORD = "exo:password";
+   public static final String JOS_PASSWORD = "jos:password";
 
    /**
     * The child node to storage user addition information.
     */
-   public static final String EXO_PROFILE = "exo:profile";
+   public static final String JOS_PROFILE = "jos:profile";
 
    /**
     * The node to storage users.
     */
-   public static final String STORAGE_EXO_USERS = "exo:users";
+   public static final String STORAGE_JOS_USERS = "jos:users";
 
    /**
     * The list of listeners to broadcast the events.
@@ -158,11 +158,11 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
 
       try
       {
-         Node uNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_EXO_USERS + "/" + username);
-         boolean authenticated = readStringProperty(uNode, EXO_PASSWORD).equals(password);
+         Node uNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_USERS + "/" + username);
+         boolean authenticated = readStringProperty(uNode, JOS_PASSWORD).equals(password);
          if (authenticated)
          {
-            uNode.setProperty(EXO_LAST_LOGIN_TIME, Calendar.getInstance());
+            uNode.setProperty(JOS_LAST_LOGIN_TIME, Calendar.getInstance());
          }
          return authenticated;
 
@@ -214,7 +214,7 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
 
       try
       {
-         Node storageNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_EXO_USERS);
+         Node storageNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_USERS);
          Node uNode = storageNode.addNode(user.getUserName());
 
          // set default value for createdDate
@@ -291,7 +291,7 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
 
       try
       {
-         Node uNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_EXO_USERS + "/" + userName);
+         Node uNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_USERS + "/" + userName);
          return readObjectFromNode(uNode);
 
       }
@@ -408,7 +408,7 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
 
       try
       {
-         Node uNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_EXO_USERS + "/" + userName);
+         Node uNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_USERS + "/" + userName);
          User user = readObjectFromNode(uNode);
 
          if (broadcast)
@@ -534,12 +534,12 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
       try
       {
          User user = new UserImpl(node.getName(), node.getUUID());
-         user.setCreatedDate(readDateProperty(node, EXO_CREATED_DATE));
-         user.setLastLoginTime(readDateProperty(node, EXO_LAST_LOGIN_TIME));
-         user.setEmail(readStringProperty(node, EXO_EMAIL));
-         user.setPassword(readStringProperty(node, EXO_PASSWORD));
-         user.setFirstName(readStringProperty(node, EXO_FIRST_NAME));
-         user.setLastName(readStringProperty(node, EXO_LAST_NAME));
+         user.setCreatedDate(readDateProperty(node, JOS_CREATED_DATE));
+         user.setLastLoginTime(readDateProperty(node, JOS_LAST_LOGIN_TIME));
+         user.setEmail(readStringProperty(node, JOS_EMAIL));
+         user.setPassword(readStringProperty(node, JOS_PASSWORD));
+         user.setFirstName(readStringProperty(node, JOS_FIRST_NAME));
+         user.setLastName(readStringProperty(node, JOS_LAST_NAME));
          return user;
       }
       catch (Exception e)
@@ -561,25 +561,25 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
       try
       {
          Calendar calendar = null;
-         node.setProperty(EXO_EMAIL, user.getEmail());
-         node.setProperty(EXO_FIRST_NAME, user.getFirstName());
-         node.setProperty(EXO_LAST_NAME, user.getLastName());
-         node.setProperty(EXO_PASSWORD, user.getPassword());
+         node.setProperty(JOS_EMAIL, user.getEmail());
+         node.setProperty(JOS_FIRST_NAME, user.getFirstName());
+         node.setProperty(JOS_LAST_NAME, user.getLastName());
+         node.setProperty(JOS_PASSWORD, user.getPassword());
 
          if (user.getLastLoginTime() == null)
          {
-            node.setProperty(EXO_LAST_LOGIN_TIME, calendar);
+            node.setProperty(JOS_LAST_LOGIN_TIME, calendar);
          }
          else
          {
             calendar = Calendar.getInstance();
             calendar.setTime(user.getLastLoginTime());
-            node.setProperty(EXO_LAST_LOGIN_TIME, calendar);
+            node.setProperty(JOS_LAST_LOGIN_TIME, calendar);
          }
 
          calendar = Calendar.getInstance();
          calendar.setTime(user.getCreatedDate());
-         node.setProperty(EXO_CREATED_DATE, calendar);
+         node.setProperty(JOS_CREATED_DATE, calendar);
 
       }
       catch (Exception e)

@@ -16,6 +16,13 @@
  */
 package org.exoplatform.services.jcr.ext.organization;
 
+import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
+import org.exoplatform.services.organization.UserProfile;
+import org.exoplatform.services.organization.UserProfileEventListener;
+import org.exoplatform.services.organization.UserProfileEventListenerHandler;
+import org.exoplatform.services.organization.UserProfileHandler;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -27,13 +34,6 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.Session;
-
-import org.exoplatform.services.log.Log;
-import org.exoplatform.services.log.ExoLogger;
-import org.exoplatform.services.organization.UserProfile;
-import org.exoplatform.services.organization.UserProfileEventListener;
-import org.exoplatform.services.organization.UserProfileEventListenerHandler;
-import org.exoplatform.services.organization.UserProfileHandler;
 
 /**
  * Created by The eXo Platform SAS Date: 24.07.2008
@@ -50,7 +50,7 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
    /**
     * The child not to storage users profile properties.
     */
-   public static final String EXO_ATTRIBUTES = "exo:attributes";
+   public static final String JOS_ATTRIBUTES = "jos:attributes";
 
    /**
     * The list of listeners to broadcast events.
@@ -189,7 +189,7 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
       {
          List<UserProfile> types = new ArrayList<UserProfile>();
 
-         Node storagePath = (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_EXO_USERS);
+         Node storagePath = (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_JOS_USERS);
          for (NodeIterator nodes = storagePath.getNodes(); nodes.hasNext();)
          {
             UserProfile userProfile = readUserProfile(session, nodes.nextNode().getName());
@@ -244,9 +244,9 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
       try
       {
          Node profileNode =
-            (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_EXO_USERS + "/" + userName
-               + "/" + UserHandlerImpl.EXO_PROFILE);
-         UserProfile userProfile = readObjectFromNode(session, profileNode.getNode(EXO_ATTRIBUTES));
+            (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_JOS_USERS + "/" + userName
+               + "/" + UserHandlerImpl.JOS_PROFILE);
+         UserProfile userProfile = readObjectFromNode(session, profileNode.getNode(JOS_ATTRIBUTES));
 
          if (broadcast)
          {
@@ -322,20 +322,20 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
       try
       {
          Node uNode =
-            (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_EXO_USERS + "/"
+            (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_JOS_USERS + "/"
                + profile.getUserName());
 
-         if (!session.itemExists(uNode.getPath() + "/" + UserHandlerImpl.EXO_PROFILE))
+         if (!session.itemExists(uNode.getPath() + "/" + UserHandlerImpl.JOS_PROFILE))
          {
-            uNode.addNode(UserHandlerImpl.EXO_PROFILE);
+            uNode.addNode(UserHandlerImpl.JOS_PROFILE);
          }
-         Node profileNode = uNode.getNode(UserHandlerImpl.EXO_PROFILE);
+         Node profileNode = uNode.getNode(UserHandlerImpl.JOS_PROFILE);
 
-         if (!session.itemExists(profileNode.getPath() + "/" + EXO_ATTRIBUTES))
+         if (!session.itemExists(profileNode.getPath() + "/" + JOS_ATTRIBUTES))
          {
-            profileNode.addNode(EXO_ATTRIBUTES);
+            profileNode.addNode(JOS_ATTRIBUTES);
          }
-         Node attrNode = profileNode.getNode(EXO_ATTRIBUTES);
+         Node attrNode = profileNode.getNode(JOS_ATTRIBUTES);
 
          if (broadcast)
          {
@@ -379,8 +379,8 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
       try
       {
          Node attrNode =
-            (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_EXO_USERS + "/" + userName
-               + "/" + UserHandlerImpl.EXO_PROFILE + "/" + EXO_ATTRIBUTES);
+            (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_JOS_USERS + "/" + userName
+               + "/" + UserHandlerImpl.JOS_PROFILE + "/" + JOS_ATTRIBUTES);
 
          return readObjectFromNode(session, attrNode);
 
@@ -414,7 +414,8 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
             Property prop = props.nextProperty();
 
             // ignore system properties
-            if (!(prop.getName()).startsWith("jcr:") && !(prop.getName()).startsWith("exo:"))
+            if (!(prop.getName()).startsWith("jcr:") && !(prop.getName()).startsWith("exo:")
+               && !(prop.getName()).startsWith("jos:"))
             {
                userProfile.setAttribute(prop.getName(), prop.getString());
             }

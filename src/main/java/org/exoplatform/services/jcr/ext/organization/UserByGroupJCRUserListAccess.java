@@ -16,6 +16,8 @@
  */
 package org.exoplatform.services.jcr.ext.organization;
 
+import org.exoplatform.services.organization.User;
+
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
@@ -23,96 +25,113 @@ import javax.jcr.Session;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 
-import org.exoplatform.services.organization.User;
-
 /**
  * Created by The eXo Platform SAS.
  * 
  * @author <a href="mailto:anatoliy.bazko@exoplatform.com.ua">Anatoliy Bazko</a>
  * @version $Id: UserByGroupJCRUserListAccess.java 111 2008-11-11 11:11:11Z $
  */
-public class UserByGroupJCRUserListAccess extends JCRUserListAccess {
+public class UserByGroupJCRUserListAccess extends JCRUserListAccess
+{
 
-  /**
-   * The groupId.
-   */
-  private String groupId;
+   /**
+    * The groupId.
+    */
+   private String groupId;
 
-  /**
-   * JCRUserListAccess constructor.
-   * 
-   * @param service
-   *          The JCROrganizationService
-   * @param groupId
-   *          The group identifier
-   */
-  public UserByGroupJCRUserListAccess(JCROrganizationServiceImpl service, String groupId) {
-    super(service);
-    this.groupId = groupId;
-  }
+   /**
+    * JCRUserListAccess constructor.
+    * 
+    * @param service
+    *          The JCROrganizationService
+    * @param groupId
+    *          The group identifier
+    */
+   public UserByGroupJCRUserListAccess(JCROrganizationServiceImpl service, String groupId)
+   {
+      super(service);
+      this.groupId = groupId;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  protected int getSize(Session session) throws Exception {
-    try {
-      Node gNode = (Node) session.getItem(service.getStoragePath() + "/"
-          + GroupHandlerImpl.STORAGE_EXO_GROUPS + groupId);
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   protected int getSize(Session session) throws Exception
+   {
+      try
+      {
+         Node gNode =
+            (Node)session.getItem(service.getStoragePath() + "/" + GroupHandlerImpl.STORAGE_JOS_GROUPS + groupId);
 
-      String statement = "select * from exo:userMembership where exo:group='" + gNode.getUUID()
-          + "'";
-      Query mquery = session.getWorkspace().getQueryManager().createQuery(statement, Query.SQL);
-      QueryResult mres = mquery.execute();
+         String statement =
+            "select * from jos:userMembership where " + MembershipHandlerImpl.JOS_GROUP + "='" + gNode.getUUID() + "'";
+         Query mquery = session.getWorkspace().getQueryManager().createQuery(statement, Query.SQL);
+         QueryResult mres = mquery.execute();
 
-      return (int) mres.getNodes().getSize();
-    } catch (PathNotFoundException e) {
-      return 0;
-    } catch (Exception e) {
-      throw new OrganizationServiceException("Can not get list size", e);
-    }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  protected User[] load(Session session, int index, int length) throws Exception {
-    if (index < 0)
-      throw new IllegalArgumentException("Illegal index: index must be a positive number");
-
-    if (length < 0)
-      throw new IllegalArgumentException("Illegal length: length must be a positive number");
-
-    try {
-      User[] users = new User[length];
-
-      Node gNode = (Node) session.getItem(service.getStoragePath() + "/"
-          + GroupHandlerImpl.STORAGE_EXO_GROUPS + groupId);
-
-      String statement = "select * from exo:userMembership where exo:group='" + gNode.getUUID()
-          + "'";
-      Query mquery = session.getWorkspace().getQueryManager().createQuery(statement, Query.SQL);
-      QueryResult mres = mquery.execute();
-
-      NodeIterator results = mres.getNodes();
-
-      UserHandlerImpl uHandler = new UserHandlerImpl(service);
-
-      for (int p = 0, counter = 0; counter < length; p++) {
-        if (!results.hasNext())
-          throw new IllegalArgumentException("Illegal index or length: sum of the index and the length cannot be greater than the list size");
-
-        Node result = results.nextNode();
-
-        if (p >= index) {
-          users[counter++] = uHandler.readObjectFromNode(result);
-        }
+         return (int)mres.getNodes().getSize();
       }
+      catch (PathNotFoundException e)
+      {
+         return 0;
+      }
+      catch (Exception e)
+      {
+         throw new OrganizationServiceException("Can not get list size", e);
+      }
+   }
 
-      return users;
-    } catch (PathNotFoundException e) {
-      return new User[0];
-    } catch (Exception e) {
-      throw new OrganizationServiceException("Can not load users", e);
-    }
-  }
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   protected User[] load(Session session, int index, int length) throws Exception
+   {
+      if (index < 0)
+         throw new IllegalArgumentException("Illegal index: index must be a positive number");
+
+      if (length < 0)
+         throw new IllegalArgumentException("Illegal length: length must be a positive number");
+
+      try
+      {
+         User[] users = new User[length];
+
+         Node gNode =
+            (Node)session.getItem(service.getStoragePath() + "/" + GroupHandlerImpl.STORAGE_JOS_GROUPS + groupId);
+
+         String statement =
+            "select * from jos:userMembership where " + MembershipHandlerImpl.JOS_GROUP + "='" + gNode.getUUID() + "'";
+         Query mquery = session.getWorkspace().getQueryManager().createQuery(statement, Query.SQL);
+         QueryResult mres = mquery.execute();
+
+         NodeIterator results = mres.getNodes();
+
+         UserHandlerImpl uHandler = new UserHandlerImpl(service);
+
+         for (int p = 0, counter = 0; counter < length; p++)
+         {
+            if (!results.hasNext())
+               throw new IllegalArgumentException(
+                  "Illegal index or length: sum of the index and the length cannot be greater than the list size");
+
+            Node result = results.nextNode();
+
+            if (p >= index)
+            {
+               users[counter++] = uHandler.readObjectFromNode(result);
+            }
+         }
+
+         return users;
+      }
+      catch (PathNotFoundException e)
+      {
+         return new User[0];
+      }
+      catch (Exception e)
+      {
+         throw new OrganizationServiceException("Can not load users", e);
+      }
+   }
 }

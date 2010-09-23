@@ -16,6 +16,13 @@
  */
 package org.exoplatform.services.jcr.ext.organization;
 
+import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
+import org.exoplatform.services.organization.Group;
+import org.exoplatform.services.organization.GroupEventListener;
+import org.exoplatform.services.organization.GroupEventListenerHandler;
+import org.exoplatform.services.organization.GroupHandler;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -27,13 +34,6 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.Session;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
-
-import org.exoplatform.services.log.Log;
-import org.exoplatform.services.log.ExoLogger;
-import org.exoplatform.services.organization.Group;
-import org.exoplatform.services.organization.GroupEventListener;
-import org.exoplatform.services.organization.GroupEventListenerHandler;
-import org.exoplatform.services.organization.GroupHandler;
 
 /**
  * Created by The eXo Platform SAS Date: 24.07.2008
@@ -48,27 +48,27 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
    /**
     * The group property that contain description.
     */
-   public static final String EXO_DESCRIPTION = "exo:description";
+   public static final String JOS_DESCRIPTION = "jos:description";
 
    /**
     * The group property that contain groupId.
     */
-   public static final String EXO_GROUP_ID = "exo:groupId";
+   public static final String JOS_GROUP_ID = "jos:groupId";
 
    /**
     * The group property that contain parentId.
     */
-   public static final String EXO_PARENT_ID = "exo:parentId";
+   public static final String JOS_PARENT_ID = "jos:parentId";
 
    /**
     * The group property that contain label.
     */
-   public static final String EXO_LABEL = "exo:label";
+   public static final String JOS_LABEL = "jos:label";
 
    /**
     * The node to storage groups.
     */
-   public static final String STORAGE_EXO_GROUPS = "exo:groups";
+   public static final String STORAGE_JOS_GROUPS = "jos:groups";
 
    /**
     * The list of listeners to broadcast events.
@@ -135,8 +135,8 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
       try
       {
          String parentId = (parent == null) ? "" : parent.getId();
-         Node parentNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_EXO_GROUPS + parentId);
-         Node gNode = parentNode.addNode(child.getGroupName(), "exo:hierarchyGroup");
+         Node parentNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_GROUPS + parentId);
+         Node gNode = parentNode.addNode(child.getGroupName(), "jos:hierarchyGroup");
 
          Group group = new GroupImpl(child.getGroupName(), parentId, gNode.getUUID());
          group.setDescription(child.getDescription());
@@ -232,7 +232,7 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
 
       try
       {
-         Node gNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_EXO_GROUPS + groupId);
+         Node gNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_GROUPS + groupId);
          return readObjectFromNode(gNode);
 
       }
@@ -286,23 +286,23 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
       try
       {
          Node user =
-            (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_EXO_USERS + "/" + userName);
-         NodeIterator memberships = user.getNodes("exo:membership");
+            (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_JOS_USERS + "/" + userName);
+         NodeIterator memberships = user.getNodes(UserHandlerImpl.JOS_MEMBERSHIP);
          nextGroup : while (memberships.hasNext())
          {
             Node membership = memberships.nextNode();
 
             if (membershipType != null
-               && !membershipType.equals(membership.getProperty(MembershipHandlerImpl.EXO_MEMBERSHIP_TYPE).getNode()
+               && !membershipType.equals(membership.getProperty(MembershipHandlerImpl.JOS_MEMBERSHIP_TYPE).getNode()
                   .getName()))
             {
                continue nextGroup; // membership doesn't match
             }
 
-            Node group = membership.getProperty("exo:group").getNode();
+            Node group = membership.getProperty(MembershipHandlerImpl.JOS_GROUP).getNode();
             for (Group eg : types)
             {
-               if (eg.getId().equals(readStringProperty(group, EXO_GROUP_ID)))
+               if (eg.getId().equals(readStringProperty(group, JOS_GROUP_ID)))
                   continue nextGroup; // already listed
             }
             types.add(readObjectFromNode(group)); // add
@@ -359,7 +359,7 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
       try
       {
          String parentId = parent == null ? "" : parent.getId();
-         Node parentNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_EXO_GROUPS + parentId);
+         Node parentNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_GROUPS + parentId);
          for (NodeIterator gNodes = parentNode.getNodes(); gNodes.hasNext();)
          {
             Node gNode = gNodes.nextNode();
@@ -484,7 +484,7 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
 
       try
       {
-         Node gNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_EXO_GROUPS + group.getId());
+         Node gNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_GROUPS + group.getId());
 
          // remove child groups
          for (NodeIterator gNodes = gNode.getNodes(); gNodes.hasNext();)
@@ -493,7 +493,8 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
          }
 
          // remove membership
-         String mStatement = "select * from exo:userMembership where exo:group='" + gNode.getUUID() + "'";
+         String mStatement =
+            "select * from jos:userMembership where " + MembershipHandlerImpl.JOS_GROUP + "='" + gNode.getUUID() + "'";
          Query mQuery = session.getWorkspace().getQueryManager().createQuery(mStatement, Query.SQL);
          QueryResult mRes = mQuery.execute();
          for (NodeIterator mNodes = mRes.getNodes(); mNodes.hasNext();)
@@ -573,7 +574,7 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
 
       try
       {
-         Node gNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_EXO_GROUPS + group.getId());
+         Node gNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_GROUPS + group.getId());
 
          if (broadcast)
          {
@@ -607,10 +608,10 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
    {
       try
       {
-         String groupId = readStringProperty(node, EXO_GROUP_ID);
+         String groupId = readStringProperty(node, JOS_GROUP_ID);
          Group group = new GroupImpl(node.getName(), groupId.substring(0, groupId.lastIndexOf('/')), node.getUUID());
-         group.setDescription(readStringProperty(node, EXO_DESCRIPTION));
-         group.setLabel(readStringProperty(node, EXO_LABEL));
+         group.setDescription(readStringProperty(node, JOS_DESCRIPTION));
+         group.setLabel(readStringProperty(node, JOS_LABEL));
          return group;
       }
       catch (Exception e)
@@ -631,10 +632,10 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
    {
       try
       {
-         node.setProperty(EXO_LABEL, group.getLabel());
-         node.setProperty(EXO_DESCRIPTION, group.getDescription());
-         node.setProperty(EXO_GROUP_ID, group.getId());
-         node.setProperty(EXO_PARENT_ID, group.getParentId());
+         node.setProperty(JOS_LABEL, group.getLabel());
+         node.setProperty(JOS_DESCRIPTION, group.getDescription());
+         node.setProperty(JOS_GROUP_ID, group.getId());
+         node.setProperty(JOS_PARENT_ID, group.getParentId());
       }
       catch (Exception e)
       {

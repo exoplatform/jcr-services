@@ -46,7 +46,7 @@ public class SimpleJCRUserListAccess extends JCRUserListAccess {
   protected int getSize(Session session) throws Exception {
     try {
       Node storageNode = (Node) session.getItem(service.getStoragePath() + "/"
-          + UserHandlerImpl.STORAGE_EXO_USERS);
+          + UserHandlerImpl.STORAGE_JOS_USERS);
       return (int) storageNode.getNodes().getSize();
     } catch (Exception e) {
       throw new OrganizationServiceException("Can not get list size", e);
@@ -67,7 +67,7 @@ public class SimpleJCRUserListAccess extends JCRUserListAccess {
 
     try {
       Node storageNode = (Node) session.getItem(service.getStoragePath() + "/"
-          + UserHandlerImpl.STORAGE_EXO_USERS);
+          + UserHandlerImpl.STORAGE_JOS_USERS);
       NodeIterator results = storageNode.getNodes();
 
       UserHandlerImpl uHandler = new UserHandlerImpl(service);
