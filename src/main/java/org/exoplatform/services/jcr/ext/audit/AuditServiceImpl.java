@@ -52,6 +52,7 @@ import org.exoplatform.services.jcr.datamodel.Identifier;
 import org.exoplatform.services.jcr.datamodel.IllegalNameException;
 import org.exoplatform.services.jcr.datamodel.InternalQName;
 import org.exoplatform.services.jcr.datamodel.ItemData;
+import org.exoplatform.services.jcr.datamodel.ItemType;
 import org.exoplatform.services.jcr.datamodel.NodeData;
 import org.exoplatform.services.jcr.datamodel.PropertyData;
 import org.exoplatform.services.jcr.datamodel.QPath;
@@ -311,7 +312,7 @@ public class AuditServiceImpl implements AuditService, Startable {
 
       PropertyData bvProp = (PropertyData) dataManager.getItemData(vancestor,
                                                                    new QPathEntry(Constants.JCR_BASEVERSION,
-                                                                                  1));
+                                                                                  1), ItemType.PROPERTY);
       try {
         versionUUID = ValueDataConvertor.readString(bvProp.getValues().get(0));
 
@@ -655,7 +656,7 @@ public class AuditServiceImpl implements AuditService, Startable {
       // searching uuid of corresponding EXO_AUDITHISTORY node
       PropertyData pData = (PropertyData) dataManager.getItemData((NodeData) ((NodeImpl) node).getData(),
                                                                   new QPathEntry(AuditService.EXO_AUDITHISTORY,
-                                                                                 0));
+                                                                                 0), ItemType.PROPERTY);
       if (pData != null)
         try {
           String ahUuid = ValueDataConvertor.readString(pData.getValues().get(0));
