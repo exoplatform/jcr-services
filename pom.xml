@@ -8,16 +8,16 @@
 
   <modelVersion>4.0.0</modelVersion>
   <artifactId>exo-jcr-services</artifactId>
-  <version>1.12.5-GA-SNAPSHOT</version>
+  <version>1.12.5-GA</version>
   <packaging>jar</packaging>
   <name>eXo JCR :: Ext :: Services</name>
   <url>http://www.exoplatform.org</url>
   <description>eXo JCR Ext Services</description>
   
   <scm>
-    <connection>scm:svn:http://svn.exoplatform.org/projects/jcr-services/branches/1.12.5-GA_REL</connection>
-    <developerConnection>scm:svn:http://svn.exoplatform.org/projects/jcr-services/branches/1.12.5-GA_REL</developerConnection>
-    <url>http://fisheye.exoplatform.org/browse/projects/jcr-services/branches/1.12.5-GA_REL</url>
+    <connection>scm:svn:http://svn.exoplatform.org/projects/jcr-services/tags/1.12.5-GA</connection>
+    <developerConnection>scm:svn:http://svn.exoplatform.org/projects/jcr-services/tags/1.12.5-GA</developerConnection>
+    <url>http://fisheye.exoplatform.org/browse/projects/jcr-services/tags/1.12.5-GA</url>
   </scm>
   
   <dependencies>
