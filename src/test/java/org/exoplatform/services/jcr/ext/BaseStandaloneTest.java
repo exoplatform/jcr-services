@@ -1,23 +1,7 @@
 package org.exoplatform.services.jcr.ext;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
-
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.RepositoryException;
-import javax.jcr.ValueFactory;
-import javax.jcr.Workspace;
-
 import junit.framework.TestCase;
 
-import org.exoplatform.services.log.Log;
 import org.exoplatform.container.StandaloneContainer;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.config.WorkspaceEntry;
@@ -34,9 +18,25 @@ import org.exoplatform.services.jcr.impl.core.RepositoryImpl;
 import org.exoplatform.services.jcr.impl.core.SessionImpl;
 import org.exoplatform.services.jcr.impl.dataflow.serialization.ReaderSpoolFileHolder;
 import org.exoplatform.services.jcr.impl.util.io.FileCleaner;
-import org.exoplatform.services.jcr.impl.util.io.WorkspaceFileCleanerHolder;
+import org.exoplatform.services.jcr.impl.util.io.FileCleanerHolder;
 import org.exoplatform.services.jcr.storage.WorkspaceDataContainer;
 import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
+
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+import javax.jcr.ValueFactory;
+import javax.jcr.Workspace;
 
 /**
  * Created by The eXo Platform SAS .
@@ -89,6 +89,7 @@ public abstract class BaseStandaloneTest extends TestCase
       }
    }
 
+   @Override
    public void setUp() throws Exception
    {
       String containerConf = getClass().getResource("/conf/standalone/test-configuration.xml").toString();
@@ -120,15 +121,15 @@ public abstract class BaseStandaloneTest extends TestCase
          wconf.getContainer().getParameterInteger(WorkspaceDataContainer.MAXBUFFERSIZE_PROP,
             WorkspaceDataContainer.DEF_MAXBUFFERSIZE);
 
-      WorkspaceFileCleanerHolder wfcleaner =
-         (WorkspaceFileCleanerHolder)wsc.getComponent(WorkspaceFileCleanerHolder.class);
-      fileCleaner = wfcleaner.getFileCleaner();
+      FileCleanerHolder cleanerHolder = (FileCleanerHolder)wsc.getComponent(FileCleanerHolder.class);
+      fileCleaner = cleanerHolder.getFileCleaner();
       holder = new ReaderSpoolFileHolder();
 
       wsc = repository.getWorkspaceContainer("ws4");
       dataManager = (PersistentDataManager)wsc.getComponent(PersistentDataManager.class);
    }
 
+   @Override
    protected void tearDown() throws Exception
    {
 
