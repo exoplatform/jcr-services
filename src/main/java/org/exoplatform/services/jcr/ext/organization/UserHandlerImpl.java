@@ -20,16 +20,22 @@ import org.exoplatform.commons.utils.LazyPageList;
 import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
+import org.exoplatform.services.organization.DigestAuthenticator;
 import org.exoplatform.services.organization.Query;
 import org.exoplatform.services.organization.User;
 import org.exoplatform.services.organization.UserEventListener;
 import org.exoplatform.services.organization.UserEventListenerHandler;
 import org.exoplatform.services.organization.UserHandler;
+import org.exoplatform.services.security.Credential;
+import org.exoplatform.services.security.DigestAuthenticationHelper;
+import org.exoplatform.services.security.PasswordCredential;
+import org.exoplatform.services.security.UsernameCredential;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
@@ -42,7 +48,8 @@ import javax.jcr.Session;
  *         Nedonosko</a>
  * @version $Id$
  */
-public class UserHandlerImpl extends CommonHandler implements UserHandler, UserEventListenerHandler
+public class UserHandlerImpl extends CommonHandler implements UserHandler, UserEventListenerHandler,
+   DigestAuthenticator
 {
 
    /**
@@ -131,7 +138,21 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
       Session session = service.getStorageSession();
       try
       {
-         return authenticate(session, username, password);
+         return authenticate(session, new Credential[]{new UsernameCredential(username),
+            new PasswordCredential(password)});
+      }
+      finally
+      {
+         session.logout();
+      }
+   }
+
+   public boolean authenticate(Credential[] credentials) throws Exception
+   {
+      Session session = service.getStorageSession();
+      try
+      {
+         return authenticate(session, credentials);
       }
       finally
       {
@@ -140,7 +161,7 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
    }
 
    /**
-    * Check if the username and the password of an user is valid.
+    * Checks if credentials matches.
     * 
     * @param session The current session
     * @param username The user name
@@ -149,17 +170,45 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
     *         record in the database, else return false.
     * @throws Exception throw an exception if cannot access the database
     */
-   private boolean authenticate(Session session, String username, String password) throws Exception
+   private boolean authenticate(Session session, Credential[] credentials) throws Exception
    {
+
       if (log.isDebugEnabled())
       {
          log.debug("User.authenticate method is started");
       }
 
+      String username = null;
+      String password = null;
+      Map<String, String> passwordContext = null;
+      for (Credential cred : credentials)
+      {
+         if (cred instanceof UsernameCredential)
+         {
+            username = ((UsernameCredential)cred).getUsername();
+         }
+         if (cred instanceof PasswordCredential)
+         {
+            password = ((PasswordCredential)cred).getPassword();
+            passwordContext = ((PasswordCredential)cred).getPasswordContext();
+         }
+      }
+
       try
       {
          Node uNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_USERS + "/" + username);
-         boolean authenticated = readStringProperty(uNode, JOS_PASSWORD).equals(password);
+         boolean authenticated;
+         if (passwordContext == null)
+         {
+            authenticated = readStringProperty(uNode, JOS_PASSWORD).equals(password);
+         }
+         else
+         {
+            authenticated =
+               DigestAuthenticationHelper.calculatePassword(username, readStringProperty(uNode, JOS_PASSWORD),
+                  passwordContext).equals(password);
+         }
+
          if (authenticated)
          {
             uNode.setProperty(JOS_LAST_LOGIN_TIME, Calendar.getInstance());
