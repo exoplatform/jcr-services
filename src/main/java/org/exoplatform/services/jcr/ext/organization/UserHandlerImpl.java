@@ -20,22 +20,18 @@ import org.exoplatform.commons.utils.LazyPageList;
 import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
-import org.exoplatform.services.organization.DigestAuthenticator;
+import org.exoplatform.services.organization.ExtendedUserHandler;
 import org.exoplatform.services.organization.Query;
 import org.exoplatform.services.organization.User;
 import org.exoplatform.services.organization.UserEventListener;
 import org.exoplatform.services.organization.UserEventListenerHandler;
 import org.exoplatform.services.organization.UserHandler;
-import org.exoplatform.services.security.Credential;
-import org.exoplatform.services.security.DigestAuthenticationHelper;
-import org.exoplatform.services.security.PasswordCredential;
-import org.exoplatform.services.security.UsernameCredential;
+import org.exoplatform.services.security.PasswordEncrypter;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
@@ -49,7 +45,7 @@ import javax.jcr.Session;
  * @version $Id$
  */
 public class UserHandlerImpl extends CommonHandler implements UserHandler, UserEventListenerHandler,
-   DigestAuthenticator
+   ExtendedUserHandler
 {
 
    /**
@@ -138,8 +134,7 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
       Session session = service.getStorageSession();
       try
       {
-         return authenticate(session, new Credential[]{new UsernameCredential(username),
-            new PasswordCredential(password)});
+         return authenticate(session, username, password, null);
       }
       finally
       {
@@ -147,12 +142,12 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
       }
    }
 
-   public boolean authenticate(Credential[] credentials) throws Exception
+   public boolean authenticate(String username, String password, PasswordEncrypter pe) throws Exception
    {
       Session session = service.getStorageSession();
       try
       {
-         return authenticate(session, credentials);
+         return authenticate(session, username, password, pe);
       }
       finally
       {
@@ -170,7 +165,8 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
     *         record in the database, else return false.
     * @throws Exception throw an exception if cannot access the database
     */
-   private boolean authenticate(Session session, Credential[] credentials) throws Exception
+   private boolean authenticate(Session session, String username, String password, PasswordEncrypter pe)
+      throws Exception
    {
 
       if (log.isDebugEnabled())
@@ -178,35 +174,18 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
          log.debug("User.authenticate method is started");
       }
 
-      String username = null;
-      String password = null;
-      Map<String, String> passwordContext = null;
-      for (Credential cred : credentials)
-      {
-         if (cred instanceof UsernameCredential)
-         {
-            username = ((UsernameCredential)cred).getUsername();
-         }
-         if (cred instanceof PasswordCredential)
-         {
-            password = ((PasswordCredential)cred).getPassword();
-            passwordContext = ((PasswordCredential)cred).getPasswordContext();
-         }
-      }
-
       try
       {
          Node uNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_USERS + "/" + username);
          boolean authenticated;
-         if (passwordContext == null)
+         if (pe == null)
          {
             authenticated = readStringProperty(uNode, JOS_PASSWORD).equals(password);
          }
          else
          {
-            authenticated =
-               DigestAuthenticationHelper.calculatePassword(username, readStringProperty(uNode, JOS_PASSWORD),
-                  passwordContext).equals(password);
+            String encryptedPassword = new String(pe.encrypt(readStringProperty(uNode, JOS_PASSWORD).getBytes()));
+            authenticated = encryptedPassword.equals(password);
          }
 
          if (authenticated)
