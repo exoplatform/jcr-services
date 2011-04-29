@@ -212,13 +212,13 @@ public class RESTArtifactLoaderService implements ResourceContainer
       catch (PathNotFoundException e)
       {
          if (LOG.isDebugEnabled())
-            e.printStackTrace();
+            LOG.debug(e.getLocalizedMessage(), e);
          return Response.status(Response.Status.NOT_FOUND).build();
       }
       catch (AccessDeniedException e)
       {
          if (LOG.isDebugEnabled())
-            e.printStackTrace();
+            LOG.debug(e.getLocalizedMessage(), e);
          if (ses.getUserID().equals(SystemIdentity.ANONIM))
             return Response.status(Response.Status.UNAUTHORIZED).header(ExtHttpHeaders.WWW_AUTHENTICATE,
                "Basic realm=\"" + realmName + "\"").build();
@@ -458,11 +458,11 @@ public class RESTArtifactLoaderService implements ResourceContainer
             }
             catch (XMLStreamException xmle)
             {
-               xmle.printStackTrace();
+               LOG.error(xmle.getLocalizedMessage(), xmle);
             }
             catch (RepositoryException re)
             {
-               re.printStackTrace();
+               LOG.error(re.getLocalizedMessage(), re);
             }
             finally
             {
@@ -473,7 +473,7 @@ public class RESTArtifactLoaderService implements ResourceContainer
                }
                catch (IOException e)
                {
-                  e.printStackTrace();
+                  LOG.error(e.getLocalizedMessage(), e);
                }
             }
          }
@@ -615,11 +615,11 @@ public class RESTArtifactLoaderService implements ResourceContainer
       }
       catch (XMLStreamException xmle)
       {
-         xmle.printStackTrace();
+         LOG.error(xmle.getLocalizedMessage(), xmle);
       }
       catch (RepositoryException re)
       {
-         re.printStackTrace();
+         LOG.error(re.getLocalizedMessage(), re);
       }
       finally
       {
@@ -630,7 +630,7 @@ public class RESTArtifactLoaderService implements ResourceContainer
          }
          catch (IOException e)
          {
-            e.printStackTrace();
+            LOG.error(e.getLocalizedMessage(), e);
          }
 
       }
