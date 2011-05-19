@@ -21,8 +21,6 @@ package org.exoplatform.services.jcr.ext.organization;
 
 import org.exoplatform.services.jcr.ext.BaseStandaloneTest;
 import org.exoplatform.services.organization.Group;
-import org.exoplatform.services.organization.GroupEventListener;
-import org.exoplatform.services.organization.GroupEventListenerHandler;
 import org.exoplatform.services.organization.GroupHandler;
 import org.exoplatform.services.organization.Membership;
 import org.exoplatform.services.organization.MembershipEventListener;
@@ -224,11 +222,36 @@ public class TestMembershipHandlerImpl extends BaseStandaloneTest
 
          g = gHandler.createGroupInstance();
          g.setGroupName("not-existed-group");
-         mHandler.linkMembership(u, g, mt, true);
-         assertNull(mHandler.findMembershipByUserGroupAndType(u.getUserName(), g.getId(), mt.getName()));
+         try
+         {
+            mHandler.linkMembership(u, g, mt, true);
+            fail("Exception  should be thrown");
+         }
+         catch (Exception e)
+         {
+         }
 
          u = uHandler.createUserInstance("not-existed-user");
-         mHandler.linkMembership(u, g, mt, true);
+         try
+         {
+            mHandler.linkMembership(u, g, mt, true);
+            fail("Exception  should be thrown");
+         }
+         catch (Exception e)
+         {
+         }
+
+         mt = mtHandler.createMembershipTypeInstance();
+         mt.setName("not-existed-mt");
+         try
+         {
+            mHandler.linkMembership(u, g, mt, true);
+            fail("Exception  should be thrown");
+         }
+         catch (Exception e)
+         {
+         }
+
          assertNull(mHandler.findMembershipByUserGroupAndType(u.getUserName(), g.getId(), mt.getName()));
 
          try
@@ -243,6 +266,15 @@ public class TestMembershipHandlerImpl extends BaseStandaloneTest
          try
          {
             mHandler.linkMembership(u, g, null, true);
+            fail("Exception should be thrown");
+         }
+         catch (Exception e)
+         {
+         }
+
+         try
+         {
+            mHandler.linkMembership(null, g, mt, true);
             fail("Exception should be thrown");
          }
          catch (Exception e)

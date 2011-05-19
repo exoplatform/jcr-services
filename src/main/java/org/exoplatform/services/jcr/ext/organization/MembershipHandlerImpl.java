@@ -120,26 +120,28 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
     *          broadcast event is 'true'
     * @throws Exception An exception is thrown if the method is fail to access
     *           the database or any listener fail to handle the event.
+    * @throws InvalidNameException if user, group or membership type are not exist          
     */
-   private void createMembership(Session session, Membership m, boolean broadcast) throws Exception
+   private void createMembership(Session session, Membership m, boolean broadcast) throws Exception,
+      InvalidNameException
    {
       try
       {
          if (!session.itemExists(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_JOS_USERS + "/"
             + m.getUserName()))
          {
-            return;
+            throw new InvalidNameException("The user " + m.getUserName() + " not exists");
          }
 
          if (!session.itemExists(service.getStoragePath() + "/" + GroupHandlerImpl.STORAGE_JOS_GROUPS + m.getGroupId()))
          {
-            return;
+            throw new InvalidNameException("The group " + m.getGroupId() + " not exists");
          }
 
          if (!session.itemExists(service.getStoragePath() + "/"
             + MembershipTypeHandlerImpl.STORAGE_JOS_MEMBERSHIP_TYPES + "/" + m.getMembershipType()))
          {
-            return;
+            throw new InvalidNameException("The membership type " + m.getMembershipType() + " not exists");
          }
 
          Node uNode =
@@ -535,6 +537,11 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
 
       try
       {
+         if (user == null)
+         {
+            throw new InvalidNameException("Can not create membership record because user is null");
+         }
+
          if (group == null)
          {
             throw new InvalidNameException("Can not create membership record for " + user.getUserName()
