@@ -19,19 +19,11 @@
  */
 package org.exoplatform.services.jcr.ext.organization;
 
-import java.util.Collection;
-import java.util.List;
-
-import org.exoplatform.services.jcr.ext.BaseStandaloneTest;
-import org.exoplatform.services.organization.GroupEventListener;
-import org.exoplatform.services.organization.GroupEventListenerHandler;
-import org.exoplatform.services.organization.OrganizationService;
-import org.exoplatform.services.organization.User;
-import org.exoplatform.services.organization.UserHandler;
 import org.exoplatform.services.organization.UserProfile;
 import org.exoplatform.services.organization.UserProfileEventListener;
 import org.exoplatform.services.organization.UserProfileEventListenerHandler;
-import org.exoplatform.services.organization.UserProfileHandler;
+
+import java.util.List;
 
 /**
  * Created by The eXo Platform SAS.
@@ -39,217 +31,129 @@ import org.exoplatform.services.organization.UserProfileHandler;
  * @author <a href="mailto:anatoliy.bazko@exoplatform.com.ua">Anatoliy Bazko</a>
  * @version $Id: TestUserProfileHandlerImpl.java 111 2008-11-11 11:11:11Z $
  */
-public class TestUserProfileHandlerImpl extends BaseStandaloneTest
+public class TestUserProfileHandlerImpl
+   extends AbstractOrganizationServiceTest
 {
-   private OrganizationService organizationService;
-
-   private UserHandler uHandler;
-
-   private UserProfileHandler upHandler;
-
    /**
-    * {@inheritDoc}
-    */
-   public void setUp() throws Exception
-   {
-      super.setUp();
-
-      organizationService = (OrganizationService)container.getComponentInstance(OrganizationService.class);
-
-      upHandler = organizationService.getUserProfileHandler();
-      uHandler = organizationService.getUserHandler();
-   }
-
-   /**
-    * Find user profile by user name and check attributes.
+    * Find user profile by name.
     */
    public void testFindUserProfileByName() throws Exception
    {
-      UserProfile up;
+      createUser(userName);
+      createUserProfile(userName);
+
+      UserProfile up = upHandler.findUserProfileByName(userName);
+      assertNotNull(up);
+      assertEquals(userName, up.getUserName());
+      assertEquals("value1", up.getAttribute("key1"));
+      assertEquals("value2", up.getAttribute("key2"));
+
+      // try to find profile for not existed user. We are supposed to get "null" instead of Exception
       try
       {
-         createUserProfile("userP1", true);
-         up = upHandler.findUserProfileByName("userP1");
-         assertNotNull(up);
-         assertEquals(up.getUserName(), "userP1");
-         assertEquals(up.getAttribute("key1"), "value1");
-         assertEquals(up.getAttribute("key2"), "value2");
-
-         // find profile for not existed user
-         assertNull(upHandler.findUserProfileByName("not-existed-user"));
-
-         // find not existed profile
-         createUserProfile("userP2", false);
-         assertNull(upHandler.findUserProfileByName("userP2"));
-
+         assertNull(upHandler.findUserProfileByName(newUserName));
       }
       catch (Exception e)
       {
-         e.printStackTrace();
          fail("Exception should not be thrown");
       }
-      finally
+
+      // try to find not existed profile. We are supposed to get "null" instead of Exception
+      createUser(newUserName);
+      try
       {
-         upHandler.removeUserProfile("userP1", true);
-         upHandler.removeUserProfile("userP2", true);
-         uHandler.removeUser("userP1", true);
-         uHandler.removeUser("userP2", true);
+         assertNull(upHandler.findUserProfileByName(newUserName));
+      }
+      catch (Exception e)
+      {
+         fail("Exception should not be thrown");
       }
    }
 
    /**
-    * Find all profiles and check it count.
+    * Find user profiles.
     */
    public void testFindUserProfiles() throws Exception
    {
-      try
-      {
-         createUserProfile("userP1", true);
-         createUserProfile("userP2", true);
-         Collection list = upHandler.findUserProfiles();
-         assertNotNull(list);
-         assertEquals(list.size(), 2);
+      createUser(userName);
+      createUserProfile(userName);
 
-      }
-      catch (Exception e)
-      {
-         e.printStackTrace();
-         fail("Exception should not be thrown");
-      }
-      finally
-      {
-         upHandler.removeUserProfile("userP1", true);
-         upHandler.removeUserProfile("userP2", true);
-         uHandler.removeUser("userP1", true);
-         uHandler.removeUser("userP2", true);
-      }
+      createUser(newUserName);
+      createUserProfile(newUserName);
+
+      assertEquals(upHandler.findUserProfiles().size(), 2);
    }
 
    /**
-    * Create user profile and than try to remove it.
+    * Remove user profile.
     */
    public void testRemoveUserProfile() throws Exception
    {
-      UserProfile up;
+      createUser(userName);
+      createUserProfile(userName);
+      
+      UserProfile up = upHandler.removeUserProfile(userName, true);
+      assertNotNull(up);
+      assertEquals(up.getAttribute("key1"), "value1");
+      assertEquals(up.getAttribute("key2"), "value2");
+      assertNull(upHandler.findUserProfileByName("userP1"));
+
+      // remove not existed profile. We are supposed to get "null" instead of Exception
       try
       {
-         createUserProfile("userP1", true);
-
-         up = upHandler.removeUserProfile("userP1", true);
-         assertEquals(up.getAttribute("key1"), "value1");
-         assertEquals(up.getAttribute("key2"), "value2");
-         assertNull(upHandler.findUserProfileByName("userP1"));
-
-         // remove not existed profile
-         assertNull(upHandler.removeUserProfile("not-existed-user", true));
-
+         assertNull(upHandler.removeUserProfile(newUserName, true));
       }
       catch (Exception e)
       {
-         e.printStackTrace();
          fail("Exception should not be thrown");
-      }
-      finally
-      {
-         upHandler.removeUserProfile("userP1", true);
-         uHandler.removeUser("userP1", true);
       }
    }
 
    /**
-    * Create user profile, make changes, save and than try to check it.
+    * Save user profile.
     */
    public void testSaveUserProfile() throws Exception
    {
+      createUser(userName);
+      createUserProfile(userName);
+
+      UserProfile up = upHandler.findUserProfileByName(userName);
+      up.setAttribute("key1", "value11");
+      up.setAttribute("key2", null);
+      upHandler.saveUserProfile(up, true);
+
+      up = upHandler.findUserProfileByName(userName);
+      assertEquals(up.getAttribute("key1"), "value11");
+      assertNull(up.getAttribute("key2"));
+
+      // try to save user profile for not existed user
       try
       {
-         createUserProfile("userP1", true);
-
-         UserProfile up = upHandler.findUserProfileByName("userP1");
-         up.setAttribute("key1", "value11");
-         up.setAttribute("key2", null);
+         up = upHandler.createUserProfileInstance(newUserName);
          upHandler.saveUserProfile(up, true);
+      }
+      catch (Exception e)
+      {
+         fail("Exception should not be thrown");
+      }
+   }
 
-         up = upHandler.findUserProfileByName("userP1");
-         assertEquals(up.getAttribute("key1"), "value11");
-         assertNull(up.getAttribute("key2"));
-
-         // save user profile for not existed user
+   /**
+    * Test get listeners.
+    */
+   public void testGetListeners() throws Exception
+   {
+      if (upHandler instanceof UserProfileEventListenerHandler)
+      {
+         List<UserProfileEventListener> list = ((UserProfileEventListenerHandler) upHandler).getUserProfileListeners();
          try
          {
-            up = upHandler.createUserProfileInstance("not-existed-user");
-            upHandler.saveUserProfile(up, true);
+            list.clear();
+            fail("We should not able to modife list of listeners");
          }
          catch (Exception e)
          {
-            e.printStackTrace();
-            fail("Exception should not be thrown");
-         }
-
-      }
-      catch (Exception e)
-      {
-         e.printStackTrace();
-         fail("Exception should not be thrown");
-      }
-      finally
-      {
-         upHandler.removeUserProfile("userP1", true);
-         uHandler.removeUser("userP1", true);
-      }
-   }
-
-   public void testGetListeners() throws Exception
-   {
-      List<UserProfileEventListener> list = ((UserProfileEventListenerHandler)upHandler).getUserProfileListeners();
-      try
-      {
-         list.clear();
-         fail("Exception should not be thrown");
-      }
-      catch (Exception e)
-      {
-
-      }
-   }
-
-   /**
-    * Create user with profile.
-    */
-   private void createUserProfile(String userName, boolean createProfile)
-   {
-      // create users
-      try
-      {
-         User u = uHandler.createUserInstance(userName);
-         u.setEmail("email");
-         u.setFirstName("first");
-         u.setLastName("last");
-         u.setPassword("pwd");
-         uHandler.createUser(u, true);
-
-         // create profile
-         if (createProfile)
-         {
-            UserProfile up = upHandler.createUserProfileInstance(userName);
-            up.setAttribute("key1", "value1");
-            up.setAttribute("key2", "value2");
-            upHandler.saveUserProfile(up, true);
          }
       }
-      catch (Exception e)
-      {
-         e.printStackTrace();
-         fail("Exception should not be thrown.");
-      }
    }
-
-   /**
-    * {@inheritDoc}
-    */
-   protected void tearDown() throws Exception
-   {
-      super.tearDown();
-   }
-
 }

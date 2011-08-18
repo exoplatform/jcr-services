@@ -16,16 +16,13 @@
  */
 package org.exoplatform.services.jcr.ext.organization;
 
-import java.util.Calendar;
-import java.util.List;
-
-import org.exoplatform.services.jcr.ext.BaseStandaloneTest;
-import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.services.organization.Query;
 import org.exoplatform.services.organization.User;
 import org.exoplatform.services.organization.UserEventListener;
 import org.exoplatform.services.organization.UserEventListenerHandler;
-import org.exoplatform.services.organization.UserHandler;
+
+import java.util.Calendar;
+import java.util.List;
 
 /**
  * Created by The eXo Platform SAS.
@@ -33,205 +30,207 @@ import org.exoplatform.services.organization.UserHandler;
  * @author <a href="mailto:anatoliy.bazko@exoplatform.com.ua">Anatoliy Bazko</a>
  * @version $Id: TestOrganizationService.java 111 2008-11-11 11:11:11Z $
  */
-public class TestUserHandlerImpl extends BaseStandaloneTest
+public class TestUserHandlerImpl
+   extends AbstractOrganizationServiceTest
 {
 
-   private Calendar calendar;
-
-   private OrganizationService organizationService;
-
-   private UserHandler uHandler;
-
    /**
-    * {@inheritDoc}
-    */
-   public void setUp() throws Exception
-   {
-      super.setUp();
-
-      organizationService = (OrganizationService)container.getComponentInstance(OrganizationService.class);
-      uHandler = organizationService.getUserHandler();
-
-      calendar = Calendar.getInstance();
-      calendar.set(2008, 1, 1);
-   }
-
-   /**
-    * Authenticate users.
+    * User authentication.
     */
    public void testAuthenticate() throws Exception
    {
-      try
-      {
-         assertTrue(uHandler.authenticate("demo", "exo"));
-         assertFalse(uHandler.authenticate("demo", "exo_"));
-         assertFalse(uHandler.authenticate("demo_", "exo"));
+      // authentication with existed user and correct password
+      assertTrue(uHandler.authenticate("demo", "exo"));
 
-      }
-      catch (Exception e)
-      {
-         e.printStackTrace();
-         fail("Exception should not be thrown.");
-      }
+      // unknown user authentication
+      assertFalse(uHandler.authenticate("demo_", "exo"));
+
+      // authentication with wrong password
+      assertFalse(uHandler.authenticate("demo", "exo_"));
    }
 
    /**
-    * Find user with specific name and check it properties.
+    * Find user by name.
     */
    public void testFindUserByName() throws Exception
    {
+      // try to find existed user
+      User u = uHandler.findUserByName("demo");
+
+      assertNotNull(u);
+      assertEquals("demo@localhost", u.getEmail());
+      assertEquals("Demo", u.getFirstName());
+      assertEquals("exo", u.getLastName());
+      assertEquals("exo", u.getPassword());
+      assertEquals("demo", u.getUserName());
+
+      // try to find not existed user. We are supposed to get "null" instead of Exception.
       try
       {
-         User u = uHandler.findUserByName("demo");
-         assertNotNull(u);
-         assertEquals(u.getEmail(), "demo@localhost");
-         assertEquals(u.getFirstName(), "Demo");
-         assertEquals(u.getLastName(), "exo");
-         assertEquals(u.getPassword(), "exo");
-         assertEquals(u.getUserName(), "demo");
-
          assertNull(uHandler.findUserByName("not-existed-user"));
       }
       catch (Exception e)
       {
-         e.printStackTrace();
-         fail("Exception should not be thrown.");
+         fail("Exception should not be thrown");
       }
    }
 
    /**
-    * Find users using query and check it count.
+    * Find users by query.
     */
    public void testFindUsersByQuery() throws Exception
    {
-      try
-      {
-         createUser("tolik");
-         Query query = new Query();
+      createUser("tolik");
 
-         query.setEmail("email@test");
-         assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
-         query.setEmail(null);
+      Query query = new Query();
+      query.setEmail("email@test");
 
-         query.setUserName("*tolik*");
-         assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
+      // try to find user by email
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
 
-         query.setUserName("*tolik");
-         assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
+      // try to find user by name with mask
+      query = new Query();
+      query.setUserName("*tolik*");
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
 
-         query.setUserName("tolik*");
-         assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
+      // try to find user by name with mask
+      query = new Query();
+      query.setUserName("tol*");
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
 
-         query.setUserName("tolik");
-         assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
+      // try to find user by name with mask
+      query = new Query();
+      query.setUserName("*lik");
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
 
-         query.setUserName("Tol");
-         assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
-         query.setUserName(null);
+      // try to find user by name explicitly
+      query = new Query();
+      query.setUserName("tolik");
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
 
-         query.setFirstName("fiRst");
-         query.setLastName("lasT");
-         assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
-         query.setFirstName(null);
-         query.setLastName(null);
+      // try to find user by name explicitly, case sensitive search
+      query = new Query();
+      query.setUserName("Tolik");
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
 
-         Calendar calc = Calendar.getInstance();
-         calc.set(2007, 1, 1);
-         query.setFromLoginDate(calc.getTime());
-         query.setUserName("*tolik*");
-         assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
+      // try to find user by part of name without mask
+      query = new Query();
+      query.setUserName("tol");
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
 
-         calc.set(2009, 1, 1);
-         query.setFromLoginDate(calc.getTime());
-         assertEquals(uHandler.findUsersByQuery(query).getSize(), 0);
-         query.setFromLoginDate(null);
+      // try to find user by fist and last names, case sensitive search
+      query = new Query();
+      query.setFirstName("fiRst");
+      query.setLastName("lasT");
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
 
-         calc.set(2007, 1, 1);
-         query.setToLoginDate(calc.getTime());
-         assertEquals(uHandler.findUsersByQuery(query).getSize(), 0);
+      // try to find user by login date
+      Calendar calc = Calendar.getInstance();
+      calc.set(Calendar.YEAR, calc.get(Calendar.YEAR) - 1);
 
-         calc.set(2009, 1, 1);
-         query.setToLoginDate(calc.getTime());
-         assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
-         query.setUserName(null);
-         query.setToLoginDate(null);
+      query = new Query();
+      query.setFromLoginDate(calc.getTime());
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
 
-      }
-      catch (Exception e)
-      {
-         e.printStackTrace();
-         fail("Exception should not be thrown.");
-      }
-      finally
-      {
-         uHandler.removeUser("tolik", true);
-      }
+      calc = Calendar.getInstance();
+      calc.set(Calendar.YEAR, calc.get(Calendar.YEAR) + 1);
+
+      query = new Query();
+      query.setFromLoginDate(calc.getTime());
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 0);
+
+      calc = Calendar.getInstance();
+      calc.set(Calendar.YEAR, calc.get(Calendar.YEAR) - 1);
+
+      query = new Query();
+      query.setToLoginDate(calc.getTime());
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 0);
+
+      calc = Calendar.getInstance();
+      calc.set(Calendar.YEAR, calc.get(Calendar.YEAR) + 1);
+
+      query = new Query();
+      query.setToLoginDate(calc.getTime());
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
    }
 
    /**
-    * Find users using query and check it count.
+    * Find users.
     */
    public void testFindUsers() throws Exception
    {
-      try
-      {
-         createUser("tolik");
-         org.exoplatform.services.organization.Query query = new org.exoplatform.services.organization.Query();
+      createUser("tolik");
 
-         query.setEmail("email@test");
-         assertEquals(uHandler.findUsers(query).getAll().size(), 1);
-         query.setEmail(null);
+      Query query = new Query();
+      query.setEmail("email@test");
 
-         query.setUserName("*tolik*");
-         assertEquals(uHandler.findUsers(query).getAll().size(), 1);
+      // try to find user by email
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
 
-         query.setUserName("tolik*");
-         assertEquals(uHandler.findUsers(query).getAll().size(), 1);
+      // try to find user by name with mask
+      query = new Query();
+      query.setUserName("*tolik*");
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
 
-         query.setUserName("tolik");
-         assertEquals(uHandler.findUsers(query).getAll().size(), 1);
+      // try to find user by name with mask
+      query = new Query();
+      query.setUserName("tol*");
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
 
-         query.setUserName("Tol");
-         assertEquals(uHandler.findUsers(query).getAll().size(), 1);
-         query.setUserName(null);
+      // try to find user by name with mask
+      query = new Query();
+      query.setUserName("*lik");
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
 
-         query.setFirstName("First");
-         query.setLastName("laSt");
-         assertEquals(uHandler.findUsers(query).getAll().size(), 1);
-         query.setFirstName(null);
-         query.setLastName(null);
+      // try to find user by name explicitly
+      query = new Query();
+      query.setUserName("tolik");
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
 
-         Calendar calc = Calendar.getInstance();
-         calc.set(2007, 1, 1);
-         query.setFromLoginDate(calc.getTime());
-         query.setUserName("*tolik*");
-         assertEquals(uHandler.findUsers(query).getAll().size(), 1);
+      // try to find user by name explicitly, case sensitive search
+      query = new Query();
+      query.setUserName("Tolik");
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
 
-         calc.set(2009, 1, 1);
-         query.setFromLoginDate(calc.getTime());
-         assertEquals(uHandler.findUsers(query).getAll().size(), 0);
-         query.setFromLoginDate(null);
+      // try to find user by part of name without mask
+      query = new Query();
+      query.setUserName("tol");
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
 
-         calc.set(2007, 1, 1);
-         query.setToLoginDate(calc.getTime());
-         assertEquals(uHandler.findUsers(query).getAll().size(), 0);
+      // try to find user by fist and last names, case sensitive search
+      query = new Query();
+      query.setFirstName("fiRst");
+      query.setLastName("lasT");
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
 
-         calc.set(2009, 1, 1);
-         query.setToLoginDate(calc.getTime());
-         assertEquals(uHandler.findUsers(query).getAll().size(), 1);
-         query.setUserName(null);
-         query.setToLoginDate(null);
+      // try to find user by login date
+      Calendar calc = Calendar.getInstance();
+      calc.set(Calendar.YEAR, calc.get(Calendar.YEAR) - 1);
 
-      }
-      catch (Exception e)
-      {
-         e.printStackTrace();
-         fail("Exception should not be thrown.");
-      }
-      finally
-      {
-         uHandler.removeUser("tolik", true);
-      }
+      query = new Query();
+      query.setFromLoginDate(calc.getTime());
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
+
+      calc = Calendar.getInstance();
+      calc.set(Calendar.YEAR, calc.get(Calendar.YEAR) + 1);
+
+      query = new Query();
+      query.setFromLoginDate(calc.getTime());
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 0);
+
+      calc = Calendar.getInstance();
+      calc.set(Calendar.YEAR, calc.get(Calendar.YEAR) - 1);
+
+      query = new Query();
+      query.setToLoginDate(calc.getTime());
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 0);
+
+      calc = Calendar.getInstance();
+      calc.set(Calendar.YEAR, calc.get(Calendar.YEAR) + 1);
+
+      query = new Query();
+      query.setToLoginDate(calc.getTime());
+      assertEquals(uHandler.findUsersByQuery(query).getSize(), 1);
    }
 
    /**
@@ -239,87 +238,60 @@ public class TestUserHandlerImpl extends BaseStandaloneTest
     */
    public void testGetUserPageList() throws Exception
    {
-      try
-      {
-         assertEquals(uHandler.getUserPageList(10).getAll().size(), 4);
-      }
-      catch (Exception e)
-      {
-         e.printStackTrace();
-         fail("Exception should not be thrown.");
-      }
+      assertEquals(uHandler.getUserPageList(10).getAll().size(), 4);
    }
 
    /**
-    * Get users page list.
+    * Find all users.
     */
    public void testFindAllUsers() throws Exception
    {
-      try
-      {
-         assertEquals(uHandler.findAllUsers().getSize(), 4);
-      }
-      catch (Exception e)
-      {
-         e.printStackTrace();
-         fail("Exception should not be thrown.");
-      }
+      assertEquals(uHandler.findAllUsers().getSize(), 4);
    }
 
    /**
-    * Create user and than try to remove it.
+    * Remove user.
     */
    public void testRemoveUser() throws Exception
    {
-      User u;
+      createUser(userName);
+      assertNotNull(uHandler.removeUser(userName, true));
+
+      // try to find user after remove. We are supposed to get "null" instead of exception
       try
       {
-         createUser("user");
-         u = uHandler.removeUser("user", true);
-         assertNotNull(u);
-         assertNull(uHandler.findUserByName("user"));
-         assertNull(uHandler.removeUser("not-existed-user", true));
-
+         assertNull(uHandler.findUserByName(userName + "_"));
       }
       catch (Exception e)
       {
-         e.printStackTrace();
-         fail("Exception should not be thrown.");
+         fail("Exception should not be thrown");
       }
    }
 
    /**
-    * Create user, change it properties and than try to save it.
+    * Save user.
     */
    public void testSaveUser() throws Exception
    {
-      try
-      {
-         createUser("user_");
+      createUser(userName);
 
-         // change name
-         User u = uHandler.findUserByName("user_");
-         u.setUserName("userNew");
-         uHandler.saveUser(u, true);
-         u = uHandler.findUserByName("userNew");
-         assertNotNull(u);
+      String newEmail = "new@Email";
 
-         // change email
-         u.setEmail("email_");
-         uHandler.saveUser(u, true);
-         u = uHandler.findUserByName("userNew");
-         assertEquals(u.getEmail(), "email_");
+      // change email and check
+      User u = uHandler.findUserByName(userName);
+      u.setEmail(newEmail);
 
-      }
-      catch (Exception e)
-      {
-         e.printStackTrace();
-         fail("Exception should not be thrown.");
-      }
-      finally
-      {
-         uHandler.removeUser("userNew", true);
-      }
+      uHandler.saveUser(u, true);
+      assertEquals(newEmail, uHandler.findUserByName(userName).getEmail());
+
+      // change name
+      u = uHandler.findUserByName(userName);
+      u.setUserName(newUserName);
+      uHandler.saveUser(u, true);
+
+      // we should to find user with new name but not with old one
+      assertNotNull(uHandler.findUserByName(newUserName));
+      assertNull(uHandler.findUserByName(userName));
    }
 
    /**
@@ -327,71 +299,34 @@ public class TestUserHandlerImpl extends BaseStandaloneTest
     */
    public void testCreateUser() throws Exception
    {
-      try
-      {
-         User u = uHandler.createUserInstance("user");
-         u.setEmail("email@test");
-         u.setFirstName("first");
-         u.setLastName("last");
-         u.setPassword("pwd");
-         uHandler.createUser(u, true);
+      User u = uHandler.createUserInstance(userName);
+      u.setEmail("email@test");
+      u.setFirstName("first");
+      u.setLastName("last");
+      u.setPassword("pwd");
+      uHandler.createUser(u, true);
 
-         assertNotNull(uHandler.findUserByName("user"));
-
-      }
-      catch (Exception e)
-      {
-         e.printStackTrace();
-         fail("Exception should not be thrown.");
-      }
-      finally
-      {
-         uHandler.removeUser("user", true);
-      }
+      // check if user exists
+      assertNotNull(uHandler.findUserByName(userName));
    }
 
+   /**
+    * Test get listeners.
+    */
    public void testGetListeners() throws Exception
    {
-      List<UserEventListener> list = ((UserEventListenerHandler)uHandler).getUserListeners();
-      try
+      if (uHandler instanceof UserEventListenerHandler)
       {
-         list.clear();
-         fail("Exception should not be thrown");
+         List<UserEventListener> list = ((UserEventListenerHandler) uHandler).getUserListeners();
+         try
+         {
+            // check if we able to modify the list of listeners
+            list.clear();
+            fail("Exception should not be thrown");
+         }
+         catch (Exception e)
+         {
+         }
       }
-      catch (Exception e)
-      {
-
-      }
-   }
-
-   /**
-    * Create new user.
-    */
-   private void createUser(String userName) throws Exception
-   {
-      try
-      {
-         User u = uHandler.createUserInstance(userName);
-         u.setEmail("email@test");
-         u.setFirstName("first");
-         u.setLastLoginTime(calendar.getTime());
-         u.setCreatedDate(calendar.getTime());
-         u.setLastName("last");
-         u.setPassword("pwd");
-         uHandler.createUser(u, true);
-      }
-      catch (Exception e)
-      {
-         e.printStackTrace();
-         fail("Exception should not be thrown.");
-      }
-   }
-
-   /**
-    * {@inheritDoc}
-    */
-   protected void tearDown() throws Exception
-   {
-      super.tearDown();
    }
 }

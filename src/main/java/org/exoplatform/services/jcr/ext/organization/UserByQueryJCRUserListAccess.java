@@ -16,16 +16,13 @@
  */
 package org.exoplatform.services.jcr.ext.organization;
 
+import org.exoplatform.services.organization.User;
+
 import java.util.Date;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.query.Query;
-import javax.jcr.query.QueryResult;
-
-import org.exoplatform.services.organization.User;
 
 /**
  * Created by The eXo Platform SAS.
@@ -161,12 +158,14 @@ public class UserByQueryJCRUserListAccess extends JCRUserListAccess
       }
 
       Date lastLoginTime = uHandler.readDateProperty(uNode, UserHandlerImpl.JOS_LAST_LOGIN_TIME);
-      if (query.getFromLoginDate() != null && query.getFromLoginDate().getTime() > lastLoginTime.getTime())
+      if (query.getFromLoginDate() != null
+               && (lastLoginTime == null || query.getFromLoginDate().getTime() > lastLoginTime.getTime()))
       {
          return false;
       }
 
-      if (query.getToLoginDate() != null && query.getToLoginDate().getTime() < lastLoginTime.getTime())
+      if (query.getToLoginDate() != null
+               && (lastLoginTime == null || query.getToLoginDate().getTime() < lastLoginTime.getTime()))
       {
          return false;
       }

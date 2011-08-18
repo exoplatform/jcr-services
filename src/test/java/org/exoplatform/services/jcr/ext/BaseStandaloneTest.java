@@ -1,23 +1,7 @@
 package org.exoplatform.services.jcr.ext;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
-
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.RepositoryException;
-import javax.jcr.ValueFactory;
-import javax.jcr.Workspace;
-
 import junit.framework.TestCase;
 
-import org.exoplatform.services.log.Log;
 import org.exoplatform.container.StandaloneContainer;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.config.WorkspaceEntry;
@@ -37,6 +21,22 @@ import org.exoplatform.services.jcr.impl.util.io.FileCleaner;
 import org.exoplatform.services.jcr.impl.util.io.FileCleanerHolder;
 import org.exoplatform.services.jcr.storage.WorkspaceDataContainer;
 import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
+
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+import javax.jcr.ValueFactory;
+import javax.jcr.Workspace;
 
 /**
  * Created by The eXo Platform SAS .
@@ -47,7 +47,7 @@ import org.exoplatform.services.log.ExoLogger;
 public abstract class BaseStandaloneTest extends TestCase
 {
 
-   private static final Log log = ExoLogger.getLogger(BaseStandaloneTest.class);
+   protected static final Log log = ExoLogger.getLogger(BaseStandaloneTest.class);
 
    public static final String WS_NAME = "ws";
 
