@@ -1,6 +1,3 @@
-/**
- * 
- */
 /*
  * Copyright (C) 2003-2008 eXo Platform SAS.
  *
@@ -165,8 +162,22 @@ public class TestMembershipHandlerImpl
       Membership m = mHandler.findMembershipByUserGroupAndType(userName, "/" + groupName1, membershipType);
       assertNotNull(m);
 
-      mHandler.removeMembership(m.getId(), true);
+      // try to create already existed membership. Exception should not be thrown
+      try
+      {
+         mHandler.linkMembership(uHandler.findUserByName(userName), gHandler.findGroupById("/" + groupName1),
+            mtHandler.findMembershipType(membershipType), true);
+      }
+      catch (Exception e)
+      {
+         fail("Exception should not be thrown");
+      }
 
+      // we expect only 1 membership record
+      assertEquals(1, mHandler.findMembershipsByUser(userName).size());
+
+      // test deprecated memthod create membership
+      mHandler.removeMembership(m.getId(), true);
       mHandler.createMembership(m, true);
       m = mHandler.findMembershipByUserGroupAndType(userName, "/" + groupName1, membershipType);
       assertNotNull(m);

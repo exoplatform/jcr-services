@@ -144,10 +144,16 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
             throw new InvalidNameException("The membership type " + m.getMembershipType() + " not exists");
          }
 
+         // check if we have already such membership record
+         if (findMembershipByUserGroupAndType(session, m.getUserName(), m.getGroupId(), m.getMembershipType()) != null)
+         {
+            return;
+         }
+
          Node uNode =
             (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_JOS_USERS + "/"
                + m.getUserName());
-
+         
          Node mNode = uNode.addNode(UserHandlerImpl.JOS_MEMBERSHIP);
 
          if (broadcast)
