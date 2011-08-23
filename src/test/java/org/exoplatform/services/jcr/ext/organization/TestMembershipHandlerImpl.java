@@ -16,6 +16,7 @@
  */
 package org.exoplatform.services.jcr.ext.organization;
 
+import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.services.organization.Group;
 import org.exoplatform.services.organization.Membership;
 import org.exoplatform.services.organization.MembershipEventListener;
@@ -103,6 +104,50 @@ public class TestMembershipHandlerImpl
    {
       Group g = gHandler.findGroupById("/platform/users");
       assertEquals(mHandler.findMembershipsByGroup(g).size(), 4);
+
+      g = gHandler.createGroupInstance();
+      g.setGroupName(groupName1);
+      assertEquals(mHandler.findMembershipsByGroup(g).size(), 0);
+
+   }
+
+   /**
+    * Find membership by group.
+    */
+   public void testFindAllMembershipsByGroup() throws Exception
+   {
+      Group g = gHandler.findGroupById("/platform/users");
+      ListAccess<Membership> memberships = mHandler.findAllMembershipsByGroup(g);
+      assertEquals(memberships.getSize(), 4);
+
+      try
+      {
+         Membership[] m = memberships.load(0, 4);
+         assertEquals(4, m.length);
+      }
+      catch (Exception e)
+      {
+         fail("Exception should not be thrown");
+      }
+
+      try
+      {
+         Membership[] m = memberships.load(1, 2);
+         assertEquals(2, m.length);
+      }
+      catch (Exception e)
+      {
+         fail("Exception should not be thrown");
+      }
+
+      try
+      {
+         Membership[] m = memberships.load(1, 4);
+         fail("Exception should be thrown");
+      }
+      catch (Exception e)
+      {
+      }
 
       g = gHandler.createGroupInstance();
       g.setGroupName(groupName1);

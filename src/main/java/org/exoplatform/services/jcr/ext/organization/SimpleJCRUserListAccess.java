@@ -28,8 +28,7 @@ import javax.jcr.Session;
  * @author <a href="mailto:anatoliy.bazko@exoplatform.com.ua">Anatoliy Bazko</a>
  * @version $Id: SimpleUserListAccess.java 111 2008-11-11 11:11:11Z $
  */
-public class SimpleJCRUserListAccess
-   extends JCRUserListAccess
+public class SimpleJCRUserListAccess extends JCRUserListAccess
 {
 
    /**

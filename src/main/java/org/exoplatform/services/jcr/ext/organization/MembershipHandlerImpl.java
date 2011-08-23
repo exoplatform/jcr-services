@@ -16,6 +16,7 @@
  */
 package org.exoplatform.services.jcr.ext.organization;
 
+import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.organization.Group;
@@ -25,6 +26,7 @@ import org.exoplatform.services.organization.MembershipEventListenerHandler;
 import org.exoplatform.services.organization.MembershipHandler;
 import org.exoplatform.services.organization.MembershipType;
 import org.exoplatform.services.organization.User;
+import org.exoplatform.services.organization.impl.mock.SimpleMembershipListAccess;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -377,6 +379,14 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
       {
          throw new OrganizationServiceException("Can not find membership by group", e);
       }
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public ListAccess<Membership> findAllMembershipsByGroup(Group group) throws Exception
+   {
+      return new SimpleMembershipListAccess(findMembershipsByGroup(group));
    }
 
    /**
