@@ -824,7 +824,17 @@
       </init-params>
     </component-plugin>
   </external-component-plugins>
-  
+
+  <external-component-plugins>
+    <target-component>org.exoplatform.services.organization.OrganizationService</target-component>
+     <component-plugin>
+        <name>tester.membership.type.listener</name>
+        <set-method>addListenerPlugin</set-method>
+        <type>org.exoplatform.services.organization.MembershipTypeEventListener</type>
+        <description>Membership type listerner for testing purpose</description>
+     </component-plugin>
+  </external-component-plugins>
+
   <external-component-plugins>
     <target-component>org.exoplatform.services.naming.InitialContextInitializer</target-component>
     <component-plugin>

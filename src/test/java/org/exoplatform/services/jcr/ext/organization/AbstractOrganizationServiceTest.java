@@ -33,7 +33,6 @@ import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 
-
 /**
  * Created by The eXo Platform SAS.
  * 
@@ -42,8 +41,7 @@ import java.util.List;
  * @author <a href="mailto:alex.reshetnyak@exoplatform.com.ua">Alex Reshetnyak</a> 
  * @version $Id: AbstractOrganizationServiceTest.java 111 2011-11-11 11:11:11Z rainf0x $
  */
-public class AbstractOrganizationServiceTest
-   extends BaseStandaloneTest
+public class AbstractOrganizationServiceTest extends BaseStandaloneTest
 {
 
    protected GroupHandler gHandler;

@@ -19,10 +19,13 @@ package org.exoplatform.services.jcr.ext.organization;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.organization.MembershipType;
+import org.exoplatform.services.organization.MembershipTypeEventListener;
+import org.exoplatform.services.organization.MembershipTypeEventListenerHandler;
 import org.exoplatform.services.organization.MembershipTypeHandler;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import javax.jcr.Node;
@@ -38,7 +41,8 @@ import javax.jcr.query.QueryResult;
  * @author <a href="mailto:peter.nedonosko@exoplatform.com.ua">Peter Nedonosko</a>
  * @version $Id$
  */
-public class MembershipTypeHandlerImpl extends CommonHandler implements MembershipTypeHandler
+public class MembershipTypeHandlerImpl extends CommonHandler implements MembershipTypeHandler,
+   MembershipTypeEventListenerHandler
 {
 
    /**
@@ -55,6 +59,11 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
     * Organization service implementation covering the handler.
     */
    protected final JCROrganizationServiceImpl service;
+
+   /**
+    * The list of listeners to broadcast the events.
+    */
+   protected final List<MembershipTypeEventListener> listeners = new ArrayList<MembershipTypeEventListener>();
 
    /**
     * MembershipTypeHandlerImpl constructor.
@@ -97,8 +106,20 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
       {
          Node storagePath = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_MEMBERSHIP_TYPES);
          Node mtNode = storagePath.addNode(mt.getName());
+
+         if (broadcast)
+         {
+            preSave(mt, true);
+         }
+
          writeObjectToNode(mt, mtNode);
          session.save();
+
+         if (broadcast)
+         {
+            postSave(mt, true);
+         }
+
          return readObjectFromNode(mtNode);
 
       }
@@ -285,8 +306,20 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
 
          // remove membership type
          MembershipType mt = readObjectFromNode(mtNode);
+
+         if (broadcast)
+         {
+            preDelete(mt);
+         }
+
          mtNode.remove();
          session.save();
+
+         if (broadcast)
+         {
+            postDelete(mt);
+         }
+
          return mt;
 
       }
@@ -356,8 +389,19 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
             mtNode = (Node)session.getItem(destPath);
          }
 
+         if (broadcast)
+         {
+            preSave(mt, false);
+         }
+
          writeObjectToNode(mt, mtNode);
          session.save();
+
+         if (broadcast)
+         {
+            postSave(mt, false);
+         }
+
          return readObjectFromNode(mtNode);
 
       }
@@ -427,6 +471,74 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
       {
          throw new OrganizationServiceException("Can not write membership type properties", e);
       }
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public void removeMembershipTypeEventListener(MembershipTypeEventListener listener)
+   {
+      listeners.remove(listener);
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public void addMembershipTypeEventListener(MembershipTypeEventListener listener)
+   {
+      listeners.add(listener);
+   }
+
+   /**
+    * PreSave event.
+    */
+   private void preSave(MembershipType type, boolean isNew) throws Exception
+   {
+      for (MembershipTypeEventListener listener : listeners)
+      {
+         listener.preSave(type, isNew);
+      }
+   }
+
+   /**
+    * PostSave event.
+    */
+   private void postSave(MembershipType type, boolean isNew) throws Exception
+   {
+      for (MembershipTypeEventListener listener : listeners)
+      {
+         listener.postSave(type, isNew);
+      }
+   }
+
+   /**
+    * PreDelete event.
+    */
+   private void preDelete(MembershipType type) throws Exception
+   {
+      for (MembershipTypeEventListener listener : listeners)
+      {
+         listener.preDelete(type);
+      }
+   }
+
+   /**
+    * PostDelete event.
+    */
+   private void postDelete(MembershipType type) throws Exception
+   {
+      for (MembershipTypeEventListener listener : listeners)
+      {
+         listener.postDelete(type);
+      }
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public List<MembershipTypeEventListener> getMembershipTypeListeners()
+   {
+      return Collections.unmodifiableList(listeners);
    }
 
 }
