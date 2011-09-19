@@ -1,0 +1,22 @@
+Index: src/main/java/org/exoplatform/services/jcr/ext/organization/GroupHandlerImpl.java
+===================================================================
+--- src/main/java/org/exoplatform/services/jcr/ext/organization/GroupHandlerImpl.java	(revision 68317)
++++ src/main/java/org/exoplatform/services/jcr/ext/organization/GroupHandlerImpl.java	(working copy)
+@@ -144,7 +144,7 @@
+ 
+          if (broadcast)
+          {
+-            preSave(child, true);
++            preSave(group, true);
+          }
+ 
+          writeObjectToNode(group, gNode);
+@@ -152,7 +152,7 @@
+ 
+          if (broadcast)
+          {
+-            postSave(child, true);
++            postSave(group, true);
+          }
+ 
+       }
