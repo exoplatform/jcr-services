@@ -26,134 +26,169 @@ import org.exoplatform.services.organization.Group;
  * @author <a href="mailto:peter.nedonosko@exoplatform.com.ua">Peter Nedonosko</a>
  * @version $Id$
  */
-public class GroupImpl implements Group {
+public class GroupImpl implements Group
+{
 
-  /**
-   * The group's description.
-   */
-  private String       description;
+   /**
+    * The group's description.
+    */
+   private String description;
 
-  /**
-   * The group's id. It is have a form /ancestor/parent/groupname.
-   */
-  private String       groupId;
+   /**
+    * The group's id. It is have a form /ancestor/parent/groupname.
+    */
+   private String groupId;
 
-  /**
-   * The group's name.
-   */
-  private String       groupName;
+   /**
+    * The group's name.
+    */
+   private String groupName;
 
-  /**
-   * The group's label.
-   */
-  private String       label;
+   /**
+    * The group's label.
+    */
+   private String label;
 
-  /**
-   * The group's parentId. It is have a form /ancestor/parent.
-   */
-  private String       parentId;
+   /**
+    * The group's parentId. It is have a form /ancestor/parent.
+    */
+   private String parentId;
 
-  /**
-   * The UUId of the group in the storage.
-   */
-  private final String UUId;
+   /**
+    * The UUId of the group in the storage.
+    */
+   private String UUId;
 
-  /**
-   * GroupImpl constructor.
-   */
-  GroupImpl() {
-    UUId = null;
-  }
+   /**
+    * GroupImpl constructor.
+    */
+   GroupImpl()
+   {
+      UUId = null;
+   }
 
-  /**
-   * GroupImpl constructor.
-   * 
-   * @param name
-   *          The name of the group
-   * @param parentId
-   *          The parentId of the group
-   * @param UUId
-   *          The group's UUId in the storage
-   */
-  GroupImpl(String name, String parentId, String UUId) {
-    this.groupName = name;
-    this.UUId = UUId;
-    this.parentId = (parentId == null || parentId.equals("") ? null : parentId);
-    this.groupId = (this.parentId == null ? "" : this.parentId) + "/" + this.groupName;
-  }
+   /**
+    * GroupImpl constructor.
+    * 
+    * @param name
+    *          The name of the group
+    * @param parentId
+    *          The parentId of the group
+    * @param UUId
+    *          The group's UUId in the storage
+    */
+   GroupImpl(String name, String parentId, String UUId)
+   {
+      this.UUId = UUId;
 
-  /**
-   * {@inheritDoc}
-   */
-  public String getDescription() {
-    return description;
-  }
+      setParentId(parentId);
+      setGroupName(name);
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public String getGroupName() {
-    return groupName;
-  }
+   /** 
+      * Set parentId to this Group. 
+      * <br>NOTE: this method will not update groupId, to change it use groupId setter.    
+      * <br>For internal use. 
+      *  
+      * @param parentId String with parentId  
+      */
+   void setParentId(String parentId)
+   {
+      this.parentId = (parentId == null || parentId.equals("") ? null : parentId);
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public String getId() {
-    return groupId;
-  }
+   /** 
+    * Set UUId to this Group. 
+    * <br>For internal use. 
+    *  
+    * @param UUId String with group UUId  
+    */
+   void setUUId(String UUId)
+   {
+      this.UUId = UUId;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public String getLabel() {
-    return label;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public String getDescription()
+   {
+      return description;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public String getParentId() {
-    return parentId;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public String getGroupName()
+   {
+      return groupName;
+   }
 
-  /**
-   * Get group's UUId.
-   * 
-   * @return The UUId of the group in the storage
-   */
-  public String getUUId() {
-    return UUId;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public String getId()
+   {
+      return groupId;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public void setDescription(String desc) {
-    description = desc;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public String getLabel()
+   {
+      return label;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public void setGroupName(String name) {
-    groupName = name;
-    groupId = ((this.getParentId() == null) ? "" : this.getParentId()) + "/" + groupName;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public String getParentId()
+   {
+      return parentId;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public void setLabel(String name) {
-    label = name;
-  }
+   /**
+    * Get group's UUId.
+    * 
+    * @return The UUId of the group in the storage
+    */
+   public String getUUId()
+   {
+      return UUId;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public String toString() {
-    return "[groupId=" + getId() + "][groupName=" + getGroupName() + "][parentId=" + getParentId()
-        + "]";
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public void setDescription(String desc)
+   {
+      description = desc;
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public void setGroupName(String name)
+   {
+      groupName = name;
+      groupId = (parentId == null ? "" : parentId) + "/" + groupName;
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public void setLabel(String name)
+   {
+      label = name;
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public String toString()
+   {
+      return "[groupId=" + getId() + "][groupName=" + getGroupName() + "][parentId=" + getParentId() + "]";
+   }
 
 }

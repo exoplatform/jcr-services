@@ -28,8 +28,7 @@ import java.util.List;
  * @author <a href="mailto:anatoliy.bazko@exoplatform.com.ua">Anatoliy Bazko</a>
  * @version $Id: TestOrganizationService.java 111 2008-11-11 11:11:11Z $
  */
-public class TestGroupHandlerImpl
-   extends AbstractOrganizationServiceTest
+public class TestGroupHandlerImpl extends AbstractOrganizationServiceTest
 {
 
    /**

@@ -134,17 +134,33 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
 
       try
       {
-         String parentId = (parent == null) ? "" : parent.getId();
-         Node parentNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_GROUPS + parentId);
+         Node parentNode =
+            (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_GROUPS
+               + (parent == null ? "" : parent.getId()));
          Node gNode = parentNode.addNode(child.getGroupName(), "jos:hierarchyGroup");
 
-         Group group = new GroupImpl(child.getGroupName(), parentId, gNode.getUUID());
+         String parentId = parent == null ? null : parent.getId();
+
+         // new logic: reuse group instance if JCR org-service manages it, create a new instance otherwise
+         GroupImpl group;
+         if (child instanceof GroupImpl)
+         {
+            group = (GroupImpl)child;
+            // ressign Ids according the parent  
+            group.setParentId(parentId);
+            group.setGroupName(group.getGroupName());
+            group.setUUId(gNode.getUUID());
+         }
+         else
+         {
+            group = new GroupImpl(child.getGroupName(), parentId, gNode.getUUID());
+         }
          group.setDescription(child.getDescription());
          group.setLabel(child.getLabel() != null ? child.getLabel() : child.getGroupName());
 
          if (broadcast)
          {
-            preSave(child, true);
+            preSave(group, true);
          }
 
          writeObjectToNode(group, gNode);
@@ -152,7 +168,7 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
 
          if (broadcast)
          {
-            postSave(child, true);
+            postSave(group, true);
          }
 
       }
