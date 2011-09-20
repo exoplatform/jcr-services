@@ -1,8 +1,91 @@
+Index: src/test/java/org/exoplatform/services/jcr/ext/organization/TestGroupHandlerImpl.java
+===================================================================
+--- src/test/java/org/exoplatform/services/jcr/ext/organization/TestGroupHandlerImpl.java	(revision 73708)
++++ src/test/java/org/exoplatform/services/jcr/ext/organization/TestGroupHandlerImpl.java	(working copy)
+@@ -22,8 +22,6 @@
+ import org.exoplatform.services.organization.GroupEventListenerHandler;
+ import org.exoplatform.services.organization.GroupHandler;
+ import org.exoplatform.services.organization.OrganizationService;
+-import org.exoplatform.services.organization.UserEventListener;
+-import org.exoplatform.services.organization.UserEventListenerHandler;
+ 
+ import java.util.List;
+ 
+@@ -295,6 +293,40 @@
+    }
+ 
+    /**
++    * Test reusing entity during adding new child group.
++    */
++   public void testReuseEntity() throws Exception
++   {
++      String groupName1 = "group1";
++      String groupName2 = "group2";
++
++      try
++      {
++         GroupImpl child1 = (GroupImpl)gHandler.createGroupInstance();
++         child1.setGroupName(groupName1);
++
++         gHandler.addChild(null, child1, true);
++         assertNotNull(child1.getUUId());
++         assertNull(child1.getParentId());
++         assertEquals("/" + groupName1, child1.getId());
++         assertEquals(groupName1, child1.getGroupName());
++
++         GroupImpl child2 = (GroupImpl)gHandler.createGroupInstance();
++         child2.setGroupName(groupName2);
++
++         gHandler.addChild(child1, child2, true);
++         assertNotNull(child2.getUUId());
++         assertEquals("/" + groupName1, child2.getParentId());
++         assertEquals("/" + groupName1 + "/" + groupName2, child2.getId());
++         assertEquals(groupName2, child2.getGroupName());
++      }
++      finally
++      {
++         gHandler.removeGroup(gHandler.findGroupById("/group1"), true);
++      }
++   }
++
++   /**
+     * Create new group.
+     */
+    private void createGroup(String parentId, String name, String label, String desc)
 Index: src/main/java/org/exoplatform/services/jcr/ext/organization/GroupHandlerImpl.java
 ===================================================================
---- src/main/java/org/exoplatform/services/jcr/ext/organization/GroupHandlerImpl.java	(revision 68317)
+--- src/main/java/org/exoplatform/services/jcr/ext/organization/GroupHandlerImpl.java	(revision 73708)
 +++ src/main/java/org/exoplatform/services/jcr/ext/organization/GroupHandlerImpl.java	(working copy)
-@@ -144,7 +144,7 @@
+@@ -134,17 +134,33 @@
+ 
+       try
+       {
+-         String parentId = (parent == null) ? "" : parent.getId();
+-         Node parentNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_GROUPS + parentId);
++         Node parentNode =
++            (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_GROUPS
++               + (parent == null ? "" : parent.getId()));
+          Node gNode = parentNode.addNode(child.getGroupName(), "jos:hierarchyGroup");
+ 
+-         Group group = new GroupImpl(child.getGroupName(), parentId, gNode.getUUID());
++         String parentId = parent == null ? null : parent.getId();
++
++         // new logic: reuse group instance if JCR org-service manages it, create a new instance otherwise
++         GroupImpl group;
++         if (child instanceof GroupImpl)
++         {
++            group = (GroupImpl)child;
++            // ressign Ids according the parent  
++            group.setParentId(parentId);
++            group.setGroupName(group.getGroupName());
++            group.setUUId(gNode.getUUID());
++         }
++         else
++         {
++            group = new GroupImpl(child.getGroupName(), parentId, gNode.getUUID());
++         }
+          group.setDescription(child.getDescription());
+          group.setLabel(child.getLabel() != null ? child.getLabel() : child.getGroupName());
  
           if (broadcast)
           {
@@ -11,7 +94,7 @@ Index: src/main/java/org/exoplatform/services/jcr/ext/organization/GroupHandlerI
           }
  
           writeObjectToNode(group, gNode);
-@@ -152,7 +152,7 @@
+@@ -152,7 +168,7 @@
  
           if (broadcast)
           {
@@ -20,3 +103,288 @@ Index: src/main/java/org/exoplatform/services/jcr/ext/organization/GroupHandlerI
           }
  
        }
+Index: src/main/java/org/exoplatform/services/jcr/ext/organization/GroupImpl.java
+===================================================================
+--- src/main/java/org/exoplatform/services/jcr/ext/organization/GroupImpl.java	(revision 73708)
++++ src/main/java/org/exoplatform/services/jcr/ext/organization/GroupImpl.java	(working copy)
+@@ -26,134 +26,169 @@
+  * @author <a href="mailto:peter.nedonosko@exoplatform.com.ua">Peter Nedonosko</a>
+  * @version $Id$
+  */
+-public class GroupImpl implements Group {
++public class GroupImpl implements Group
++{
+ 
+-  /**
+-   * The group's description.
+-   */
+-  private String       description;
++   /**
++    * The group's description.
++    */
++   private String description;
+ 
+-  /**
+-   * The group's id. It is have a form /ancestor/parent/groupname.
+-   */
+-  private String       groupId;
++   /**
++    * The group's id. It is have a form /ancestor/parent/groupname.
++    */
++   private String groupId;
+ 
+-  /**
+-   * The group's name.
+-   */
+-  private String       groupName;
++   /**
++    * The group's name.
++    */
++   private String groupName;
+ 
+-  /**
+-   * The group's label.
+-   */
+-  private String       label;
++   /**
++    * The group's label.
++    */
++   private String label;
+ 
+-  /**
+-   * The group's parentId. It is have a form /ancestor/parent.
+-   */
+-  private String       parentId;
++   /**
++    * The group's parentId. It is have a form /ancestor/parent.
++    */
++   private String parentId;
+ 
+-  /**
+-   * The UUId of the group in the storage.
+-   */
+-  private final String UUId;
++   /**
++    * The UUId of the group in the storage.
++    */
++   private String UUId;
+ 
+-  /**
+-   * GroupImpl constructor.
+-   */
+-  GroupImpl() {
+-    UUId = null;
+-  }
++   /**
++    * GroupImpl constructor.
++    */
++   GroupImpl()
++   {
++      UUId = null;
++   }
+ 
+-  /**
+-   * GroupImpl constructor.
+-   * 
+-   * @param name
+-   *          The name of the group
+-   * @param parentId
+-   *          The parentId of the group
+-   * @param UUId
+-   *          The group's UUId in the storage
+-   */
+-  GroupImpl(String name, String parentId, String UUId) {
+-    this.groupName = name;
+-    this.UUId = UUId;
+-    this.parentId = (parentId == null || parentId.equals("") ? null : parentId);
+-    this.groupId = (this.parentId == null ? "" : this.parentId) + "/" + this.groupName;
+-  }
++   /**
++    * GroupImpl constructor.
++    * 
++    * @param name
++    *          The name of the group
++    * @param parentId
++    *          The parentId of the group
++    * @param UUId
++    *          The group's UUId in the storage
++    */
++   GroupImpl(String name, String parentId, String UUId)
++   {
++      this.UUId = UUId;
+ 
+-  /**
+-   * {@inheritDoc}
+-   */
+-  public String getDescription() {
+-    return description;
+-  }
++      setParentId(parentId);
++      setGroupName(name);
++   }
+ 
+-  /**
+-   * {@inheritDoc}
+-   */
+-  public String getGroupName() {
+-    return groupName;
+-  }
++   /** 
++      * Set parentId to this Group. 
++      * <br>NOTE: this method will not update groupId, to change it use groupId setter.    
++      * <br>For internal use. 
++      *  
++      * @param parentId String with parentId  
++      */
++   void setParentId(String parentId)
++   {
++      this.parentId = (parentId == null || parentId.equals("") ? null : parentId);
++   }
+ 
+-  /**
+-   * {@inheritDoc}
+-   */
+-  public String getId() {
+-    return groupId;
+-  }
++   /** 
++    * Set UUId to this Group. 
++    * <br>For internal use. 
++    *  
++    * @param UUId String with group UUId  
++    */
++   void setUUId(String UUId)
++   {
++      this.UUId = UUId;
++   }
+ 
+-  /**
+-   * {@inheritDoc}
+-   */
+-  public String getLabel() {
+-    return label;
+-  }
++   /**
++    * {@inheritDoc}
++    */
++   public String getDescription()
++   {
++      return description;
++   }
+ 
+-  /**
+-   * {@inheritDoc}
+-   */
+-  public String getParentId() {
+-    return parentId;
+-  }
++   /**
++    * {@inheritDoc}
++    */
++   public String getGroupName()
++   {
++      return groupName;
++   }
+ 
+-  /**
+-   * Get group's UUId.
+-   * 
+-   * @return The UUId of the group in the storage
+-   */
+-  public String getUUId() {
+-    return UUId;
+-  }
++   /**
++    * {@inheritDoc}
++    */
++   public String getId()
++   {
++      return groupId;
++   }
+ 
+-  /**
+-   * {@inheritDoc}
+-   */
+-  public void setDescription(String desc) {
+-    description = desc;
+-  }
++   /**
++    * {@inheritDoc}
++    */
++   public String getLabel()
++   {
++      return label;
++   }
+ 
+-  /**
+-   * {@inheritDoc}
+-   */
+-  public void setGroupName(String name) {
+-    groupName = name;
+-    groupId = ((this.getParentId() == null) ? "" : this.getParentId()) + "/" + groupName;
+-  }
++   /**
++    * {@inheritDoc}
++    */
++   public String getParentId()
++   {
++      return parentId;
++   }
+ 
+-  /**
+-   * {@inheritDoc}
+-   */
+-  public void setLabel(String name) {
+-    label = name;
+-  }
++   /**
++    * Get group's UUId.
++    * 
++    * @return The UUId of the group in the storage
++    */
++   public String getUUId()
++   {
++      return UUId;
++   }
+ 
+-  /**
+-   * {@inheritDoc}
+-   */
+-  public String toString() {
+-    return "[groupId=" + getId() + "][groupName=" + getGroupName() + "][parentId=" + getParentId()
+-        + "]";
+-  }
++   /**
++    * {@inheritDoc}
++    */
++   public void setDescription(String desc)
++   {
++      description = desc;
++   }
+ 
++   /**
++    * {@inheritDoc}
++    */
++   public void setGroupName(String name)
++   {
++      groupName = name;
++      groupId = (parentId == null ? "" : parentId) + "/" + groupName;
++   }
++
++   /**
++    * {@inheritDoc}
++    */
++   public void setLabel(String name)
++   {
++      label = name;
++   }
++
++   /**
++    * {@inheritDoc}
++    */
++   public String toString()
++   {
++      return "[groupId=" + getId() + "][groupName=" + getGroupName() + "][parentId=" + getParentId() + "]";
++   }
++
+ }
