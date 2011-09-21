@@ -20,6 +20,8 @@ import org.exoplatform.commons.utils.LazyPageList;
 import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
+import org.exoplatform.services.organization.CacheHandler;
+import org.exoplatform.services.organization.CacheHandler.CacheType;
 import org.exoplatform.services.organization.ExtendedUserHandler;
 import org.exoplatform.services.organization.Query;
 import org.exoplatform.services.organization.User;
@@ -188,12 +190,16 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
             authenticated = encryptedPassword.equals(password);
          }
 
+         Calendar lastLoginTime = Calendar.getInstance();
+
          if (authenticated)
          {
-            uNode.setProperty(JOS_LAST_LOGIN_TIME, Calendar.getInstance());
+            uNode.setProperty(JOS_LAST_LOGIN_TIME, lastLoginTime);
          }
-         return authenticated;
 
+         service.getCacheHandler().remove(username, CacheType.USER);
+
+         return authenticated;
       }
       catch (PathNotFoundException e)
       {
@@ -252,6 +258,11 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
             user.setCreatedDate(calendar.getTime());
          }
 
+         if (user instanceof UserImpl)
+         {
+            ((UserImpl)user).setUUId(uNode.getUUID());
+         }
+
          if (broadcast)
          {
             preSave(user, true);
@@ -260,11 +271,12 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
          writeObjectToNode(user, uNode);
          session.save();
 
+         service.getCacheHandler().put(user.getUserName(), user, CacheType.USER);
+
          if (broadcast)
          {
             postSave(user, true);
          }
-
       }
       catch (Exception e)
       {
@@ -317,11 +329,20 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
          log.debug("User.findUserByName method is started");
       }
 
+      User user = (User)service.getCacheHandler().get(userName, CacheType.USER);
+      if (user != null)
+      {
+         return user;
+      }
+
       try
       {
          Node uNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_USERS + "/" + userName);
-         return readObjectFromNode(uNode);
+         user = readObjectFromNode(uNode);
 
+         service.getCacheHandler().put(userName, user, CacheType.USER);
+
+         return user;
       }
       catch (PathNotFoundException e)
       {
@@ -447,13 +468,16 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
          uNode.remove();
          session.save();
 
+         service.getCacheHandler().remove(userName, CacheType.USER);
+         service.getCacheHandler().remove(userName, CacheType.USER_PROFILE);
+         service.getCacheHandler().remove(CacheHandler.USER_PREFIX + userName, CacheType.MEMBERSHIP);
+
          if (broadcast)
          {
             postDelete(user);
          }
 
          return user;
-
       }
       catch (PathNotFoundException e)
       {
@@ -495,7 +519,7 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
     * This method is used to update an existing User object.
     * 
     * @param session The current session
-    * @param user The user object to update
+    * @param u The user object to update
     * @param broadcast If the broadcast is true , then all the user event
     *          listener that register with the organization service will be
     *          called
@@ -503,7 +527,7 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
     *           save the user object or any listeners fail to handle the user
     *           event.
     */
-   private void saveUser(Session session, User user, boolean broadcast) throws Exception
+   private void saveUser(Session session, User u, boolean broadcast) throws Exception
    {
       if (log.isDebugEnabled())
       {
@@ -512,10 +536,18 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
 
       try
       {
-         UserImpl userImpl = (UserImpl)user;
-         String userUUID =
-            userImpl.getUUId() != null ? userImpl.getUUId() : ((UserImpl)findUserByName(session, user.getUserName()))
-               .getUUId();
+         UserImpl user = (UserImpl)u;
+         
+         String userUUID;
+         if (user.getUUId() != null)
+         {
+            userUUID = user.getUUId() ;
+         }
+         else
+         {
+            userUUID = ((UserImpl)findUserByName(session, user.getUserName())).getUUId();
+            user.setUUId(userUUID);
+         }
          Node uNode = session.getNodeByUUID(userUUID);
 
          String srcPath = uNode.getPath();
@@ -537,15 +569,24 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
          writeObjectToNode(user, uNode);
          session.save();
 
+         if (!prevName.equals(user.getUserName()))
+         {
+            service.getCacheHandler().remove(prevName, CacheType.USER);
+            service.getCacheHandler().move(prevName, user.getUserName(), CacheType.USER_PROFILE);
+            service.getCacheHandler().move(CacheHandler.USER_PREFIX + prevName,
+               CacheHandler.USER_PREFIX + user.getUserName(), CacheType.MEMBERSHIP);
+         }
+
+         service.getCacheHandler().put(user.getUserName(), user, CacheType.USER);
+
          if (broadcast)
          {
             postSave(user, false);
          }
-
       }
       catch (Exception e)
       {
-         throw new OrganizationServiceException("Can not save user '" + user.getUserName() + "'", e);
+         throw new OrganizationServiceException("Can not save user '" + u.getUserName() + "'", e);
       }
    }
 
@@ -664,26 +705,6 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
    {
       for (UserEventListener listener : listeners)
          listener.postDelete(user);
-   }
-
-   /**
-    * RemoveAsterix remove char '*' from start and end if string starts and ends
-    * with '*'.
-    * 
-    * @param str String to remove char
-    * @return String with removed chars or the same string
-    */
-   private String removeAsterix(String str)
-   {
-      if (str.startsWith("*"))
-      {
-         str = str.substring(1);
-      }
-      if (str.endsWith("*"))
-      {
-         str = str.substring(0, str.length() - 1);
-      }
-      return str;
    }
 
    /**

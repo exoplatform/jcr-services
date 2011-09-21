@@ -19,6 +19,8 @@ package org.exoplatform.services.jcr.ext.organization;
 import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
+import org.exoplatform.services.organization.CacheHandler;
+import org.exoplatform.services.organization.CacheHandler.CacheType;
 import org.exoplatform.services.organization.Group;
 import org.exoplatform.services.organization.Membership;
 import org.exoplatform.services.organization.MembershipEventListener;
@@ -157,6 +159,11 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
                + m.getUserName());
          
          Node mNode = uNode.addNode(UserHandlerImpl.JOS_MEMBERSHIP);
+         
+         if (m instanceof MembershipImpl)
+         {
+            ((MembershipImpl)m).setId(mNode.getUUID());
+         }
 
          if (broadcast)
          {
@@ -165,6 +172,8 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
 
          writeObjectToNode(session, m, mNode);
          session.save();
+
+         service.getCacheHandler().put(service.getCacheHandler().getMembershipKey(m), m, CacheType.MEMBERSHIP);
 
          if (broadcast)
          {
@@ -227,7 +236,6 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
       {
          Node mNode = session.getNodeByUUID(id);
          return readObjectFromNode(session, mNode);
-
       }
       catch (ItemNotFoundException e)
       {
@@ -275,10 +283,16 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
          log.debug("findMembershipByUserGroupAndType");
       }
 
+      MembershipImpl membership =
+         (MembershipImpl)service.getCacheHandler().get(
+            service.getCacheHandler().getMembershipKey(userName, groupId, type), CacheType.MEMBERSHIP);
+      if (membership != null)
+      {
+         return membership;
+      }
+
       try
       {
-         Membership membership = null;
-
          String groupUUId = getGroupUUID(session, groupId);
          if (groupUUId != null)
          {
@@ -305,6 +319,12 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
                   }
                }
             }
+         }
+
+         if (membership != null)
+         {
+            service.getCacheHandler().put(service.getCacheHandler().getMembershipKey(membership), membership,
+               CacheType.MEMBERSHIP);
          }
 
          return membership;
@@ -611,13 +631,14 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
          mNode.remove();
          session.save();
 
+         service.getCacheHandler().remove(service.getCacheHandler().getMembershipKey(membership), CacheType.MEMBERSHIP);
+
          if (broadcast)
          {
             postDelete(membership);
          }
 
          return membership;
-
       }
       catch (ItemNotFoundException e)
       {
@@ -700,6 +721,9 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
          }
 
          session.save();
+
+         service.getCacheHandler().remove(CacheHandler.USER_PREFIX + userName, CacheType.MEMBERSHIP);
+
          for (int i = 0; i < types.size(); i++)
          {
             if (broadcast)
@@ -709,7 +733,6 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
          }
 
          return types;
-
       }
       catch (PathNotFoundException e)
       {
@@ -819,30 +842,6 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
       catch (Exception e)
       {
          throw new OrganizationServiceException("Can not find group by uuid " + UUID, e);
-      }
-   }
-
-   /**
-    * Create membership type '*' if not exist.
-    * 
-    * @param session The current session
-    * @param name The membership type name
-    * @param broadcast Broadcast the event to the registered listeners if the
-    *          broadcast event is 'true'
-    * @throws Exception An exception is thrown if the method is fail to access
-    *           the database or any listener fail to handle the event.
-    */
-   private void createAnyMembershipType(Session session, String name, boolean broadcast) throws Exception
-   {
-      if (name.equals("*")
-         && !session.itemExists(service.getStoragePath() + "/" + MembershipTypeHandlerImpl.STORAGE_JOS_MEMBERSHIP_TYPES
-            + "/" + name))
-      {
-
-         MembershipType m = service.getMembershipTypeHandler().createMembershipTypeInstance();
-         m.setName("*");
-         m.setDescription("any membership type");
-         ((MembershipTypeHandlerImpl)service.getMembershipTypeHandler()).createMembershipType(session, m, broadcast);
       }
    }
 

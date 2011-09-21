@@ -18,6 +18,7 @@ package org.exoplatform.services.jcr.ext.organization;
 
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
+import org.exoplatform.services.organization.CacheHandler.CacheType;
 import org.exoplatform.services.organization.UserProfile;
 import org.exoplatform.services.organization.UserProfileEventListener;
 import org.exoplatform.services.organization.UserProfileEventListenerHandler;
@@ -145,9 +146,21 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
          log.debug("UserProfile.findUserProfileByName method is started");
       }
 
+      UserProfile profile = (UserProfile)service.getCacheHandler().get(userName, CacheType.USER_PROFILE);
+      if (profile != null)
+      {
+         return profile;
+      }
+
       try
       {
-         return readUserProfile(session, userName);
+         profile = readUserProfile(session, userName);
+         if (profile != null)
+         {
+            service.getCacheHandler().put(userName, profile, CacheType.USER_PROFILE);
+         }
+
+         return profile;
       }
       catch (Exception e)
       {
@@ -256,13 +269,14 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
          profileNode.remove();
          session.save();
 
+         service.getCacheHandler().remove(userName, CacheType.USER_PROFILE);
+
          if (broadcast)
          {
             postDelete(userProfile);
          }
 
          return userProfile;
-
       }
       catch (PathNotFoundException e)
       {
@@ -325,17 +339,25 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
             (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_JOS_USERS + "/"
                + profile.getUserName());
 
-         if (!session.itemExists(uNode.getPath() + "/" + UserHandlerImpl.JOS_PROFILE))
+         Node profileNode;
+         try
          {
-            uNode.addNode(UserHandlerImpl.JOS_PROFILE);
+            profileNode = (Node)session.getItem(uNode.getPath() + "/" + UserHandlerImpl.JOS_PROFILE);
          }
-         Node profileNode = uNode.getNode(UserHandlerImpl.JOS_PROFILE);
+         catch (PathNotFoundException e)
+         {
+            profileNode = uNode.addNode(UserHandlerImpl.JOS_PROFILE);
+         }
 
-         if (!session.itemExists(profileNode.getPath() + "/" + JOS_ATTRIBUTES))
+         Node attrNode;
+         try
          {
-            profileNode.addNode(JOS_ATTRIBUTES);
+            attrNode = (Node)session.getItem(profileNode.getPath() + "/" + JOS_ATTRIBUTES);
          }
-         Node attrNode = profileNode.getNode(JOS_ATTRIBUTES);
+         catch (PathNotFoundException e)
+         {
+            attrNode = profileNode.addNode(JOS_ATTRIBUTES);
+         }
 
          if (broadcast)
          {
@@ -349,11 +371,12 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
 
          session.save();
 
+         service.getCacheHandler().put(profile.getUserName(), profile, CacheType.USER_PROFILE);
+
          if (broadcast)
          {
             postSave(profile, false);
          }
-
       }
       catch (PathNotFoundException e)
       {

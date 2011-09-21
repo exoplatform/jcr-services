@@ -16,10 +16,10 @@
  */
 package org.exoplatform.services.jcr.ext.organization;
 
+import org.exoplatform.services.organization.UserProfile;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import org.exoplatform.services.organization.UserProfile;
 
 /**
  * Created by The eXo Platform SAS Date: 24.07.2008
@@ -27,97 +27,119 @@ import org.exoplatform.services.organization.UserProfile;
  * @author <a href="mailto:peter.nedonosko@exoplatform.com.ua">Peter Nedonosko</a>
  * @version $Id$
  */
-public class UserProfileImpl implements UserProfile {
+public class UserProfileImpl implements UserProfile, Cloneable
+{
 
-  /**
-   * The profile attributes.
-   */
-  private Map<String, String> attributes;
+   /**
+    * The profile attributes.
+    */
+   private Map<String, String> attributes;
 
-  /**
-   * The name of user.
-   */
-  private String              userName;
+   /**
+    * The name of user.
+    */
+   private String userName;
 
-  /**
-   * UserProfileImpl constructor.
-   */
-  public UserProfileImpl() {
-    attributes = new HashMap<String, String>();
-  }
+   /**
+    * UserProfileImpl constructor.
+    */
+   public UserProfileImpl()
+   {
+      attributes = new HashMap<String, String>();
+   }
 
-  /**
-   * UserProfileImpl constructor.
-   * 
-   * @param name
-   *          The user name
-   */
-  public UserProfileImpl(String name) {
-    attributes = new HashMap<String, String>();
-    userName = name;
-  }
+   /**
+    * UserProfileImpl constructor.
+    * 
+    * @param name
+    *          The user name
+    */
+   public UserProfileImpl(String name)
+   {
+      attributes = new HashMap<String, String>();
+      userName = name;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public String getAttribute(String attName) {
-    return attributes.get(attName);
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public String getAttribute(String attName)
+   {
+      return attributes.get(attName);
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public Map<String, String> getUserInfoMap() {
-    return attributes;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public Map<String, String> getUserInfoMap()
+   {
+      return attributes;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public String getUserName() {
-    return userName;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public String getUserName()
+   {
+      return userName;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public void setAttribute(String key, String value) {
-    attributes.put(key, value);
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public void setAttribute(String key, String value)
+   {
+      attributes.put(key, value);
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public void setUserInfoMap(Map<String, String> map) {
-    attributes = map;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public void setUserInfoMap(Map<String, String> map)
+   {
+      attributes = map;
+   }
 
-  /**
-   * Set user name
-   * 
-   * @param username
-   *          user name
-   * 
-   *@deprecated The third party developer should not used this method. We should pass the username
-   *             to the @see UserProfileHandler.createUserInstance() and set the username for the
-   *             instance once only.
-   */
-  public void setUserName(String username) {
-    userName = username;
-  }
+   /**
+    * Set user name
+    * 
+    * @param username
+    *          user name
+    * 
+    *@deprecated The third party developer should not used this method. We should pass the username
+    *             to the @see UserProfileHandler.createUserInstance() and set the username for the
+    *             instance once only.
+    */
+   public void setUserName(String username)
+   {
+      userName = username;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public String toString() {
-    String result = "";
+   /**
+    * {@inheritDoc}
+    */
+   public String toString()
+   {
+      String result = "";
 
-    Object[] keys = getUserInfoMap().keySet().toArray();
-    for (int i = 0; i < keys.length; i++) {
-      String key = (String) keys[i];
-      result = result + "[" + key + "=" + getAttribute(key) + "]";
-    }
+      Object[] keys = getUserInfoMap().keySet().toArray();
+      for (int i = 0; i < keys.length; i++)
+      {
+         String key = (String)keys[i];
+         result = result + "[" + key + "=" + getAttribute(key) + "]";
+      }
 
-    return result;
-  }
+      return result;
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public Object clone()
+   {
+      UserProfileImpl profile = new UserProfileImpl(userName);
+      profile.setUserInfoMap(attributes);
+
+      return profile;
+   }
 }

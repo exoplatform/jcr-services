@@ -154,6 +154,7 @@ public class TestMembershipTypeHandlerImpl extends AbstractOrganizationServiceTe
       // Modify membership type. In preSave event there is old record in storage.
       MembershipType mt = mtHandler.findMembershipType(membershipType);
       mt.setDescription("newDesc");
+
       mtHandler.saveMembershipType(mt, true);
 
       // preSave Event

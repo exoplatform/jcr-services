@@ -26,94 +26,139 @@ import org.exoplatform.services.organization.Membership;
  * @author <a href="mailto:peter.nedonosko@exoplatform.com.ua">Peter Nedonosko</a>
  * @version $Id$
  */
-public class MembershipImpl implements Membership {
+public class MembershipImpl implements Membership, Cloneable
+{
 
-  /**
-   * The group id
-   */
-  private String groupId;
+   /**
+    * The group id
+    */
+   private String groupId;
 
-  /**
-   * The membership type id
-   */
-  private String membershipType;
+   /**
+    * The membership type id
+    */
+   private String membershipType;
 
-  /**
-   * The user name
-   */
-  private String userName;
+   /**
+    * The user name
+    */
+   private String userName;
 
-  /**
-   * The id of the membership
-   */
-  private String id;
+   /**
+    * The id of the membership
+    */
+   private String id;
 
-  /**
-   * MembershipImpl constructor.
-   */
-  MembershipImpl() {
-  }
+   /**
+    * MembershipImpl constructor.
+    */
+   MembershipImpl()
+   {
+   }
 
-  /**
-   * MembershipImpl constructor.
-   * 
-   * @param id
-   *          The membership record identifier
-   * @param userName
-   *          The user name
-   * @param groupId
-   *          The group id
-   * @param membershipType
-   *          The membership type
-   */
-  MembershipImpl(String id, String userName, String groupId, String membershipType) {
-    this.id = id;
-    this.userName = userName;
-    this.groupId = groupId;
-    this.membershipType = membershipType;
-  }
+   /**
+    * MembershipImpl constructor.
+    * 
+    * @param id
+    *          The membership record identifier
+    * @param userName
+    *          The user name
+    * @param groupId
+    *          The group id
+    * @param membershipType
+    *          The membership type
+    */
+   MembershipImpl(String id, String userName, String groupId, String membershipType)
+   {
+      this.id = id;
+      this.userName = userName;
+      this.groupId = groupId;
+      this.membershipType = membershipType;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public String getGroupId() {
-    return groupId;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public String getGroupId()
+   {
+      return groupId;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public String getId() {
-    return id;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public String getId()
+   {
+      return id;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public String getMembershipType() {
-    return membershipType;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public String getMembershipType()
+   {
+      return membershipType;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public String getUserName() {
-    return userName;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public String getUserName()
+   {
+      return userName;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public void setMembershipType(String type) {
-    membershipType = type;
-  }
+   /**
+    * Set membership id.
+    */
+   void setId(String id)
+   {
+      this.id = id;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public String toString() {
-    return "[groupId=" + getGroupId() + "][type=" + getMembershipType() + "][user=" + getUserName()
-        + "]";
-  }
+   /**
+    * Set group id.
+    */
+   void setGroupId(String groupId)
+   {
+      this.groupId = groupId;
+   }
 
+   /**
+    * Set user name.
+    */
+   void setUserName(String userName)
+   {
+      this.userName = userName;
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public void setMembershipType(String type)
+   {
+      membershipType = type;
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public String toString()
+   {
+      return "[groupId=" + getGroupId() + "][type=" + getMembershipType() + "][user=" + getUserName() + "]";
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public Object clone()
+   {
+      MembershipImpl membership = new MembershipImpl();
+      membership.setId(id);
+      membership.setMembershipType(membershipType);
+      membership.setGroupId(groupId);
+      membership.setUserName(userName);
+
+      return membership;
+   }
 }

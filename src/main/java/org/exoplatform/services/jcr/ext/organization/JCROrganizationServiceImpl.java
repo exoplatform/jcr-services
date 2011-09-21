@@ -22,6 +22,7 @@ package org.exoplatform.services.jcr.ext.organization;
 import org.exoplatform.container.configuration.ConfigurationException;
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.container.xml.ValueParam;
+import org.exoplatform.services.cache.CacheService;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.config.RepositoryConfigurationException;
 import org.exoplatform.services.jcr.core.ManageableRepository;
@@ -109,6 +110,11 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
    protected String storageWorkspace;
 
    /**
+    * Cache for organization service entities.
+    */
+   protected final JCRCacheHandler cacheHandler;
+
+   /**
     * Initialization parameters.
     */
    protected InitParams initParams;
@@ -126,10 +132,10 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
     * @throws ConfigurationException The exception is thrown if can not
     *           initialize service
     */
-   public JCROrganizationServiceImpl(InitParams params, RepositoryService repositoryService)
+   public JCROrganizationServiceImpl(InitParams params, RepositoryService repositoryService, CacheService cservice)
       throws ConfigurationException
    {
-      this(params, repositoryService, null);
+      this(params, repositoryService, null, cservice);
    }
 
    /**
@@ -142,14 +148,16 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
     *           initialize service
     */
    public JCROrganizationServiceImpl(InitParams initParams, RepositoryService repositoryService,
-      RegistryService registryService) throws ConfigurationException
+      RegistryService registryService, CacheService cservice) throws ConfigurationException
    {
-      // TODO Searching Repository Content should be enabled
       this.repositoryService = repositoryService;
       this.registryService = registryService;
+      this.cacheHandler = new JCRCacheHandler(cservice);
 
       if (initParams == null)
-         throw new ConfigurationException("Init parameters expected !!!");
+      {
+         throw new ConfigurationException("Initialization parameters expected !!!");
+      }
 
       this.initParams = initParams;
 
@@ -244,6 +252,14 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
    public void stop()
    {
       super.stop();
+   }
+
+   /**
+    * Returns cache.
+    */
+   JCRCacheHandler getCacheHandler()
+   {
+      return cacheHandler;
    }
 
    /**

@@ -26,7 +26,7 @@ import org.exoplatform.services.organization.Group;
  * @author <a href="mailto:peter.nedonosko@exoplatform.com.ua">Peter Nedonosko</a>
  * @version $Id$
  */
-public class GroupImpl implements Group
+public class GroupImpl implements Group, Cloneable
 {
 
    /**
@@ -191,4 +191,19 @@ public class GroupImpl implements Group
       return "[groupId=" + getId() + "][groupName=" + getGroupName() + "][parentId=" + getParentId() + "]";
    }
 
+   /**
+    * {@inheritDoc}
+    */
+   public Object clone()
+   {
+      GroupImpl group = new GroupImpl();
+      group.setUUId(UUId);
+      group.setDescription(description);
+      group.setParentId(parentId);
+      group.setGroupName(groupName);
+      group.setLabel(label);
+
+      return group;
+
+   }
 }

@@ -16,9 +16,9 @@
  */
 package org.exoplatform.services.jcr.ext.organization;
 
-import java.util.Date;
-
 import org.exoplatform.services.organization.User;
+
+import java.util.Date;
 
 /**
  * Created by The eXo Platform SAS.
@@ -28,216 +28,267 @@ import org.exoplatform.services.organization.User;
  * @author <a href="mailto:peter.nedonosko@exoplatform.com.ua">Peter Nedonosko</a>
  * @version $Id$
  */
-public class UserImpl implements User {
+public class UserImpl implements User, Cloneable
+{
 
-  /**
-   * The user's created date
-   */
-  private Date             createdDate;
+   /**
+    * The user's created date
+    */
+   private Date createdDate;
 
-  /**
-   * The email of the user
-   */
-  private String           email;
+   /**
+    * The email of the user
+    */
+   private String email;
 
-  /**
-   * The first name of the user
-   */
-  private String           firstName;
+   /**
+    * The first name of the user
+    */
+   private String firstName;
 
-  /**
-   * The last login time of the user
-   */
-  private Date             lastLoginTime;
+   /**
+    * The last login time of the user
+    */
+   private Date lastLoginTime;
 
-  /**
-   * The last name of the user
-   */
-  private String           lastName;
+   /**
+    * The last name of the user
+    */
+   private String lastName;
 
-  /**
-   * The password of the user
-   */
-  private transient String password;
+   /**
+    * The password of the user
+    */
+   private transient String password;
 
-  /**
-   * The user name
-   */
-  private String           userName;
+   /**
+    * The user name
+    */
+   private String userName;
 
-  /**
-   * The UUId of the user in the storage
-   */
-  private final String     UUId;
+   /**
+    * The UUId of the user in the storage
+    */
+   private String UUId;
 
-  /**
-   * UserImpl constructor.
-   */
-  UserImpl() {
-    this.UUId = null;
-  }
+   /**
+    * UserImpl constructor.
+    */
+   UserImpl()
+   {
+      this.UUId = null;
+   }
 
-  /**
-   * UserImpl constructor.
-   * 
-   * @param name
-   *          The user name
-   */
-  UserImpl(String name) {
-    this.userName = name;
-    this.UUId = null;
-  }
+   /**
+    * UserImpl constructor.
+    * 
+    * @param name
+    *          The user name
+    */
+   UserImpl(String name)
+   {
+      this.userName = name;
+      this.UUId = null;
+   }
 
-  /**
-   * UserImpl constructor.
-   * 
-   * @param name
-   *          The user name
-   * @param UUId
-   *          The UUId of the use in the storage
-   */
-  UserImpl(String name, String UUId) {
-    this.userName = name;
-    this.UUId = UUId;
-  }
+   /**
+    * UserImpl constructor.
+    * 
+    * @param name
+    *          The user name
+    * @param UUId
+    *          The UUId of the use in the storage
+    */
+   UserImpl(String name, String UUId)
+   {
+      this.userName = name;
+      this.UUId = UUId;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public Date getCreatedDate() {
-    return createdDate;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public Date getCreatedDate()
+   {
+      return createdDate;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public String getEmail() {
-    return email;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public String getEmail()
+   {
+      return email;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public String getFirstName() {
-    return firstName;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public String getFirstName()
+   {
+      return firstName;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public String getFullName() {
-    return getFirstName() + " " + getLastName();
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public String getFullName()
+   {
+      return getFirstName() + " " + getLastName();
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public Date getLastLoginTime() {
-    return lastLoginTime;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public Date getLastLoginTime()
+   {
+      return lastLoginTime;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public String getLastName() {
-    return lastName;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public String getLastName()
+   {
+      return lastName;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public String getOrganizationId() {
-    return null;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public String getOrganizationId()
+   {
+      return null;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public String getPassword() {
-    return password;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public String getPassword()
+   {
+      return password;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public String getUserName() {
-    return userName;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public String getUserName()
+   {
+      return userName;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public void setCreatedDate(Date t) {
-    createdDate = t;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public void setCreatedDate(Date t)
+   {
+      createdDate = t;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public void setEmail(String s) {
-    email = s;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public void setEmail(String s)
+   {
+      email = s;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public void setFirstName(String s) {
-    firstName = s;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public void setFirstName(String s)
+   {
+      firstName = s;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public void setFullName(String s) {
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public void setFullName(String s)
+   {
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public void setLastLoginTime(Date t) {
-    lastLoginTime = t;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public void setLastLoginTime(Date t)
+   {
+      lastLoginTime = t;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public void setLastName(String s) {
-    lastName = s;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public void setLastName(String s)
+   {
+      lastName = s;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public void setOrganizationId(String s) {
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public void setOrganizationId(String s)
+   {
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public void setPassword(String s) {
-    password = s;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public void setPassword(String s)
+   {
+      password = s;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public void setUserName(String s) {
-    userName = s;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public void setUserName(String s)
+   {
+      userName = s;
+   }
 
-  /**
-   * Get user UUId.
-   * 
-   * @return UUId of the user in the storage
-   */
-  public String getUUId() {
-    return UUId;
-  }
+   /**
+    * Set user UUId.
+    */
+   void setUUId(String UUid)
+   {
+      this.UUId = UUid;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public String toString() {
-    return "[user=" + getUserName() + "]";
-  }
+   /**
+    * Get user UUId.
+    * 
+    * @return UUId of the user in the storage
+    */
+   public String getUUId()
+   {
+      return UUId;
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public String toString()
+   {
+      return "[user=" + getUserName() + "]";
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public Object clone()
+   {
+      UserImpl user = new UserImpl();
+      user.setCreatedDate(createdDate);
+      user.setEmail(email);
+      user.setFirstName(firstName);
+      user.setLastName(lastName);
+      user.setLastLoginTime(lastLoginTime);
+      user.setPassword(password);
+      user.setUserName(userName);
+      user.setUUId(UUId);
+
+      return user;
+   }
+
 }

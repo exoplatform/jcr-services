@@ -18,6 +18,8 @@ package org.exoplatform.services.jcr.ext.organization;
 
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
+import org.exoplatform.services.organization.CacheHandler;
+import org.exoplatform.services.organization.CacheHandler.CacheType;
 import org.exoplatform.services.organization.MembershipType;
 import org.exoplatform.services.organization.MembershipTypeEventListener;
 import org.exoplatform.services.organization.MembershipTypeEventListenerHandler;
@@ -106,6 +108,11 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
       {
          Node storagePath = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_MEMBERSHIP_TYPES);
          Node mtNode = storagePath.addNode(mt.getName());
+         
+         if (mt instanceof MembershipTypeImpl)
+         {
+            ((MembershipTypeImpl)mt).setUUId(mtNode.getUUID());
+         }
 
          if (broadcast)
          {
@@ -115,13 +122,14 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
          writeObjectToNode(mt, mtNode);
          session.save();
 
+         service.getCacheHandler().put(mt.getName(), mt, CacheType.MEMBERSHIPTYPE);
+
          if (broadcast)
          {
             postSave(mt, true);
          }
 
          return readObjectFromNode(mtNode);
-
       }
       catch (Exception e)
       {
@@ -177,12 +185,21 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
          log.debug("MembershipType.findMembershipType method is started");
       }
 
+      MembershipType mt = (MembershipType)service.getCacheHandler().get(name, CacheType.MEMBERSHIPTYPE);
+      if (mt != null)
+      {
+         return mt;
+      }
+
       try
       {
          Node mtNode =
             (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_MEMBERSHIP_TYPES + "/" + name);
-         return readObjectFromNode(mtNode);
+         mt = readObjectFromNode(mtNode);
 
+         service.getCacheHandler().put(name, mt, CacheType.MEMBERSHIPTYPE);
+
+         return mt;
       }
       catch (PathNotFoundException e)
       {
@@ -315,6 +332,9 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
          mtNode.remove();
          session.save();
 
+         service.getCacheHandler().remove(name, CacheType.MEMBERSHIPTYPE);
+         service.getCacheHandler().remove(CacheHandler.MEMBERSHIPTYPE_PREFIX + name, CacheType.MEMBERSHIP);
+
          if (broadcast)
          {
             postDelete(mt);
@@ -372,38 +392,54 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
 
       try
       {
-         MembershipTypeImpl mtImpl = (MembershipTypeImpl)mt;
-         String mtUUID =
-            mtImpl.getUUId() != null ? mtImpl.getUUId()
-               : ((MembershipTypeImpl)findMembershipType(session, mt.getName())).getUUId();
+         MembershipTypeImpl mType = (MembershipTypeImpl)mt;
+
+         String mtUUID;
+         if (mType.getUUId() != null)
+         {
+            mtUUID = mType.getUUId();
+         }
+         else
+         {
+            mtUUID = ((MembershipTypeImpl)findMembershipType(session, mType.getName())).getUUId();
+            mType.setUUId(mtUUID);
+         }
          Node mtNode = session.getNodeByUUID(mtUUID);
 
          String srcPath = mtNode.getPath();
          int pos = srcPath.lastIndexOf('/');
          String prevName = srcPath.substring(pos + 1);
 
-         if (!prevName.equals(mt.getName()))
+         if (!prevName.equals(mType.getName()))
          {
-            String destPath = srcPath.substring(0, pos) + "/" + mt.getName();
+            String destPath = srcPath.substring(0, pos) + "/" + mType.getName();
             session.move(srcPath, destPath);
             mtNode = (Node)session.getItem(destPath);
          }
 
          if (broadcast)
          {
-            preSave(mt, false);
+            preSave(mType, false);
          }
 
-         writeObjectToNode(mt, mtNode);
+         writeObjectToNode(mType, mtNode);
          session.save();
+
+         if (!prevName.equals(mType.getName()))
+         {
+            service.getCacheHandler().remove(prevName, CacheType.MEMBERSHIPTYPE);
+            service.getCacheHandler().move(CacheHandler.MEMBERSHIPTYPE_PREFIX + prevName,
+               CacheHandler.MEMBERSHIPTYPE_PREFIX + mType.getName(), CacheType.MEMBERSHIP);
+         }
+
+         service.getCacheHandler().put(mType.getName(), mType, CacheType.MEMBERSHIPTYPE);
 
          if (broadcast)
          {
-            postSave(mt, false);
+            postSave(mType, false);
          }
 
-         return readObjectFromNode(mtNode);
-
+         return mType;
       }
       catch (Exception e)
       {

@@ -18,6 +18,7 @@ package org.exoplatform.services.jcr.ext.organization;
 
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
+import org.exoplatform.services.organization.CacheHandler.CacheType;
 import org.exoplatform.services.organization.Group;
 import org.exoplatform.services.organization.GroupEventListener;
 import org.exoplatform.services.organization.GroupEventListenerHandler;
@@ -166,11 +167,12 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
          writeObjectToNode(group, gNode);
          session.save();
 
+         service.getCacheHandler().put(child.getId(), group, CacheType.GROUP);
+
          if (broadcast)
          {
             postSave(group, true);
          }
-
       }
       catch (Exception e)
       {
@@ -246,11 +248,20 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
          log.debug("findGroupById started");
       }
 
+      Group group = (Group)service.getCacheHandler().get(groupId, CacheType.GROUP);
+      if (group != null)
+      {
+         return group;
+      }
+
       try
       {
          Node gNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_GROUPS + groupId);
-         return readObjectFromNode(gNode);
+         group = readObjectFromNode(gNode);
 
+         service.getCacheHandler().put(groupId, group, CacheType.GROUP);
+
+         return group;
       }
       catch (PathNotFoundException e)
       {
@@ -531,13 +542,14 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
          gNode.remove();
          session.save();
 
+         service.getCacheHandler().removeGroupHierarchy(group.getId());
+
          if (broadcast)
          {
             postDelete(group);
          }
 
          return g;
-
       }
       catch (Exception e)
       {
@@ -600,11 +612,12 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
          writeObjectToNode(group, gNode);
          session.save();
 
+         service.getCacheHandler().put(group.getId(), group, CacheType.GROUP);
+
          if (broadcast)
          {
             postSave(group, false);
          }
-
       }
       catch (Exception e)
       {

@@ -16,9 +16,9 @@
  */
 package org.exoplatform.services.jcr.ext.organization;
 
-import java.util.Date;
-
 import org.exoplatform.services.organization.MembershipType;
+
+import java.util.Date;
 
 /**
  * Created by The eXo Platform SAS.
@@ -28,144 +28,190 @@ import org.exoplatform.services.organization.MembershipType;
  * @author <a href="mailto:peter.nedonosko@exoplatform.com.ua">Peter Nedonosko</a>
  * @version $Id$
  */
-public class MembershipTypeImpl implements MembershipType {
+public class MembershipTypeImpl implements MembershipType, Cloneable
+{
 
-  /**
-   * The description of the membership type
-   */
-  private String       description;
+   /**
+    * The description of the membership type
+    */
+   private String description;
 
-  /**
-   * The name of the membership type
-   */
-  private String       name;
+   /**
+    * The name of the membership type
+    */
+   private String name;
 
-  /**
-   * The UUID of the membership type in the storage
-   */
-  private final String UUId;
+   /**
+    * The UUID of the membership type in the storage
+    */
+   private String UUId;
 
-  /**
-   * MembershipTypeImpl constructor.
-   */
-  MembershipTypeImpl() {
-    this.UUId = null;
-  }
+   /**
+    * MembershipTypeImpl constructor.
+    */
+   MembershipTypeImpl()
+   {
+      this.UUId = null;
+   }
 
-  /**
-   * MembershipTypeImpl constructor.
-   * 
-   * @param UUId
-   *          - membership node id
-   */
-  MembershipTypeImpl(String UUId) {
-    this.UUId = UUId;
-  }
+   /**
+    * MembershipTypeImpl constructor.
+    * 
+    * @param UUId
+    *          - membership node id
+    */
+   MembershipTypeImpl(String UUId)
+   {
+      this.UUId = UUId;
+   }
 
-  /**
-   * Get the date when the membership type was created to the database.
-   * 
-   * @deprecated This method is not used.
-   * @return The date that the membership type was created to the database
-   */
-  public Date getCreatedDate() {
-    return null;
-  }
+   /**
+    * MembershipTypeImpl constructor.
+    */
+   MembershipTypeImpl(String UUId, String name, String description)
+   {
+      this.UUId = UUId;
+      this.name = name;
+      this.description = description;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public String getDescription() {
-    return description;
-  }
+   /**
+    * Get the date when the membership type was created to the database.
+    * 
+    * @deprecated This method is not used.
+    * @return The date that the membership type was created to the database
+    */
+   public Date getCreatedDate()
+   {
+      return null;
+   }
 
-  /**
-   * Get the date when membership type was modified last time.
-   * 
-   * @deprecated This method is not used.
-   * @return The last time that an user modify the data of the membership type.
-   */
-  public Date getModifiedDate() {
-    return null;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public String getDescription()
+   {
+      return description;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public String getName() {
-    return name;
-  }
+   /**
+    * Get the date when membership type was modified last time.
+    * 
+    * @deprecated This method is not used.
+    * @return The last time that an user modify the data of the membership type.
+    */
+   public Date getModifiedDate()
+   {
+      return null;
+   }
 
-  /**
-   * Get owner of the membership type.
-   * 
-   * @deprecated This method is not used.
-   * @return The owner of the membership type
-   */
-  public String getOwner() {
-    return null;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public String getName()
+   {
+      return name;
+   }
 
-  /**
-   * Get UUId of the membership type in the storage.
-   * 
-   * @return The UUID of the membership type in the storage
-   */
-  public String getUUId() {
-    return UUId;
-  }
+   /**
+    * Get owner of the membership type.
+    * 
+    * @deprecated This method is not used.
+    * @return The owner of the membership type
+    */
+   public String getOwner()
+   {
+      return null;
+   }
 
-  /**
-   * Set date creation of the membership type.
-   * 
-   * @deprecated This method is not used.
-   * @param d
-   *          The created date
-   */
-  public void setCreatedDate(Date d) {
-  }
+   /**
+    * Get UUId of the membership type in the storage.
+    * 
+    * @return The UUID of the membership type in the storage
+    */
+   public String getUUId()
+   {
+      return UUId;
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public void setDescription(String s) {
-    description = s;
-  }
+   /**
+    * Set UUId of the membership type.
+    */
+   void setUUId(String UUId)
+   {
+      this.UUId = UUId;
+   }
 
-  /**
-   * Set date modification of the membership type.
-   * 
-   * @deprecated This method is not used.
-   * @param d
-   *          The modified date
-   */
-  public void setModifiedDate(Date d) {
-  }
+   /**
+    * Set date creation of the membership type.
+    * 
+    * @deprecated This method is not used.
+    * @param d
+    *          The created date
+    */
+   public void setCreatedDate(Date d)
+   {
+   }
 
-  /**
-   * Set the new name for membership type.
-   * 
-   * @param s
-   *          The name of the membership type
-   */
-  public void setName(String s) {
-    name = s;
-  }
+   /**
+    * {@inheritDoc}
+    */
+   public void setDescription(String s)
+   {
+      description = s;
+   }
 
-  /**
-   * Set the owner for membership type.
-   * 
-   * @deprecated This method is not used.
-   * @param s
-   *          The new owner of the membership type
-   */
-  public void setOwner(String s) {
-  }
+   /**
+    * Set date modification of the membership type.
+    * 
+    * @deprecated This method is not used.
+    * @param d
+    *          The modified date
+    */
+   public void setModifiedDate(Date d)
+   {
+   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public String toString() {
-    return "[type=" + getName() + "]";
-  }
+   /**
+    * Set the new name for membership type.
+    * 
+    * @param s
+    *          The name of the membership type
+    */
+   public void setName(String s)
+   {
+      name = s;
+   }
+
+   /**
+    * Set the owner for membership type.
+    * 
+    * @deprecated This method is not used.
+    * @param s
+    *          The new owner of the membership type
+    */
+   public void setOwner(String s)
+   {
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public String toString()
+   {
+      return "[type=" + getName() + "]";
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public Object clone()
+   {
+      MembershipTypeImpl type = new MembershipTypeImpl();
+      type.setDescription(description);
+      type.setName(name);
+      type.setUUId(UUId);
+
+      return type;
+   }
 }
