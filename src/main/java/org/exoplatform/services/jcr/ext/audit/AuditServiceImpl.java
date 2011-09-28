@@ -698,7 +698,7 @@ public class AuditServiceImpl implements AuditService, Startable
 
          if (storage == null)
          {
-            SessionChangesLog changesLog = new SessionChangesLog(session.getId());
+            SessionChangesLog changesLog = new SessionChangesLog(session);
 
             // here should be added to TransactionalDataManager (i.e. saved
             // immediatelly!
