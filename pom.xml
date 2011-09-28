@@ -69,6 +69,13 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
+      <groupId>org.exoplatform.core</groupId>
+      <artifactId>exo.core.component.organization.tests</artifactId>
+      <version>${org.exoplatform.core.version}</version>
+      <classifier>sources</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
       <version>1.5.8</version>         
@@ -287,18 +294,82 @@
         </dependencies>
       </plugin>
       
+      <!-- Unpacking Organization Service TCK tests-->
+      <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-dependency-plugin</artifactId>
+         <executions>
+            <execution>
+               <id>unpack</id>
+               <phase>generate-test-sources</phase>
+               <goals>
+                  <goal>unpack</goal>
+               </goals>
+               <configuration>
+                  <artifactItems>
+                     <artifactItem>
+                        <groupId>org.exoplatform.core</groupId>
+                        <artifactId>exo.core.component.organization.tests</artifactId>
+                        <classifier>sources</classifier>
+                        <type>jar</type>
+                        <overWrite>false</overWrite>
+                     </artifactItem>
+                  </artifactItems>
+                  <outputDirectory>${project.build.directory}/org-service-tck-tests</outputDirectory>
+               </configuration>
+            </execution>
+         </executions>
+      </plugin>
+      
+      <!-- Adding Organization Service TCK resources and test sources-->
+      <plugin>
+         <groupId>org.codehaus.mojo</groupId>
+         <artifactId>build-helper-maven-plugin</artifactId>
+         <version>1.3</version>
+         <executions>
+            <execution>
+               <id>add-test-resource</id>
+               <phase>generate-test-sources</phase>
+               <goals>
+                  <goal>add-test-resource</goal>
+               </goals>
+               <configuration>
+                  <resources>
+                     <resource>
+                        <directory>${project.build.directory}/org-service-tck-tests</directory>
+                     </resource>
+                  </resources>
+               </configuration>
+            </execution> 
+            <execution>
+               <id>add-test-source</id>
+               <phase>generate-test-sources</phase>
+               <goals>
+                  <goal>add-test-source</goal>
+               </goals>
+               <configuration>
+                  <sources>
+                     <source>${project.build.directory}/org-service-tck-tests</source>
+                  </sources>
+               </configuration>
+            </execution>
+         </executions>
+      </plugin>         
+      
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <argLine>${env.MAVEN_OPTS} -Djava.security.manager=org.exoplatform.commons.test.TestSecurityManager -Djava.security.policy=${project.build.directory}/test-classes/test.policy</argLine>
+          <!-- Including Organization Service TCK-->
           <includes>
-            <include>org/exoplatform/services/jcr/ext/audit/*Test.java</include>
-            <include>org/exoplatform/services/jcr/ext/organization/Test*.java</include>
-          </includes>
+              <include>org/exoplatform/services/tck/organization/Test*.java</include>
+              <include>org/exoplatform/services/jcr/ext/organization/Test*.java</include>
+              <include>org/exoplatform/services/jcr/ext/audit/*Test.java</include>
+          </includes>                 
           <excludes>
-            <exclude>org/exoplatform/services/jcr/**/Base*.java</exclude>
-          </excludes>
+             <exclude>org/exoplatform/services/tck/organization/AbstractOrganizationServiceTest.java</exclude>
+          </excludes>   
         </configuration>
       </plugin>
          <plugin>
