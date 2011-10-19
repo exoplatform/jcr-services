@@ -343,10 +343,6 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
          return mt;
 
       }
-      catch (PathNotFoundException e)
-      {
-         return null;
-      }
       catch (Exception e)
       {
          throw new OrganizationServiceException("Can not remove membership type '" + name + "'", e);
