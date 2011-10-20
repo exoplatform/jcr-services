@@ -677,7 +677,7 @@ public class AuditServiceImpl implements AuditService, Startable {
       ItemData storage = session.getTransientNodesManager().getItemData(AUDIT_STORAGE_ID);
 
       if (storage == null) {
-        SessionChangesLog changesLog = new SessionChangesLog(session.getId());
+        SessionChangesLog changesLog = new SessionChangesLog(session);
 
         // here should be added to TransactionalDataManager (i.e. saved
         // immediatelly!
