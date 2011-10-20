@@ -22,8 +22,6 @@ import org.exoplatform.services.organization.GroupEventListener;
 import org.exoplatform.services.organization.GroupEventListenerHandler;
 import org.exoplatform.services.organization.GroupHandler;
 import org.exoplatform.services.organization.OrganizationService;
-import org.exoplatform.services.organization.UserEventListener;
-import org.exoplatform.services.organization.UserEventListenerHandler;
 
 import java.util.List;
 
@@ -291,6 +289,40 @@ public class TestGroupHandlerImpl extends BaseStandaloneTest
       catch (Exception e)
       {
 
+      }
+   }
+
+   /**
+    * Test reusing entity during adding new child group.
+    */
+   public void testReuseEntity() throws Exception
+   {
+      String groupName1 = "group1";
+      String groupName2 = "group2";
+
+      try
+      {
+         GroupImpl child1 = (GroupImpl)gHandler.createGroupInstance();
+         child1.setGroupName(groupName1);
+
+         gHandler.addChild(null, child1, true);
+         assertNotNull(child1.getUUId());
+         assertNull(child1.getParentId());
+         assertEquals("/" + groupName1, child1.getId());
+         assertEquals(groupName1, child1.getGroupName());
+
+         GroupImpl child2 = (GroupImpl)gHandler.createGroupInstance();
+         child2.setGroupName(groupName2);
+
+         gHandler.addChild(child1, child2, true);
+         assertNotNull(child2.getUUId());
+         assertEquals("/" + groupName1, child2.getParentId());
+         assertEquals("/" + groupName1 + "/" + groupName2, child2.getId());
+         assertEquals(groupName2, child2.getGroupName());
+      }
+      finally
+      {
+         gHandler.removeGroup(gHandler.findGroupById("/group1"), true);
       }
    }
 
