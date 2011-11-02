@@ -239,7 +239,7 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
       }
       catch (ItemNotFoundException e)
       {
-         return null;
+         throw new OrganizationServiceException("Can not find membership " + id, e);
       }
       catch (Exception e)
       {
