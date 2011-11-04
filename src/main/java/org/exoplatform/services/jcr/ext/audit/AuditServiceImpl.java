@@ -203,9 +203,7 @@ public class AuditServiceImpl implements AuditService, Startable
 
       NodeData auditHistory = auditSession.getAuditHistoryNodeData();
       if (auditHistory == null)
-      {
          throw new PathNotFoundException("Audit history not found for " + currentItem.getPath());
-      }
 
       if (auditHistory == null)
       {
@@ -241,8 +239,8 @@ public class AuditServiceImpl implements AuditService, Startable
 
       TransientNodeData arNode =
          new TransientNodeData(QPath.makeChildPath(auditHistory.getQPath(), new InternalQName(null, auditRecordName)),
-            IdGenerator.generate(), -1, AuditService.EXO_AUDITRECORD, new InternalQName[0], Integer
-               .parseInt(auditRecordName), auditHistory.getIdentifier(), exoAuditRecordAccessControlList);
+            IdGenerator.generate(), -1, AuditService.EXO_AUDITRECORD, new InternalQName[0],
+            Integer.parseInt(auditRecordName), auditHistory.getIdentifier(), exoAuditRecordAccessControlList);
 
       // exo:auditRecord
       dataManager.update(new ItemState(arNode, ItemState.ADDED, true, ((ItemImpl)currentItem).getInternalPath()), true);
@@ -289,11 +287,11 @@ public class AuditServiceImpl implements AuditService, Startable
             // exo:newValue
             TransientPropertyData arNewValue =
                TransientPropertyData.createPropertyData(arNode, AuditService.EXO_AUDITRECORD_NEWVALUE, propertyType,
-                  ((PropertyImpl)currentItem).isMultiValued(), ((PropertyData)((PropertyImpl)currentItem).getData())
-                     .getValues());
+                  ((PropertyImpl)currentItem).isMultiValued(),
+                  ((PropertyData)((PropertyImpl)currentItem).getData()).getValues());
 
-            dataManager.update(new ItemState(arNewValue, ItemState.ADDED, true, ((ItemImpl)currentItem)
-               .getInternalPath()), true);
+            dataManager.update(
+               new ItemState(arNewValue, ItemState.ADDED, true, ((ItemImpl)currentItem).getInternalPath()), true);
 
             if (eventType == Event.PROPERTY_CHANGED)
             {
@@ -301,11 +299,11 @@ public class AuditServiceImpl implements AuditService, Startable
                // exo:oldValue
                TransientPropertyData arOldValue =
                   TransientPropertyData.createPropertyData(arNode, AuditService.EXO_AUDITRECORD_OLDVALUE, propertyType,
-                     ((PropertyImpl)previousItem).isMultiValued(), ((PropertyData)((PropertyImpl)previousItem)
-                        .getData()).getValues());
+                     ((PropertyImpl)previousItem).isMultiValued(),
+                     ((PropertyData)((PropertyImpl)previousItem).getData()).getValues());
 
-               dataManager.update(new ItemState(arOldValue, ItemState.ADDED, true, ((ItemImpl)previousItem)
-                  .getInternalPath()), true);
+               dataManager.update(
+                  new ItemState(arOldValue, ItemState.ADDED, true, ((ItemImpl)previousItem).getInternalPath()), true);
             }
          }
       }
@@ -323,8 +321,8 @@ public class AuditServiceImpl implements AuditService, Startable
          TransientPropertyData propertyNameData =
             TransientPropertyData.createPropertyData(arNode, EXO_AUDITRECORD_PROPERTYNAME, PropertyType.STRING, false,
                new TransientValueData(((ItemImpl)currentItem).getInternalName()));
-         dataManager.update(new ItemState(propertyNameData, ItemState.ADDED, true, ((ItemImpl)currentItem)
-            .getInternalPath()), true);
+         dataManager.update(
+            new ItemState(propertyNameData, ItemState.ADDED, true, ((ItemImpl)currentItem).getInternalPath()), true);
       }
 
       if (vancestor != null)
@@ -346,21 +344,16 @@ public class AuditServiceImpl implements AuditService, Startable
             Version version = (Version)dataManager.getItemByIdentifier(versionUUID, false);
             versionName = version.getName();
 
-            if (!dataManager.isNew(version.getParent().getUUID()))
+            VersionHistory versionHistory =
+               (VersionHistory)dataManager.getItemByIdentifier(version.getParent().getUUID(), false);
+            String[] labels = versionHistory.getVersionLabels(version);
+            for (int i = 0; i < labels.length; i++)
             {
-               VersionHistory versionHistory =
-                  (VersionHistory)dataManager.getItemByIdentifier(version.getParent().getUUID(), false);
-               String[] labels = versionHistory.getVersionLabels(version);
-               for (int i = 0; i < labels.length; i++)
-               {
-                  String vl = labels[i];
-                  if (i == 0)
-                  {
-                     versionName += " ";
-                  }
+               String vl = labels[i];
+               if (i == 0)
+                  versionName += " ";
 
-                  versionName += "'" + vl + "' ";
-               }
+               versionName += "'" + vl + "' ";
             }
          }
          catch (IOException e)
@@ -376,10 +369,10 @@ public class AuditServiceImpl implements AuditService, Startable
             TransientPropertyData.createPropertyData(arNode, EXO_AUDITRECORD_AUDITVERSIONNAME, PropertyType.STRING,
                false, new TransientValueData(versionName));
 
-         dataManager.update(new ItemState(auditVersion, ItemState.ADDED, true, ((ItemImpl)currentItem)
-            .getInternalPath()), true);
-         dataManager.update(new ItemState(auditVersionName, ItemState.ADDED, true, ((ItemImpl)currentItem)
-            .getInternalPath()), true);
+         dataManager.update(
+            new ItemState(auditVersion, ItemState.ADDED, true, ((ItemImpl)currentItem).getInternalPath()), true);
+         dataManager.update(
+            new ItemState(auditVersionName, ItemState.ADDED, true, ((ItemImpl)currentItem).getInternalPath()), true);
       }
 
       // Update lastRecord
@@ -388,19 +381,17 @@ public class AuditServiceImpl implements AuditService, Startable
             QPath.makeChildPath(auditHistory.getQPath(), EXO_AUDITHISTORY_LASTRECORD));
 
       pLastRecord =
-         new TransientPropertyData(pLastRecord.getQPath(), pLastRecord.getIdentifier(), pLastRecord
-            .getPersistedVersion(), pLastRecord.getType(), pLastRecord.getParentIdentifier(), pLastRecord
-            .isMultiValued(), new TransientValueData(String.valueOf(auditRecordName)));
+         new TransientPropertyData(pLastRecord.getQPath(), pLastRecord.getIdentifier(),
+            pLastRecord.getPersistedVersion(), pLastRecord.getType(), pLastRecord.getParentIdentifier(),
+            pLastRecord.isMultiValued(), new TransientValueData(String.valueOf(auditRecordName)));
 
       dataManager.update(
          new ItemState(pLastRecord, ItemState.UPDATED, true, ((ItemImpl)currentItem).getInternalPath()), true);
 
       if (log.isDebugEnabled())
-      {
          log.debug("Add audit record: " + " Item path="
             + ((ItemImpl)currentItem).getLocation().getInternalPath().getAsString() + " User=" + session.getUserID()
             + " EventType=" + eventType);
-      }
    }
 
    public void createHistory(Node node) throws RepositoryException
@@ -567,17 +558,13 @@ public class AuditServiceImpl implements AuditService, Startable
                   {
                      oldValue = new Value[propertyData.getValues().size()];
                      for (int i = 0; i < propertyData.getValues().size(); i++)
-                     {
                         oldValue[i] = vf.loadValue(propertyData.getValues().get(i), propertyData.getType());
-                     }
                   }
                   else if (propertyData.getQPath().getName().equals(AuditService.EXO_AUDITRECORD_NEWVALUE))
                   {
                      newValue = new Value[propertyData.getValues().size()];
                      for (int i = 0; i < propertyData.getValues().size(); i++)
-                     {
                         newValue[i] = vf.loadValue(propertyData.getValues().get(i), propertyData.getType());
-                     }
                   }
                }
             }
@@ -605,9 +592,7 @@ public class AuditServiceImpl implements AuditService, Startable
 
       }
       else
-      {
          throw new PathNotFoundException("Audit history not found for " + node.getPath());
-      }
    }
 
    public boolean hasHistory(Node node)
@@ -623,9 +608,7 @@ public class AuditServiceImpl implements AuditService, Startable
          try
          {
             if (log.isDebugEnabled())
-            {
                log.debug("Audit history for " + node.getPath() + " not accessible due to error " + e, e);
-            }
          }
          catch (RepositoryException e1)
          {
@@ -648,18 +631,14 @@ public class AuditServiceImpl implements AuditService, Startable
          session.getTransientNodesManager().delete(auditHistory);
       }
       else
-      {
          throw new PathNotFoundException("Audit history not found for " + node.getPath());
-      }
    }
 
    private void checkIfAuditable(Item item) throws RepositoryException, UnsupportedOperationException
    {
       NodeImpl node = (item.isNode()) ? (NodeImpl)item : (NodeImpl)item.getParent();
       if (!node.isNodeType("exo:auditable"))
-      {
          throw new ConstraintViolationException("exo:auditable node expected at: " + node.getPath());
-      }
    }
 
    private class AuditSession
@@ -675,17 +654,11 @@ public class AuditServiceImpl implements AuditService, Startable
       {
          session = (SessionImpl)item.getSession();
          if (item.isNode())
-         {
             node = (ExtendedNode)item;
-         }
          else
-         {
             node = (ExtendedNode)item.getParent();
-         }
          if (!node.isNodeType(AuditService.EXO_AUDITABLE))
-         {
             throw new RepositoryException("Node is not exo:auditable " + node.getPath());
-         }
 
          dataManager = session.getTransientNodesManager();
       }
@@ -697,7 +670,6 @@ public class AuditServiceImpl implements AuditService, Startable
             (PropertyData)dataManager.getItemData((NodeData)((NodeImpl)node).getData(), new QPathEntry(
                AuditService.EXO_AUDITHISTORY, 0), ItemType.PROPERTY);
          if (pData != null)
-         {
             try
             {
                String ahUuid = ValueDataConvertor.readString(pData.getValues().get(0));
@@ -715,7 +687,6 @@ public class AuditServiceImpl implements AuditService, Startable
             {
                throw new RepositoryException("Error of exo:auditHistory read", e);
             }
-         }
 
          return null;
       }
@@ -790,9 +761,7 @@ public class AuditServiceImpl implements AuditService, Startable
             storage = session.getTransientNodesManager().getItemData(AUDIT_STORAGE_ID);
          }
          if (!storage.isNode())
-         {
             throw new RepositoryException("Item with uuid " + AUDIT_STORAGE_ID + " should be node  ");
-         }
          return (NodeData)storage;
       }
 
@@ -892,9 +861,7 @@ public class AuditServiceImpl implements AuditService, Startable
       {
          ValueParam valParam = initParams.getValueParam(ADMIN_INDENTITY);
          if (valParam != null)
-         {
             adminIdentity = valParam.getValue();
-         }
       }
 
       log.info("Admin identity is read from configuration file");
@@ -910,16 +877,12 @@ public class AuditServiceImpl implements AuditService, Startable
    private void checkParams()
    {
       if (adminIdentity == null)
-      {
          throw new RuntimeException("Admin identity is not configured");
-      }
 
       StringTokenizer listTokenizer = new StringTokenizer(adminIdentity, AccessControlList.DELIMITER);
 
       if (listTokenizer.countTokens() < 1)
-      {
          throw new RuntimeException("AccessControlList " + adminIdentity + " is empty or have a bad format");
-      }
 
       adminIdentitys = new ArrayList<String>(listTokenizer.countTokens());
 

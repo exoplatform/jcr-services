@@ -79,7 +79,7 @@ public interface AuditService {
                                                                                          "lastRecord");
 
   /**
-   * Creates audit history for given node. Throws an exception, if history already present.
+   * Ccreates audit history.
    * 
    * @param item
    * @throws RepositoryException
