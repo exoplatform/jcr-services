@@ -344,16 +344,18 @@ public class AuditServiceImpl implements AuditService, Startable
             Version version = (Version)dataManager.getItemByIdentifier(versionUUID, false);
             versionName = version.getName();
 
-            VersionHistory versionHistory =
-               (VersionHistory)dataManager.getItemByIdentifier(version.getParent().getUUID(), false);
-            String[] labels = versionHistory.getVersionLabels(version);
-            for (int i = 0; i < labels.length; i++)
+            if (!dataManager.isNew(version.getParent().getUUID()))
             {
-               String vl = labels[i];
-               if (i == 0)
-                  versionName += " ";
-
-               versionName += "'" + vl + "' ";
+               VersionHistory versionHistory =
+               (VersionHistory)dataManager.getItemByIdentifier(version.getParent().getUUID(), false);
+               String[] labels = versionHistory.getVersionLabels(version);
+               for (int i = 0; i < labels.length; i++)
+               {
+                  String vl = labels[i];
+                  if (i == 0)
+                     versionName += " ";
+                  versionName += "'" + vl + "' ";
+               }
             }
          }
          catch (IOException e)

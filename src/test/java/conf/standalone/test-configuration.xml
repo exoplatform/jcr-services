@@ -103,6 +103,8 @@
             <name>namespaces</name>
             <property name="dc" value="http://purl.org/dc/elements/1.1/"/>
             <property name="jos" value="http://www.exoplatform.com/jcr-services/organization-service/1.0/"/>
+            <property name="rma" value="http://www.rma.com/jcr/"/>            
+            <property name="publication" value="http://www.exoplatform.com/jcr/publication/1.1/"/>
           </properties-param>
         </init-params>
       </component-plugin>
@@ -372,6 +374,26 @@
                       </field>
                       <field name="path">
                         <string>/AuditServiceTest/mixin</string>
+                      </field>
+                      <field name="nodeTypes">
+                        <string>exo:auditable</string>
+                      </field>
+                      <field name="isDeep">
+                        <boolean>true</boolean>
+                      </field>
+                      <field name="actionClassName">
+                        <string>org.exoplatform.services.jcr.ext.audit.AuditAction</string>
+                      </field>
+                    </object>
+                  </value>
+                  
+                  <value>
+                    <object type="org.exoplatform.services.jcr.impl.ext.action.ActionConfiguration">
+                      <field name="eventTypes">
+                        <string>addMixin,addProperty,changeProperty,removeProperty</string>
+                      </field>
+                      <field name="path">
+                        <string>/AuditServiceTest/SetPropertyAfterAddAudit</string>
                       </field>
                       <field name="nodeTypes">
                         <string>exo:auditable</string>
