@@ -642,90 +642,85 @@ public class AuditServiceTest extends BaseStandaloneTest {
     session.save();
   }
 
-	public void testSetPropertyAfterAddAudit() throws Exception {
+  public void testSetPropertyAfterAddAudit() throws Exception {
 
-		NodeImpl rootNode = (NodeImpl) session.getRootNode().getNode(ROOT_PATH).addNode("SetPropertyAfterAddAudit");
-		session.save();
+    NodeImpl rootNode = (NodeImpl) session.getRootNode().getNode(ROOT_PATH).addNode("SetPropertyAfterAddAudit");
+    session.save();
 
-		Node folder = rootNode.addNode("folder", "nt:folder");
+    Node folder = rootNode.addNode("folder", "nt:folder");
 
-		Node subfile = folder.addNode("subfile", "nt:file");
-		Node contentNodeOfSubFile = subfile.addNode("jcr:content", "nt:resource");
-		contentNodeOfSubFile.setProperty("jcr:lastModified", Calendar.getInstance());
-		contentNodeOfSubFile.setProperty("jcr:mimeType", "text/xml");
-		contentNodeOfSubFile.setProperty("jcr:data", "");
+    Node subfile = folder.addNode("subfile", "nt:file");
+    Node contentNodeOfSubFile = subfile.addNode("jcr:content", "nt:resource");
+    contentNodeOfSubFile.setProperty("jcr:lastModified", Calendar.getInstance());
+    contentNodeOfSubFile.setProperty("jcr:mimeType", "text/xml");
+    contentNodeOfSubFile.setProperty("jcr:data", "");
 
-		subfile.addMixin("exo:auditable");
-		if (!service.hasHistory(subfile))
-			service.createHistory(subfile);
-		folder.getSession().save();
+    subfile.addMixin("exo:auditable");
+    if (!service.hasHistory(subfile))
+      service.createHistory(subfile);
+    folder.getSession().save();
 
-		subfile.addMixin("mix:versionable");
-		subfile.addMixin("publication:publication");
-		subfile.setProperty("publication:lifecycleName", "Authoring publication");
-		subfile.setProperty("publication:currentState", "enrolled");
-		List<Value> history = new ArrayList<Value>();
-		subfile.setProperty("publication:history", history.toArray(new Value[history.size()]));
-		folder.getSession().save();
+    subfile.addMixin("mix:versionable");
+    subfile.addMixin("publication:publication");
+    subfile.setProperty("publication:lifecycleName", "Authoring publication");
+    subfile.setProperty("publication:currentState", "enrolled");
+    List<Value> history = new ArrayList<Value>();
+    subfile.setProperty("publication:history", history.toArray(new Value[history.size()]));
+    folder.getSession().save();
 
-	}
-	
-	public void testSetPropertyAfterAddAudit2() throws Exception {
-	   NodeImpl rootNode = (NodeImpl) session.getRootNode().getNode(ROOT_PATH).addNode("SetPropertyAfterAddAudit");
-	   session.save();
+  }
+  
+  public void testSetPropertyAfterAddAudit2() throws Exception {
+    NodeImpl rootNode = (NodeImpl) session.getRootNode().getNode(ROOT_PATH).addNode("SetPropertyAfterAddAudit");
+    session.save();
 
-		Node filePlan = addNodeFilePlan("fileplan", rootNode, "cateIdentify1",
-				"disposition1", true, true, "mediaType1", "markingList1",
-				"original1", true, false, "trigger1", false, false, false,
-				false, "hourly");
+    Node filePlan = addNodeFilePlan("fileplan", rootNode, "cateIdentify1", "disposition1", true, true, 
+       "mediaType1", "markingList1", "original1", true, false, "trigger1", false, false, false, false, "hourly");
 
-		Node file1 = filePlan.addNode("file1", "nt:file");
-		Node contentNode = file1.addNode("jcr:content", "nt:resource");
-		contentNode.setProperty("jcr:lastModified", Calendar.getInstance());
-		contentNode.setProperty("jcr:mimeType", "text/xml");
-		contentNode.setProperty("jcr:data", "");
+    Node file1 = filePlan.addNode("file1", "nt:file");
+    Node contentNode = file1.addNode("jcr:content", "nt:resource");
+    contentNode.setProperty("jcr:lastModified", Calendar.getInstance());
+    contentNode.setProperty("jcr:mimeType", "text/xml");
+    contentNode.setProperty("jcr:data", "");
 
-		file1.getSession().save();
+    file1.getSession().save();
 
-		file1.addMixin("exo:auditable");
-		if (!service.hasHistory(file1))
-			service.createHistory(file1);
-		filePlan.getSession().save();
+    file1.addMixin("exo:auditable");
+    if (!service.hasHistory(file1))
+      service.createHistory(file1);
+    filePlan.getSession().save();
 
-		file1.addMixin("mix:versionable");
-		file1.addMixin("publication:publication");
-		file1.setProperty("publication:lifecycleName", "Authoring publication");
-		file1.setProperty("publication:currentState", "enrolled");
-		List<Value> history = new ArrayList<Value>();
-		file1.setProperty("publication:history", history.toArray(new Value[history.size()]));
-		filePlan.getSession().save();
-	}
-	
-	private Node addNodeFilePlan(String nodeName, Node parent,
-			String cateIdentify, String disposition, boolean permanentRecord,
-			boolean recordFolder, String mediaType, String markingList,
-			String original, boolean recordIndicator, boolean cutoff,
-			String eventTrigger, boolean processHold, boolean processTransfer,
-			boolean processAccession, boolean processDestruction,
-			String vitalRecordReview) throws Exception {
-		Node filePlan = parent.addNode(nodeName, "rma:filePlan");
-		filePlan.setProperty("rma:recordCategoryIdentifier", cateIdentify);
-		filePlan.setProperty("rma:dispositionAuthority", disposition);
-		filePlan.setProperty("rma:permanentRecordIndicator", permanentRecord);
-		filePlan.setProperty("rma:containsRecordFolders", recordFolder);
-		filePlan.setProperty("rma:defaultMediaType", mediaType);
-		filePlan.setProperty("rma:defaultMarkingList", markingList);
-		filePlan.setProperty("rma:defaultOriginatingOrganization", original);
-		filePlan.setProperty("rma:vitalRecordIndicator", recordIndicator);
-		filePlan.setProperty("rma:processCutoff", cutoff);
-		filePlan.setProperty("rma:eventTrigger", eventTrigger);
-		filePlan.setProperty("rma:processHold", processHold);
-		filePlan.setProperty("rma:processTransfer", processTransfer);
-		filePlan.setProperty("rma:processAccession", processAccession);
-		filePlan.setProperty("rma:processDestruction", processDestruction);
-		filePlan.setProperty("rma:vitalRecordReviewPeriod", vitalRecordReview);
-		return filePlan;
-	}
+    file1.addMixin("mix:versionable");
+    file1.addMixin("publication:publication");
+    file1.setProperty("publication:lifecycleName", "Authoring publication");
+    file1.setProperty("publication:currentState", "enrolled");
+    List<Value> history = new ArrayList<Value>();
+    file1.setProperty("publication:history", history.toArray(new Value[history.size()]));
+    filePlan.getSession().save();
+  }
+  
+  private Node addNodeFilePlan(String nodeName, Node parent, String cateIdentify, String disposition, 
+     boolean permanentRecord, boolean recordFolder, String mediaType, String markingList, String original,
+     boolean recordIndicator, boolean cutoff, String eventTrigger, boolean processHold, boolean processTransfer,
+     boolean processAccession, boolean processDestruction, String vitalRecordReview) throws Exception {
+    Node filePlan = parent.addNode(nodeName, "rma:filePlan");
+    filePlan.setProperty("rma:recordCategoryIdentifier", cateIdentify);
+    filePlan.setProperty("rma:dispositionAuthority", disposition);
+    filePlan.setProperty("rma:permanentRecordIndicator", permanentRecord);
+    filePlan.setProperty("rma:containsRecordFolders", recordFolder);
+    filePlan.setProperty("rma:defaultMediaType", mediaType);
+    filePlan.setProperty("rma:defaultMarkingList", markingList);
+    filePlan.setProperty("rma:defaultOriginatingOrganization", original);
+    filePlan.setProperty("rma:vitalRecordIndicator", recordIndicator);
+    filePlan.setProperty("rma:processCutoff", cutoff);
+    filePlan.setProperty("rma:eventTrigger", eventTrigger);
+    filePlan.setProperty("rma:processHold", processHold);
+    filePlan.setProperty("rma:processTransfer", processTransfer);
+    filePlan.setProperty("rma:processAccession", processAccession);
+    filePlan.setProperty("rma:processDestruction", processDestruction);
+    filePlan.setProperty("rma:vitalRecordReviewPeriod", vitalRecordReview);
+    return filePlan;
+  }
   
   @Override
   protected void tearDown() throws Exception {
