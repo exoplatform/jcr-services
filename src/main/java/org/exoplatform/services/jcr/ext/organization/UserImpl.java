@@ -279,11 +279,11 @@ public class UserImpl implements User, Cloneable
    public Object clone()
    {
       UserImpl user = new UserImpl();
-      user.setCreatedDate(createdDate);
+      user.setCreatedDate((Date)createdDate.clone());
       user.setEmail(email);
       user.setFirstName(firstName);
       user.setLastName(lastName);
-      user.setLastLoginTime(lastLoginTime);
+      user.setLastLoginTime((Date)lastLoginTime.clone());
       user.setPassword(password);
       user.setUserName(userName);
       user.setUUId(UUId);

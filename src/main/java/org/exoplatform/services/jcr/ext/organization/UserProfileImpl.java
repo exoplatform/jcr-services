@@ -138,7 +138,7 @@ public class UserProfileImpl implements UserProfile, Cloneable
    public Object clone()
    {
       UserProfileImpl profile = new UserProfileImpl(userName);
-      profile.setUserInfoMap(attributes);
+      profile.setUserInfoMap(new HashMap<String, String>(attributes));
 
       return profile;
    }
