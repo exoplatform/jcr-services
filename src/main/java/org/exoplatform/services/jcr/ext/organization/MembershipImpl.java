@@ -16,6 +16,7 @@
  */
 package org.exoplatform.services.jcr.ext.organization;
 
+import org.exoplatform.services.organization.ExtendedCloneable;
 import org.exoplatform.services.organization.Membership;
 
 /**
@@ -26,7 +27,7 @@ import org.exoplatform.services.organization.Membership;
  * @author <a href="mailto:peter.nedonosko@exoplatform.com.ua">Peter Nedonosko</a>
  * @version $Id$
  */
-public class MembershipImpl implements Membership, Cloneable
+public class MembershipImpl implements Membership, ExtendedCloneable
 {
 
    /**
@@ -151,14 +152,15 @@ public class MembershipImpl implements Membership, Cloneable
    /**
     * {@inheritDoc}
     */
-   public Object clone()
+   public MembershipImpl clone()
    {
-      MembershipImpl membership = new MembershipImpl();
-      membership.setId(id);
-      membership.setMembershipType(membershipType);
-      membership.setGroupId(groupId);
-      membership.setUserName(userName);
-
-      return membership;
+      try
+      {
+         return (MembershipImpl)super.clone();
+      }
+      catch (CloneNotSupportedException e)
+      {
+         return this;
+      }
    }
 }

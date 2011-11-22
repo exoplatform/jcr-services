@@ -16,6 +16,7 @@
  */
 package org.exoplatform.services.jcr.ext.organization;
 
+import org.exoplatform.services.organization.ExtendedCloneable;
 import org.exoplatform.services.organization.Group;
 
 /**
@@ -26,7 +27,7 @@ import org.exoplatform.services.organization.Group;
  * @author <a href="mailto:peter.nedonosko@exoplatform.com.ua">Peter Nedonosko</a>
  * @version $Id$
  */
-public class GroupImpl implements Group, Cloneable
+public class GroupImpl implements Group, ExtendedCloneable
 {
 
    /**
@@ -194,16 +195,15 @@ public class GroupImpl implements Group, Cloneable
    /**
     * {@inheritDoc}
     */
-   public Object clone()
+   public GroupImpl clone()
    {
-      GroupImpl group = new GroupImpl();
-      group.setUUId(UUId);
-      group.setDescription(description);
-      group.setParentId(parentId);
-      group.setGroupName(groupName);
-      group.setLabel(label);
-
-      return group;
-
+      try
+      {
+         return (GroupImpl)super.clone();
+      }
+      catch (CloneNotSupportedException e)
+      {
+         return this;
+      }
    }
 }

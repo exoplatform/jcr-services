@@ -16,6 +16,7 @@
  */
 package org.exoplatform.services.jcr.ext.organization;
 
+import org.exoplatform.services.organization.ExtendedCloneable;
 import org.exoplatform.services.organization.UserProfile;
 
 import java.util.HashMap;
@@ -27,7 +28,7 @@ import java.util.Map;
  * @author <a href="mailto:peter.nedonosko@exoplatform.com.ua">Peter Nedonosko</a>
  * @version $Id$
  */
-public class UserProfileImpl implements UserProfile, Cloneable
+public class UserProfileImpl implements UserProfile, ExtendedCloneable
 {
 
    /**
@@ -135,11 +136,19 @@ public class UserProfileImpl implements UserProfile, Cloneable
    /**
     * {@inheritDoc}
     */
-   public Object clone()
+   public UserProfileImpl clone()
    {
-      UserProfileImpl profile = new UserProfileImpl(userName);
-      profile.setUserInfoMap(new HashMap<String, String>(attributes));
+      UserProfileImpl upi;
+      try
+      {
+         upi = (UserProfileImpl)super.clone();
+         upi.attributes = new HashMap<String, String>(attributes);
+      }
+      catch (CloneNotSupportedException e)
+      {
+         return this;
+      }
 
-      return profile;
+      return upi;
    }
 }

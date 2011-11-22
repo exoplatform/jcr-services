@@ -16,6 +16,7 @@
  */
 package org.exoplatform.services.jcr.ext.organization;
 
+import org.exoplatform.services.organization.ExtendedCloneable;
 import org.exoplatform.services.organization.User;
 
 import java.util.Date;
@@ -28,7 +29,7 @@ import java.util.Date;
  * @author <a href="mailto:peter.nedonosko@exoplatform.com.ua">Peter Nedonosko</a>
  * @version $Id$
  */
-public class UserImpl implements User, Cloneable
+public class UserImpl implements User, ExtendedCloneable
 {
 
    /**
@@ -276,19 +277,27 @@ public class UserImpl implements User, Cloneable
    /**
     * {@inheritDoc}
     */
-   public Object clone()
+   public UserImpl clone()
    {
-      UserImpl user = new UserImpl();
-      user.setCreatedDate((Date)createdDate.clone());
-      user.setEmail(email);
-      user.setFirstName(firstName);
-      user.setLastName(lastName);
-      user.setLastLoginTime((Date)lastLoginTime.clone());
-      user.setPassword(password);
-      user.setUserName(userName);
-      user.setUUId(UUId);
+      UserImpl ui;
+      try
+      {
+         ui = (UserImpl)super.clone();
+         if (createdDate != null)
+         {
+            ui.createdDate = (Date)createdDate.clone();
+         }
+         if (lastLoginTime != null)
+         {
+            ui.lastLoginTime = (Date)lastLoginTime.clone();
+         }
+      }
+      catch (CloneNotSupportedException e)
+      {
+         return this;
+      }
 
-      return user;
+      return ui;
    }
 
 }
