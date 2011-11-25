@@ -115,7 +115,7 @@ public class UserByGroupJCRUserListAccess extends JCRUserListAccess
                throw new IllegalArgumentException(
                   "Illegal index or length: sum of the index and the length cannot be greater than the list size");
 
-            Node result = results.nextNode();
+            Node result = results.nextNode().getParent();
 
             if (p >= index)
             {
