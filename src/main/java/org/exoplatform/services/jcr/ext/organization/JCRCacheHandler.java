@@ -22,8 +22,11 @@ import org.exoplatform.services.cache.CacheService;
 import org.exoplatform.services.jcr.config.RepositoryConfigurationException;
 import org.exoplatform.services.organization.CacheHandler;
 import org.exoplatform.services.organization.Group;
+import org.exoplatform.services.organization.Membership;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.jcr.RepositoryException;
 
@@ -80,46 +83,9 @@ public class JCRCacheHandler extends CacheHandler
     * {@inheritDoc}
     */
    @Override
-   public void put(Serializable key, Object value, CacheType cacheType)
+   protected Serializable createInternalKey(Serializable key)
    {
-      super.put(createRepositoryKey(key), value, cacheType);
-   }
-
-   /**
-    * {@inheritDoc}
-    */
-   @Override
-   public Object get(Serializable key, CacheType cacheType)
-   {
-      return super.get(createRepositoryKey(key), cacheType);
-   }
-
-   /**
-    * {@inheritDoc}
-    */
-   @Override
-   public void remove(Serializable key, CacheType cacheType)
-   {
-      super.remove(createRepositoryKey(key), cacheType);
-   }
-
-   /**
-    * {@inheritDoc}
-    */
-   @Override
-   public void move(Serializable oldKey, Serializable newKey, CacheType cacheType)
-   {
-      super.move(createRepositoryKey(oldKey), createRepositoryKey(newKey), cacheType);
-   }
-
-   /**
-    * Adds repository name into the key, to isolate caches of different repositories. 
-    * 
-    * @param key
-    * @return
-    */
-   private Serializable createRepositoryKey(Serializable key)
-   {
+      //return key;
       // Safe check
       if (key instanceof String)
       {
@@ -129,10 +95,12 @@ public class JCRCacheHandler extends CacheHandler
          }
          catch (RepositoryException e)
          {
+            e.printStackTrace();
             throw new IllegalStateException(e.getMessage(), e);
          }
          catch (RepositoryConfigurationException e)
          {
+            e.printStackTrace();
             throw new IllegalStateException(e.getMessage(), e);
          }
       }
