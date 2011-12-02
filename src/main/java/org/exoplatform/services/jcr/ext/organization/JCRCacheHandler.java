@@ -22,11 +22,8 @@ import org.exoplatform.services.cache.CacheService;
 import org.exoplatform.services.jcr.config.RepositoryConfigurationException;
 import org.exoplatform.services.organization.CacheHandler;
 import org.exoplatform.services.organization.Group;
-import org.exoplatform.services.organization.Membership;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.jcr.RepositoryException;
 
@@ -85,7 +82,6 @@ public class JCRCacheHandler extends CacheHandler
    @Override
    protected Serializable createInternalKey(Serializable key)
    {
-      //return key;
       // Safe check
       if (key instanceof String)
       {
@@ -95,12 +91,10 @@ public class JCRCacheHandler extends CacheHandler
          }
          catch (RepositoryException e)
          {
-            e.printStackTrace();
             throw new IllegalStateException(e.getMessage(), e);
          }
          catch (RepositoryConfigurationException e)
          {
-            e.printStackTrace();
             throw new IllegalStateException(e.getMessage(), e);
          }
       }
