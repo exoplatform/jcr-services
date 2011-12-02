@@ -152,7 +152,7 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
    {
       this.repositoryService = repositoryService;
       this.registryService = registryService;
-      this.cacheHandler = new JCRCacheHandler(cservice);
+      this.cacheHandler = new JCRCacheHandler(cservice, this);
 
       if (initParams == null)
       {
@@ -466,7 +466,7 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
       }
    }
 
-   private ManageableRepository getWorkingRepository() throws RepositoryException, RepositoryConfigurationException
+   protected ManageableRepository getWorkingRepository() throws RepositoryException, RepositoryConfigurationException
    {
       return repositoryName != null ? repositoryService.getRepository(repositoryName) : repositoryService
          .getCurrentRepository();

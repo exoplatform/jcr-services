@@ -19,8 +19,13 @@
 package org.exoplatform.services.jcr.ext.organization;
 
 import org.exoplatform.services.cache.CacheService;
+import org.exoplatform.services.jcr.config.RepositoryConfigurationException;
 import org.exoplatform.services.organization.CacheHandler;
 import org.exoplatform.services.organization.Group;
+
+import java.io.Serializable;
+
+import javax.jcr.RepositoryException;
 
 /**
  * Cache handler for JCR implementation of organization service. Contains method for
@@ -33,6 +38,7 @@ import org.exoplatform.services.organization.Group;
  */
 public class JCRCacheHandler extends CacheHandler
 {
+   private final JCROrganizationServiceImpl jcrOrganizationServiceImpl;
 
    /**
     * JCRCacheHandler constructor.
@@ -40,9 +46,10 @@ public class JCRCacheHandler extends CacheHandler
     * @param cservice
     *          Cache service
     */
-   public JCRCacheHandler(CacheService cservice)
+   public JCRCacheHandler(CacheService cservice, JCROrganizationServiceImpl jcrOrganizationServiceImpl)
    {
       super(cservice);
+      this.jcrOrganizationServiceImpl = jcrOrganizationServiceImpl;
    }
 
    /**
@@ -68,4 +75,71 @@ public class JCRCacheHandler extends CacheHandler
       {
       }
    }
+
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   public void put(Serializable key, Object value, CacheType cacheType)
+   {
+      super.put(createRepositoryKey(key), value, cacheType);
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   public Object get(Serializable key, CacheType cacheType)
+   {
+      return super.get(createRepositoryKey(key), cacheType);
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   public void remove(Serializable key, CacheType cacheType)
+   {
+      super.remove(createRepositoryKey(key), cacheType);
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   public void move(Serializable oldKey, Serializable newKey, CacheType cacheType)
+   {
+      super.move(createRepositoryKey(oldKey), createRepositoryKey(newKey), cacheType);
+   }
+
+   /**
+    * Adds repository name into the key, to isolate caches of different repositories. 
+    * 
+    * @param key
+    * @return
+    */
+   private Serializable createRepositoryKey(Serializable key)
+   {
+      // Safe check
+      if (key instanceof String)
+      {
+         try
+         {
+            return jcrOrganizationServiceImpl.getWorkingRepository().getConfiguration().getName() + ":" + key;
+         }
+         catch (RepositoryException e)
+         {
+            throw new IllegalStateException(e.getMessage(), e);
+         }
+         catch (RepositoryConfigurationException e)
+         {
+            throw new IllegalStateException(e.getMessage(), e);
+         }
+      }
+      else
+      {
+         return key;
+      }
+   }
+
 }
