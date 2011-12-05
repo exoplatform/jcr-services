@@ -31,12 +31,18 @@ import javax.jcr.Session;
 public class TestMultipleRepositories extends AbstractOrganizationServiceTest
 {
 
-   public void testSetCurrent() throws Exception
+   /**
+    * Test checks that possible to create same users, groups and memberships for different repositories.
+    * This test used to ensure that caches for different repositories are isolated   
+    * 
+    * @throws Exception
+    */
+   public void testCreateSameUsersMemberships() throws Exception
    {
       String currentRepo = repositoryService.getCurrentRepository().getConfiguration().getName();
-      String userName = "TestMultipleRepositories-User1";
-      String groupName = "TestMultipleRepositories-Group1";
-      String type = "TestMultipleRepositories-Type1";
+      String userName = "testCreateSameUsersMemberships-User1";
+      String groupName = "testCreateSameUsersMemberships-Group1";
+      String type = "testCreateSameUsersMemberships-Type1";
       try
       {
          createMembership(userName, groupName, type);
@@ -45,11 +51,140 @@ public class TestMultipleRepositories extends AbstractOrganizationServiceTest
          mHandler.findMembershipsByUser(userName);
          mHandler.findMembershipByUserGroupAndType(userName, groupName, type);
 
+         // <--> switch to repository "db2"
          repositoryService.setCurrentRepositoryName("db2");
          prepareRepository();
          assertNull(uHandler.findUserByName(userName));
          assertNull(mHandler.findMembershipByUserGroupAndType(userName, groupName, type));
          createMembership(userName, groupName, type);
+      }
+      finally
+      {
+         repositoryService.setCurrentRepositoryName(currentRepo);
+      }
+   }
+
+   /**
+    * Test checks that possible to create same users and removing it from one repository won't
+    * have an influence on other.
+    * This test used to ensure that caches for different repositories are isolated   
+    * 
+    * @throws Exception
+    */
+   public void testCreateDeleteSameUsers() throws Exception
+   {
+      String currentRepo = repositoryService.getCurrentRepository().getConfiguration().getName();
+      String userName = "testCreateDeleteSameUsers-User1";
+      try
+      {
+         createUser(userName);
+         // warmup cache
+         uHandler.findUserByName(userName);
+
+         // <--> switch to repository "db2"
+         repositoryService.setCurrentRepositoryName("db2");
+         prepareRepository();
+         assertNull(uHandler.findUserByName(userName));
+         createUser(userName);
+         uHandler.findUserByName(userName);
+
+         // <--> switch back to repository "db1"
+         repositoryService.setCurrentRepositoryName(currentRepo);
+         // delete user from "db1"
+         uHandler.removeUser(userName, true);
+         assertNull(uHandler.findUserByName(userName));
+
+         // <--> switch to repository "db2"
+         repositoryService.setCurrentRepositoryName("db2");
+         // user from "db2" must still exist.
+         assertNotNull(uHandler.findUserByName(userName));
+
+      }
+      finally
+      {
+         repositoryService.setCurrentRepositoryName(currentRepo);
+      }
+   }
+
+   /**
+    * Test checks that possible to create same groups and removing it from one repository won't
+    * have an influence on other.
+    * This test used to ensure that caches for different repositories are isolated   
+    * 
+    * @throws Exception
+    */
+   public void testCreateDeleteSameGroups() throws Exception
+   {
+      String currentRepo = repositoryService.getCurrentRepository().getConfiguration().getName();
+      String groupName = "testCreateDeleteSameGroups-Group1";
+      try
+      {
+         createGroup(null, groupName, "lable", "desc");
+         // warmup cache
+         assertNotNull(gHandler.findGroupById("/" + groupName));
+
+         // <--> switch to repository "db2"
+         repositoryService.setCurrentRepositoryName("db2");
+         prepareRepository();
+         assertNull(gHandler.findGroupById("/" + groupName));
+         createGroup(null, groupName, "lable", "desc");
+         gHandler.findGroupById("/" + groupName);
+
+         // <--> switch back to repository "db1"
+         repositoryService.setCurrentRepositoryName(currentRepo);
+         // delete group from "db1"
+         gHandler.removeGroup(gHandler.findGroupById("/" + groupName), true);
+         assertNull(gHandler.findGroupById("/" + groupName));
+
+         // <--> switch to repository "db2"
+         repositoryService.setCurrentRepositoryName("db2");
+         // group from "db2" must still exist.
+         assertNotNull(gHandler.findGroupById("/" + groupName));
+      }
+      finally
+      {
+         repositoryService.setCurrentRepositoryName(currentRepo);
+      }
+   }
+
+   /**
+    * Test checks that possible to create same Memberships and removing it from one repository won't
+    * have an influence on other.
+    * This test used to ensure that caches for different repositories are isolated    
+    * 
+    * @throws Exception
+    */
+   public void testCreateDeleteSameMemberships() throws Exception
+   {
+      String currentRepo = repositoryService.getCurrentRepository().getConfiguration().getName();
+      String userName = "testCreateDeleteSameMemberships-User1";
+      String groupName = "testCreateDeleteSameMemberships-Group1";
+      String type = "testCreateDeleteSameMemberships-Type1";
+      try
+      {
+         createMembership(userName, groupName, type);
+         // warmup cache
+         uHandler.findUserByName(userName);
+         mHandler.findMembershipsByUser(userName);
+         mHandler.findMembershipByUserGroupAndType(userName, groupName, type);
+
+         // <--> switch to repository "db2"
+         repositoryService.setCurrentRepositoryName("db2");
+         prepareRepository();
+         assertNull(uHandler.findUserByName(userName));
+         assertNull(mHandler.findMembershipByUserGroupAndType(userName, groupName, type));
+         createMembership(userName, groupName, type);
+
+         // <--> switch back to repository "db1"
+         repositoryService.setCurrentRepositoryName(currentRepo);
+         // delete Membership from "db1"
+         mHandler.removeMembershipByUser(userName, true);
+         assertNull(mHandler.findMembershipByUserGroupAndType(userName, groupName, type));
+
+         // <--> switch to repository "db2"
+         repositoryService.setCurrentRepositoryName("db2");
+         // group from "db2" must still exist.
+         assertNotNull(mHandler.findMembershipByUserGroupAndType(userName, "/" + groupName, type));
       }
       finally
       {
@@ -63,15 +198,18 @@ public class TestMultipleRepositories extends AbstractOrganizationServiceTest
          (JCROrganizationServiceImpl)container.getComponentInstanceOfType(OrganizationService.class);
       Session storageSession = organizationService.getStorageSession();
 
-      // will create new
-      Node storage =
-         storageSession.getRootNode().addNode(organizationService.getStoragePath().substring(1),
-            "jos:organizationStorage");
+      // Check repository not prepared
+      if (!storageSession.getRootNode().hasNode(organizationService.getStoragePath().substring(1)))
+      {
+         Node storage =
+            storageSession.getRootNode().addNode(organizationService.getStoragePath().substring(1),
+               "jos:organizationStorage");
 
-      storage.addNode(UserHandlerImpl.STORAGE_JOS_USERS, "jos:organizationUsers");
-      storage.addNode(GroupHandlerImpl.STORAGE_JOS_GROUPS, "jos:organizationGroups");
-      storage.addNode(MembershipTypeHandlerImpl.STORAGE_JOS_MEMBERSHIP_TYPES, "jos:organizationMembershipTypes");
+         storage.addNode(UserHandlerImpl.STORAGE_JOS_USERS, "jos:organizationUsers");
+         storage.addNode(GroupHandlerImpl.STORAGE_JOS_GROUPS, "jos:organizationGroups");
+         storage.addNode(MembershipTypeHandlerImpl.STORAGE_JOS_MEMBERSHIP_TYPES, "jos:organizationMembershipTypes");
 
-      storageSession.save(); // storage done configure
+         storageSession.save();
+      }
    }
 }

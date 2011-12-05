@@ -38,6 +38,8 @@ import javax.jcr.RepositoryException;
  */
 public class JCRCacheHandler extends CacheHandler
 {
+   private static char DELIMITER = ':';
+
    private final JCROrganizationServiceImpl jcrOrganizationServiceImpl;
 
    /**
@@ -80,14 +82,16 @@ public class JCRCacheHandler extends CacheHandler
     * {@inheritDoc}
     */
    @Override
-   protected Serializable createInternalKey(Serializable key)
+   protected Serializable createCacheKey(Serializable orgServiceKey)
    {
       // Safe check
-      if (key instanceof String)
+      if (orgServiceKey instanceof String)
       {
          try
          {
-            return jcrOrganizationServiceImpl.getWorkingRepository().getConfiguration().getName() + ":" + key;
+            // add "repository:" to OrgSerivce Key
+            return jcrOrganizationServiceImpl.getWorkingRepository().getConfiguration().getName() + DELIMITER
+               + orgServiceKey;
          }
          catch (RepositoryException e)
          {
@@ -100,8 +104,52 @@ public class JCRCacheHandler extends CacheHandler
       }
       else
       {
-         return key;
+         return orgServiceKey;
       }
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   protected boolean matchKey(Serializable cacheKey)
+   {
+      if (cacheKey instanceof String)
+      {
+         try
+         {
+            // check is prefix equals to "repository:"
+            String prefix = jcrOrganizationServiceImpl.getWorkingRepository().getConfiguration().getName() + DELIMITER;
+            return ((String)cacheKey).startsWith(prefix);
+         }
+         catch (RepositoryException e)
+         {
+            throw new IllegalStateException(e.getMessage(), e);
+         }
+         catch (RepositoryConfigurationException e)
+         {
+            throw new IllegalStateException(e.getMessage(), e);
+         }
+      }
+      return false;
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   protected Serializable createOrgServiceKey(Serializable cacheKey)
+   {
+      if (cacheKey instanceof String)
+      {
+         // trim "repository:" from Cache Key
+         int indexOfDelimiter = ((String)cacheKey).indexOf(DELIMITER);
+         if (indexOfDelimiter >= 0)
+         {
+            return ((String)cacheKey).substring(indexOfDelimiter + 1);
+         }
+      }
+      return cacheKey;
    }
 
 }
