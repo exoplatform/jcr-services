@@ -1,0 +1,34 @@
+Index: src/test/java/org/exoplatform/services/jcr/ext/organization/TestMembershipTypeHandlerImpl.java
+===================================================================
+--- src/test/java/org/exoplatform/services/jcr/ext/organization/TestMembershipTypeHandlerImpl.java	(revision 77346)
++++ src/test/java/org/exoplatform/services/jcr/ext/organization/TestMembershipTypeHandlerImpl.java	(working copy)
+@@ -73,6 +73,12 @@
+       // member
+       // validator
+       assertEquals(mtHandler.findMembershipTypes().size(), 3);
++
++      createMembershipType("*", "All membership types");
++      assertEquals(mtHandler.findMembershipTypes().size(), 4);
++      
++      mtHandler.removeMembershipType("*", true);
++      assertEquals(mtHandler.findMembershipTypes().size(), 3);
+     } catch (Exception e) {
+       e.printStackTrace();
+       fail("Exception should not be thrown");
+Index: src/main/java/org/exoplatform/services/jcr/ext/organization/MembershipTypeHandlerImpl.java
+===================================================================
+--- src/main/java/org/exoplatform/services/jcr/ext/organization/MembershipTypeHandlerImpl.java	(revision 77346)
++++ src/main/java/org/exoplatform/services/jcr/ext/organization/MembershipTypeHandlerImpl.java	(working copy)
+@@ -213,11 +213,7 @@
+          Node storageNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_MEMBERSHIP_TYPES);
+          for (NodeIterator nodes = storageNode.getNodes(); nodes.hasNext();)
+          {
+-            Node mtNode = nodes.nextNode();
+-            if (!mtNode.getName().equals("*"))
+-            {
+-               types.add(readObjectFromNode(mtNode));
+-            }
++            types.add(readObjectFromNode(nodes.nextNode()));
+          }
+          return types;
+ 
