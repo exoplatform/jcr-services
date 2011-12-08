@@ -251,11 +251,7 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
          Node storageNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_MEMBERSHIP_TYPES);
          for (NodeIterator nodes = storageNode.getNodes(); nodes.hasNext();)
          {
-            Node mtNode = nodes.nextNode();
-            if (!mtNode.getName().equals("*"))
-            {
-               types.add(readObjectFromNode(mtNode));
-            }
+            types.add(readObjectFromNode(nodes.nextNode()));
          }
          return types;
 
