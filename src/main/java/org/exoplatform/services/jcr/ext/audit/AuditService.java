@@ -16,12 +16,12 @@
  */
 package org.exoplatform.services.jcr.ext.audit;
 
+import org.exoplatform.services.jcr.datamodel.InternalQName;
+import org.exoplatform.services.jcr.impl.Constants;
+
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-
-import org.exoplatform.services.jcr.datamodel.InternalQName;
-import org.exoplatform.services.jcr.impl.Constants;
 
 /**
  * Created by The eXo Platform SAS .
@@ -101,7 +101,7 @@ public interface AuditService {
    * @param eventType
    * @throws RepositoryException
    */
-  void addRecord(Item currentItem, Item previousItem, int eventType) throws RepositoryException;
+   void addRecord(Item previousItem, Item currentItem, int eventType) throws RepositoryException;
 
   /**
    * Get node audit history.
