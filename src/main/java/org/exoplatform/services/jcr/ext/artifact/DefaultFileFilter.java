@@ -24,11 +24,11 @@ import java.io.FileFilter;
  * @version $Id: DefaultFileFilter.java 14:47:50
  */
 
-public class DefaultFileFilter implements FileFilter {
+public class DefaultFileFilter implements FileFilter
+{
 
-  public boolean accept(File pathname) {
-    // TODO Auto-generated method stub
+  public boolean accept(File pathname) 
+  {
     return true;
   }
-
 }

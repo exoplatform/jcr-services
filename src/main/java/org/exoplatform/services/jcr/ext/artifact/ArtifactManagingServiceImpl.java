@@ -141,7 +141,7 @@ public class ArtifactManagingServiceImpl
 
       this.initParams = initParams;
 
-      setDefaultMimes(); // TODO use config to set this keys!! fake
+      setDefaultMimes();
    }
 
    /**
@@ -163,8 +163,6 @@ public class ArtifactManagingServiceImpl
     * (org.exoplatform.services.jcr.ext.common.SessionProvider,
     * org.exoplatform.services.jcr.ext.maven.ArtifactDescriptor, java.io.InputStream)
     */
-
-   // TODO remove it with builder pattern
    public void addArtifact(SessionProvider sp, ArtifactDescriptor artifact, InputStream jarIStream,
             InputStream pomIStream) throws RepositoryException
    {

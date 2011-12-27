@@ -16,12 +16,12 @@
  */
 package org.exoplatform.services.jcr.ext.artifact;
 
+import org.apache.commons.io.FilenameUtils;
+
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.commons.io.FilenameUtils;
 
 /**
  * Author : Volodymyr Krasnikov volodymyr.krasnikov@exoplatform.com.ua
@@ -46,10 +46,9 @@ public class MavenFileFilter implements FilenameFilter {
 
   }
 
-  public boolean accept(File dir, String name) {
-    // TODO Auto-generated method stub
+  public boolean accept(File dir, String name)
+  {
     String ext = FilenameUtils.getExtension(name);
     return true;// list.contains(ext);
   }
-
 }
