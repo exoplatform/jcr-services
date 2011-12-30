@@ -331,7 +331,7 @@ public class AuditServiceImpl implements AuditService, Startable
          // audit record
 
          String versionUUID; // current base version UUID
-         String versionName; // current base version name + labels
+         StringBuilder versionName = new StringBuilder(); // current base version name + labels
 
          PropertyData bvProp =
             (PropertyData)dataManager.getItemData(vancestor, new QPathEntry(Constants.JCR_BASEVERSION, 1),
@@ -342,7 +342,7 @@ public class AuditServiceImpl implements AuditService, Startable
 
             // using JCR API objects
             Version version = (Version)dataManager.getItemByIdentifier(versionUUID, false);
-            versionName = version.getName();
+            versionName = new StringBuilder(version.getName());
 
             if (!dataManager.isNew(version.getParent().getUUID()))
             {
@@ -353,8 +353,10 @@ public class AuditServiceImpl implements AuditService, Startable
                {
                   String vl = labels[i];
                   if (i == 0)
-                     versionName += " ";
-                  versionName += "'" + vl + "' ";
+                  {
+                     versionName.append(" ");
+                  }
+                  versionName.append("'").append(vl).append("' ");
                }
             }
          }
@@ -369,7 +371,7 @@ public class AuditServiceImpl implements AuditService, Startable
 
          TransientPropertyData auditVersionName =
             TransientPropertyData.createPropertyData(arNode, EXO_AUDITRECORD_AUDITVERSIONNAME, PropertyType.STRING,
-               false, new TransientValueData(versionName));
+               false, new TransientValueData(versionName.toString()));
 
          dataManager.update(
             new ItemState(auditVersion, ItemState.ADDED, true, ((ItemImpl)currentItem).getInternalPath()), true);

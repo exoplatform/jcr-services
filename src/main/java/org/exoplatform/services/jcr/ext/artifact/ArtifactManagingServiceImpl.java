@@ -362,12 +362,12 @@ public class ArtifactManagingServiceImpl
       }
       log.info(targetNode.getPath());
       NodeType[] a = targetNode.getMixinNodeTypes();
-      String mixins = "";
+      StringBuilder mixins = new StringBuilder();
       for (NodeType type : a)
       {
-         mixins += type.getName() + " ";
+         mixins.append(type.getName()).append(" ");
       }
-      log.info("**** Mixins : " + mixins);
+      log.info("**** Mixins : " + mixins.toString());
 
       log.info("**** Workspace : " + session.getWorkspace().getName());
 

@@ -121,16 +121,16 @@ public class UserProfileImpl implements UserProfile, ExtendedCloneable
     */
    public String toString()
    {
-      String result = "";
+      StringBuilder result = new StringBuilder();
 
       Object[] keys = getUserInfoMap().keySet().toArray();
       for (int i = 0; i < keys.length; i++)
       {
          String key = (String)keys[i];
-         result = result + "[" + key + "=" + getAttribute(key) + "]";
+         result.append("[").append(key).append("=").append(getAttribute(key)).append("]");
       }
 
-      return result;
+      return result.toString();
    }
 
    /**
