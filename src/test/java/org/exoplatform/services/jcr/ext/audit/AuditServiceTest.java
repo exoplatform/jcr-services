@@ -16,6 +16,17 @@
  */
 package org.exoplatform.services.jcr.ext.audit;
 
+import org.exoplatform.services.command.action.Action;
+import org.exoplatform.services.command.action.ActionMatcher;
+import org.exoplatform.services.jcr.access.PermissionType;
+import org.exoplatform.services.jcr.core.ExtendedNode;
+import org.exoplatform.services.jcr.datamodel.InternalQName;
+import org.exoplatform.services.jcr.ext.BaseStandaloneTest;
+import org.exoplatform.services.jcr.impl.core.NodeImpl;
+import org.exoplatform.services.jcr.impl.ext.action.SessionActionCatalog;
+import org.exoplatform.services.jcr.observation.ExtendedEventType;
+import org.exoplatform.services.security.IdentityConstants;
+
 import java.io.StringBufferInputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -32,18 +43,6 @@ import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 import javax.jcr.Value;
 import javax.jcr.observation.Event;
-
-import org.exoplatform.services.command.action.Action;
-import org.exoplatform.services.command.action.ActionMatcher;
-import org.exoplatform.services.jcr.access.PermissionType;
-import org.exoplatform.services.jcr.access.SystemIdentity;
-import org.exoplatform.services.jcr.core.ExtendedNode;
-import org.exoplatform.services.jcr.datamodel.InternalQName;
-import org.exoplatform.services.jcr.ext.BaseStandaloneTest;
-import org.exoplatform.services.jcr.ext.app.SessionProviderService;
-import org.exoplatform.services.jcr.impl.core.NodeImpl;
-import org.exoplatform.services.jcr.impl.ext.action.SessionActionCatalog;
-import org.exoplatform.services.jcr.observation.ExtendedEventType;
 
 /**
  * Created by The eXo Platform SAS .
@@ -97,7 +96,7 @@ public class AuditServiceTest extends BaseStandaloneTest {
 
     auditServiceTestRoot = (NodeImpl) rootAdmin.addNode(ROOT_PATH);
     auditServiceTestRoot.addMixin("exo:privilegeable");
-    auditServiceTestRoot.setPermission(SystemIdentity.ANY, PermissionType.ALL);
+    auditServiceTestRoot.setPermission(IdentityConstants.ANY, PermissionType.ALL);
     rootAdmin.save();
 
     auditServiceTestRoot = (NodeImpl) root.getNode(ROOT_PATH);

@@ -20,7 +20,6 @@ import org.exoplatform.container.ExoContainerContext;
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.container.xml.PropertiesParam;
 import org.exoplatform.services.jcr.RepositoryService;
-import org.exoplatform.services.jcr.access.SystemIdentity;
 import org.exoplatform.services.jcr.core.ExtendedNode;
 import org.exoplatform.services.jcr.ext.app.ThreadLocalSessionProviderService;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
@@ -32,6 +31,7 @@ import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.rest.ExtHttpHeaders;
 import org.exoplatform.services.rest.resource.ResourceContainer;
+import org.exoplatform.services.security.IdentityConstants;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -219,7 +219,7 @@ public class RESTArtifactLoaderService implements ResourceContainer
       {
          if (LOG.isDebugEnabled())
             LOG.debug(e.getLocalizedMessage(), e);
-         if (ses.getUserID().equals(SystemIdentity.ANONIM))
+         if (ses.getUserID().equals(IdentityConstants.ANONIM))
             return Response.status(Response.Status.UNAUTHORIZED).header(ExtHttpHeaders.WWW_AUTHENTICATE,
                "Basic realm=\"" + realmName + "\"").build();
          else

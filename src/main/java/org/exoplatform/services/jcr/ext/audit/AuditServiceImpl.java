@@ -22,7 +22,6 @@ import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.access.AccessControlEntry;
 import org.exoplatform.services.jcr.access.AccessControlList;
 import org.exoplatform.services.jcr.access.PermissionType;
-import org.exoplatform.services.jcr.access.SystemIdentity;
 import org.exoplatform.services.jcr.config.RepositoryConfigurationException;
 import org.exoplatform.services.jcr.core.ExtendedNode;
 import org.exoplatform.services.jcr.core.ExtendedPropertyType;
@@ -55,6 +54,7 @@ import org.exoplatform.services.jcr.impl.dataflow.session.SessionChangesLog;
 import org.exoplatform.services.jcr.util.IdGenerator;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
+import org.exoplatform.services.security.IdentityConstants;
 import org.picocontainer.Startable;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -227,8 +227,8 @@ public class AuditServiceImpl implements AuditService, Startable
 
       // exo:auditRecord
       List<AccessControlEntry> access = new ArrayList<AccessControlEntry>();
-      access.add(new AccessControlEntry(SystemIdentity.ANY, PermissionType.SET_PROPERTY));
-      access.add(new AccessControlEntry(SystemIdentity.ANY, PermissionType.READ));
+      access.add(new AccessControlEntry(IdentityConstants.ANY, PermissionType.SET_PROPERTY));
+      access.add(new AccessControlEntry(IdentityConstants.ANY, PermissionType.READ));
 
       for (String identity : adminIdentitys)
       {
@@ -417,9 +417,9 @@ public class AuditServiceImpl implements AuditService, Startable
       InternalQName aiName = new InternalQName(null, ((ItemImpl)node).getData().getIdentifier());
       // exo:auditHistory
       List<AccessControlEntry> access = new ArrayList<AccessControlEntry>();
-      access.add(new AccessControlEntry(SystemIdentity.ANY, PermissionType.ADD_NODE));
-      access.add(new AccessControlEntry(SystemIdentity.ANY, PermissionType.READ));
-      access.add(new AccessControlEntry(SystemIdentity.ANY, PermissionType.SET_PROPERTY));
+      access.add(new AccessControlEntry(IdentityConstants.ANY, PermissionType.ADD_NODE));
+      access.add(new AccessControlEntry(IdentityConstants.ANY, PermissionType.READ));
+      access.add(new AccessControlEntry(IdentityConstants.ANY, PermissionType.SET_PROPERTY));
 
       for (String identity : adminIdentitys)
       {
@@ -709,16 +709,16 @@ public class AuditServiceImpl implements AuditService, Startable
             // nodeData: /exo:audit with UUID = AUDIT_STORAGE_ID
             // its primaryType exo:auditStorage
             List<AccessControlEntry> access = new ArrayList<AccessControlEntry>();
-            access.add(new AccessControlEntry(SystemIdentity.ANY, PermissionType.ADD_NODE));
+            access.add(new AccessControlEntry(IdentityConstants.ANY, PermissionType.ADD_NODE));
 
             for (String identity : adminIdentitys)
             {
                access.add(new AccessControlEntry(identity, PermissionType.READ));
             }
 
-            access.add(new AccessControlEntry(SystemIdentity.ANY, PermissionType.REMOVE));
+            access.add(new AccessControlEntry(IdentityConstants.ANY, PermissionType.REMOVE));
 
-            AccessControlList exoAuditAccessControlList = new AccessControlList(SystemIdentity.SYSTEM, access);
+            AccessControlList exoAuditAccessControlList = new AccessControlList(IdentityConstants.SYSTEM, access);
 
             InternalQName[] mixins = new InternalQName[]{Constants.EXO_PRIVILEGEABLE, Constants.MIX_REFERENCEABLE};
 
