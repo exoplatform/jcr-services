@@ -85,7 +85,7 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
     */
    public void addUserProfileEventListener(UserProfileEventListener listener)
    {
-      SecurityHelper.validateSecurityPermissions(new RuntimePermission[]{PermissionConstants.MANAGE_LISTENERS});
+      SecurityHelper.validateSecurityPermission(PermissionConstants.MANAGE_LISTENERS);
       listeners.add(listener);
    }
 
@@ -298,7 +298,7 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
     */
    public void removeUserProfileEventListener(UserProfileEventListener listener)
    {
-      SecurityHelper.validateSecurityPermissions(new RuntimePermission[]{PermissionConstants.MANAGE_LISTENERS});
+      SecurityHelper.validateSecurityPermission(PermissionConstants.MANAGE_LISTENERS);
       listeners.remove(listener);
    }
 

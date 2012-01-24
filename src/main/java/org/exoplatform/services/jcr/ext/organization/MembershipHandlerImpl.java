@@ -98,7 +98,7 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
     */
    public void addMembershipEventListener(MembershipEventListener listener)
    {
-      SecurityHelper.validateSecurityPermissions(new RuntimePermission[]{PermissionConstants.MANAGE_LISTENERS});
+      SecurityHelper.validateSecurityPermission(PermissionConstants.MANAGE_LISTENERS);
       listeners.add(listener);
    }
 
@@ -754,7 +754,7 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
     */
    public void removeMembershipEventListener(MembershipEventListener listener)
    {
-      SecurityHelper.validateSecurityPermissions(new RuntimePermission[]{PermissionConstants.MANAGE_LISTENERS});
+      SecurityHelper.validateSecurityPermission(PermissionConstants.MANAGE_LISTENERS);
       listeners.remove(listener);
    }
 
