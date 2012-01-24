@@ -127,7 +127,7 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
     */
    public void addUserEventListener(UserEventListener listener)
    {
-      SecurityHelper.validateSecurityPermissions(new RuntimePermission[]{PermissionConstants.MANAGE_LISTENERS});
+      SecurityHelper.validateSecurityPermission(PermissionConstants.MANAGE_LISTENERS);
       listeners.add(listener);
    }
 
@@ -499,7 +499,7 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
     */
    public void removeUserEventListener(UserEventListener listener)
    {
-      SecurityHelper.validateSecurityPermissions(new RuntimePermission[]{PermissionConstants.MANAGE_LISTENERS});
+      SecurityHelper.validateSecurityPermission(PermissionConstants.MANAGE_LISTENERS);
       listeners.remove(listener);
    }
 

@@ -187,7 +187,7 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
     */
    public void addGroupEventListener(GroupEventListener listener)
    {
-      SecurityHelper.validateSecurityPermissions(new RuntimePermission[]{PermissionConstants.MANAGE_LISTENERS});
+      SecurityHelper.validateSecurityPermission(PermissionConstants.MANAGE_LISTENERS);
       listeners.add(listener);
    }
 
@@ -567,7 +567,7 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
     */
    public void removeGroupEventListener(GroupEventListener listener)
    {
-      SecurityHelper.validateSecurityPermissions(new RuntimePermission[]{PermissionConstants.MANAGE_LISTENERS});
+      SecurityHelper.validateSecurityPermission(PermissionConstants.MANAGE_LISTENERS);
       listeners.remove(listener);
    }
 
