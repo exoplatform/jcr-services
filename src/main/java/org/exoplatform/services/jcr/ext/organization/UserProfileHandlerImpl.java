@@ -16,6 +16,7 @@
  */
 package org.exoplatform.services.jcr.ext.organization;
 
+import org.exoplatform.commons.utils.SecurityHelper;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.organization.CacheHandler.CacheType;
@@ -23,6 +24,7 @@ import org.exoplatform.services.organization.UserProfile;
 import org.exoplatform.services.organization.UserProfileEventListener;
 import org.exoplatform.services.organization.UserProfileEventListenerHandler;
 import org.exoplatform.services.organization.UserProfileHandler;
+import org.exoplatform.services.security.PermissionConstants;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -83,6 +85,7 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
     */
    public void addUserProfileEventListener(UserProfileEventListener listener)
    {
+      SecurityHelper.validateSecurityPermissions(new RuntimePermission[]{PermissionConstants.MANAGE_LISTENERS});
       listeners.add(listener);
    }
 
@@ -295,6 +298,7 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
     */
    public void removeUserProfileEventListener(UserProfileEventListener listener)
    {
+      SecurityHelper.validateSecurityPermissions(new RuntimePermission[]{PermissionConstants.MANAGE_LISTENERS});
       listeners.remove(listener);
    }
 

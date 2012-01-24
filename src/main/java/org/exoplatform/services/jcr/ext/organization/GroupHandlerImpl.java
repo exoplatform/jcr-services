@@ -16,6 +16,7 @@
  */
 package org.exoplatform.services.jcr.ext.organization;
 
+import org.exoplatform.commons.utils.SecurityHelper;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.organization.CacheHandler.CacheType;
@@ -23,6 +24,7 @@ import org.exoplatform.services.organization.Group;
 import org.exoplatform.services.organization.GroupEventListener;
 import org.exoplatform.services.organization.GroupEventListenerHandler;
 import org.exoplatform.services.organization.GroupHandler;
+import org.exoplatform.services.security.PermissionConstants;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -185,6 +187,7 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
     */
    public void addGroupEventListener(GroupEventListener listener)
    {
+      SecurityHelper.validateSecurityPermissions(new RuntimePermission[]{PermissionConstants.MANAGE_LISTENERS});
       listeners.add(listener);
    }
 
@@ -564,6 +567,7 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
     */
    public void removeGroupEventListener(GroupEventListener listener)
    {
+      SecurityHelper.validateSecurityPermissions(new RuntimePermission[]{PermissionConstants.MANAGE_LISTENERS});
       listeners.remove(listener);
    }
 
