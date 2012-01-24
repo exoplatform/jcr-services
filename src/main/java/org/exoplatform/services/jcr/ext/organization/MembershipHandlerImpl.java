@@ -17,6 +17,7 @@
 package org.exoplatform.services.jcr.ext.organization;
 
 import org.exoplatform.commons.utils.ListAccess;
+import org.exoplatform.commons.utils.SecurityHelper;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.organization.CacheHandler;
@@ -29,6 +30,7 @@ import org.exoplatform.services.organization.MembershipHandler;
 import org.exoplatform.services.organization.MembershipType;
 import org.exoplatform.services.organization.User;
 import org.exoplatform.services.organization.impl.mock.SimpleMembershipListAccess;
+import org.exoplatform.services.security.PermissionConstants;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -96,6 +98,7 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
     */
    public void addMembershipEventListener(MembershipEventListener listener)
    {
+      SecurityHelper.validateSecurityPermissions(new RuntimePermission[]{PermissionConstants.MANAGE_LISTENERS});
       listeners.add(listener);
    }
 
@@ -751,6 +754,7 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
     */
    public void removeMembershipEventListener(MembershipEventListener listener)
    {
+      SecurityHelper.validateSecurityPermissions(new RuntimePermission[]{PermissionConstants.MANAGE_LISTENERS});
       listeners.remove(listener);
    }
 

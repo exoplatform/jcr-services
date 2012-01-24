@@ -16,6 +16,7 @@
  */
 package org.exoplatform.services.jcr.ext.organization;
 
+import org.exoplatform.commons.utils.SecurityHelper;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.organization.CacheHandler;
@@ -24,6 +25,7 @@ import org.exoplatform.services.organization.MembershipType;
 import org.exoplatform.services.organization.MembershipTypeEventListener;
 import org.exoplatform.services.organization.MembershipTypeEventListenerHandler;
 import org.exoplatform.services.organization.MembershipTypeHandler;
+import org.exoplatform.services.security.PermissionConstants;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -506,6 +508,7 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
     */
    public void removeMembershipTypeEventListener(MembershipTypeEventListener listener)
    {
+      SecurityHelper.validateSecurityPermissions(new RuntimePermission[]{PermissionConstants.MANAGE_LISTENERS});
       listeners.remove(listener);
    }
 
@@ -514,6 +517,7 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
     */
    public void addMembershipTypeEventListener(MembershipTypeEventListener listener)
    {
+      SecurityHelper.validateSecurityPermissions(new RuntimePermission[]{PermissionConstants.MANAGE_LISTENERS});
       listeners.add(listener);
    }
 

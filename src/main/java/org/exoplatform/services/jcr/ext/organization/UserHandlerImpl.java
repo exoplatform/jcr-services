@@ -18,6 +18,7 @@ package org.exoplatform.services.jcr.ext.organization;
 
 import org.exoplatform.commons.utils.LazyPageList;
 import org.exoplatform.commons.utils.ListAccess;
+import org.exoplatform.commons.utils.SecurityHelper;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.organization.CacheHandler;
@@ -29,6 +30,7 @@ import org.exoplatform.services.organization.UserEventListener;
 import org.exoplatform.services.organization.UserEventListenerHandler;
 import org.exoplatform.services.organization.UserHandler;
 import org.exoplatform.services.security.PasswordEncrypter;
+import org.exoplatform.services.security.PermissionConstants;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -125,6 +127,7 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
     */
    public void addUserEventListener(UserEventListener listener)
    {
+      SecurityHelper.validateSecurityPermissions(new RuntimePermission[]{PermissionConstants.MANAGE_LISTENERS});
       listeners.add(listener);
    }
 
@@ -496,6 +499,7 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
     */
    public void removeUserEventListener(UserEventListener listener)
    {
+      SecurityHelper.validateSecurityPermissions(new RuntimePermission[]{PermissionConstants.MANAGE_LISTENERS});
       listeners.remove(listener);
    }
 
