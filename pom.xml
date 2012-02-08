@@ -19,6 +19,17 @@
     <url>http://fisheye.exoplatform.org/browse/projects/jcr-services/branches/1.15.x</url>
   </scm>
   
+  <properties>
+     <org.exoplatform.kernel.version>2.4.0-Beta01-SNAPSHOT</org.exoplatform.kernel.version>
+     <org.exoplatform.core.version>2.5.0-Beta01-SNAPSHOT</org.exoplatform.core.version>
+     <org.exoplatform.ws.version>2.3.0-Beta01-SNAPSHOT</org.exoplatform.ws.version>
+     <org.exoplatform.jcr.version>1.15.0-Beta01-SNAPSHOT</org.exoplatform.jcr.version>
+     
+     <wikbook.source>${pom.basedir}/src/main/wikbook</wikbook.source>
+     <wikbook.target>${project.build.directory}/wikbook</wikbook.target>
+     <wikbook.version>0.9.26</wikbook.version>
+  </properties>
+  
   <dependencies>
     <dependency>
       <groupId>org.exoplatform.jcr</groupId>
@@ -413,23 +424,37 @@
   </build>  
   <profiles>
     <profile>
-      <id>default</id>
-      <activation>
-        <property>
-          <name>default</name>
-        </property>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <properties>
-        <org.exoplatform.kernel.version>2.4.0-Beta01-SNAPSHOT</org.exoplatform.kernel.version>
-        <org.exoplatform.core.version>2.5.0-Beta01-SNAPSHOT</org.exoplatform.core.version>
-        <org.exoplatform.ws.version>2.3.0-Beta01-SNAPSHOT</org.exoplatform.ws.version>
-        <org.exoplatform.jcr.version>1.15.0-Beta01-SNAPSHOT</org.exoplatform.jcr.version>
-
-        <wikbook.source>${pom.basedir}/src/main/wikbook</wikbook.source>
-        <wikbook.target>${project.build.directory}/wikbook</wikbook.target>
-        <wikbook.version>0.9.26</wikbook.version>
-      </properties>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <dependencies>
+              <dependency>
+                <groupId>org.apache.apache.resources</groupId>
+                <artifactId>apache-source-release-assembly-descriptor</artifactId>
+                <version>1.0.2</version>
+              </dependency>
+            </dependencies>
+            <executions>
+              <execution>
+                <id>source-release-assembly</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>single</goal>
+                </goals>
+                <configuration>
+                  <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
+                  <descriptorRefs>
+                    <descriptorRef>source-release</descriptorRef>
+                  </descriptorRefs>
+                  <tarLongFileFormat>gnu</tarLongFileFormat>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
   </profiles>
 </project>
