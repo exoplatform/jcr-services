@@ -35,6 +35,7 @@ import java.util.List;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
@@ -83,7 +84,7 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
    /**
     * Log.
     */
-   protected static Log log = ExoLogger.getLogger("jcr.MembershipTypeHandler");
+   protected static final Log LOG = ExoLogger.getLogger("jcr.MembershipTypeHandler");
 
    /**
     * Use this method to persist a new membership type.
@@ -101,9 +102,9 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
     */
    MembershipType createMembershipType(Session session, MembershipType mt, boolean broadcast) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("MembershipType.createMembershipType method is started");
+         LOG.debug("MembershipType.createMembershipType method is started");
       }
 
       try
@@ -160,9 +161,9 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
     */
    public MembershipType createMembershipTypeInstance()
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("MembershipType.createMembershipTypeInstance method is started");
+         LOG.debug("MembershipType.createMembershipTypeInstance method is started");
       }
 
       return new MembershipTypeImpl();
@@ -182,9 +183,9 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
     */
    private MembershipType findMembershipType(Session session, String name) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("MembershipType.findMembershipType method is started");
+         LOG.debug("MembershipType.findMembershipType method is started");
       }
 
       MembershipType mt = (MembershipType)service.getCacheHandler().get(name, CacheType.MEMBERSHIPTYPE);
@@ -241,9 +242,9 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
     */
    private Collection findMembershipTypes(Session session) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("MembershipType.findMembershipTypes method is started");
+         LOG.debug("MembershipType.findMembershipTypes method is started");
       }
 
       try
@@ -296,9 +297,9 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
     */
    private MembershipType removeMembershipType(Session session, String name, boolean broadcast) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("MembershipType.removeMembershipType method is started");
+         LOG.debug("MembershipType.removeMembershipType method is started");
       }
 
       try
@@ -379,9 +380,9 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
     */
    private MembershipType saveMembershipType(Session session, MembershipType mt, boolean broadcast) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("MembershipType.saveMembershipType method is started");
+         LOG.debug("MembershipType.saveMembershipType method is started");
       }
 
       try
@@ -497,7 +498,7 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
       {
          node.setProperty(JOS_DESCRIPTION, mt.getDescription());
       }
-      catch (Exception e)
+      catch (RepositoryException e)
       {
          throw new OrganizationServiceException("Can not write membership type properties", e);
       }

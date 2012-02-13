@@ -119,7 +119,7 @@ public class AuditServiceImpl implements AuditService, Startable
    /**
     * Logger.
     */
-   private static Log log = ExoLogger.getLogger("jcr.AuditService");
+   private static final Log LOG = ExoLogger.getLogger("jcr.AuditService");
 
    private List<String> adminIdentitys = null;
 
@@ -177,7 +177,7 @@ public class AuditServiceImpl implements AuditService, Startable
             }
             catch (Exception exc)
             {
-               log.error("Cannot write init configuration to RegistryService.", exc);
+               LOG.error("Cannot write init configuration to RegistryService.", exc);
             }
          }
          finally
@@ -219,7 +219,7 @@ public class AuditServiceImpl implements AuditService, Startable
       {
          auditRecordName = String.valueOf((int)ValueDataConvertor.readLong(pData.getValues().get(0)) + 1);
       }
-      catch (Exception e)
+      catch (IOException e)
       {
          throw new RepositoryException("Error on add audit record. Problem in calculating new record name. "
             + e.getLocalizedMessage());
@@ -392,8 +392,8 @@ public class AuditServiceImpl implements AuditService, Startable
       dataManager.update(
          new ItemState(pLastRecord, ItemState.UPDATED, true, ((ItemImpl)currentItem).getInternalPath()), true);
 
-      if (log.isDebugEnabled())
-         log.debug("Add audit record: " + " Item path="
+      if (LOG.isDebugEnabled())
+         LOG.debug("Add audit record: " + " Item path="
             + ((ItemImpl)currentItem).getLocation().getInternalPath().getAsString() + " User=" + session.getUserID()
             + " EventType=" + eventType);
    }
@@ -611,12 +611,12 @@ public class AuditServiceImpl implements AuditService, Startable
       {
          try
          {
-            if (log.isDebugEnabled())
-               log.debug("Audit history for " + node.getPath() + " not accessible due to error " + e, e);
+            if (LOG.isDebugEnabled())
+               LOG.debug("Audit history for " + node.getPath() + " not accessible due to error " + e, e);
          }
          catch (RepositoryException e1)
          {
-            log.error("Can't read node path for " + node, e1);
+            LOG.error("Can't read node path for " + node, e1);
          }
          return false;
       }
@@ -818,7 +818,7 @@ public class AuditServiceImpl implements AuditService, Startable
       Element element = doc.getDocumentElement();
       adminIdentity = getAttributeSmart(element, "value");
 
-      log.info("Admin identity is read from RegistryService");
+      LOG.info("Admin identity is read from RegistryService");
 
       checkParams();
    }
@@ -868,7 +868,7 @@ public class AuditServiceImpl implements AuditService, Startable
             adminIdentity = valParam.getValue();
       }
 
-      log.info("Admin identity is read from configuration file");
+      LOG.info("Admin identity is read from configuration file");
 
       checkParams();
    }

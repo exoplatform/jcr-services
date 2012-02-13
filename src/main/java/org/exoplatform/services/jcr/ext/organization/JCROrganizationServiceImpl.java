@@ -122,7 +122,7 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
    /**
     * Logger.
     */
-   private static Log log = ExoLogger.getLogger("jcr.JCROrganizationService");
+   private static final Log LOG = ExoLogger.getLogger("jcr.JCROrganizationService");
 
    /**
     * JCROrganizationServiceImpl constructor. Without registry service.
@@ -175,9 +175,9 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
    @Override
    public void start()
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("Starting JCROrganizationService");
+         LOG.debug("Starting JCROrganizationService");
       }
 
       if (registryService != null && !registryService.getForceXMLConfigurationValue(initParams))
@@ -196,7 +196,7 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
             }
             catch (Exception exc)
             {
-               log.error("Cannot write init configuration to RegistryService.", exc);
+               LOG.error("Cannot write init configuration to RegistryService.", exc);
             }
          }
          finally
@@ -237,7 +237,7 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
             session.logout();
          }
       }
-      catch (Exception e)
+      catch (RepositoryException e)
       {
          throw new RuntimeException("Can not configure storage", e);
       }
@@ -339,17 +339,17 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
 
       if (repositoryName != null)
       {
-         log.info("Repository from RegistryService: " + repositoryName);
+         LOG.info("Repository from RegistryService: " + repositoryName);
       }
 
       if (storageWorkspace != null)
       {
-         log.info("Workspace from RegistryService: " + storageWorkspace);
+         LOG.info("Workspace from RegistryService: " + storageWorkspace);
       }
 
       if (storagePath != null)
       {
-         log.info("Root node from RegistryService: " + storagePath);
+         LOG.info("Root node from RegistryService: " + storagePath);
       }
    }
 
@@ -402,17 +402,17 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
 
       if (repositoryName != null)
       {
-         log.info("Repository from configuration file: " + repositoryName);
+         LOG.info("Repository from configuration file: " + repositoryName);
       }
 
       if (storageWorkspace != null)
       {
-         log.info("Workspace from configuration file: " + storageWorkspace);
+         LOG.info("Workspace from configuration file: " + storageWorkspace);
       }
 
       if (storagePath != null)
       {
-         log.info("Root node from configuration file: " + storagePath);
+         LOG.info("Root node from configuration file: " + storagePath);
       }
    }
 

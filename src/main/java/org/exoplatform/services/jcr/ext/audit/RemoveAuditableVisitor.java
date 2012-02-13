@@ -37,7 +37,7 @@ public class RemoveAuditableVisitor extends TraversingItemVisitor {
    */
   private final AuditService auditService;
 
-  private final Log          log = ExoLogger.getLogger("jcr.RemoveAuditableVisitor");
+  private final static Log          LOG = ExoLogger.getLogger("jcr.RemoveAuditableVisitor");
 
   public RemoveAuditableVisitor(AuditService auditService) {
     super();
@@ -50,8 +50,8 @@ public class RemoveAuditableVisitor extends TraversingItemVisitor {
     if (((NodeImpl) node).isNodeType(AuditService.EXO_AUDITABLE)) {
       if (auditService.hasHistory(node)) {
         auditService.removeHistory(node);
-        if (log.isDebugEnabled()) {
-          log.debug("History removed for " + node.getPath());
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("History removed for " + node.getPath());
         }
       }
     }

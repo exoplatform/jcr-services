@@ -195,6 +195,10 @@ public class RESTArtifactLoaderService implements ResourceContainer
                }
                catch (RepositoryException e)
                { // no .sh1 file found
+                  if (LOG.isTraceEnabled())
+                  {
+                     LOG.trace("An exception occurred: " + e.getMessage());
+                  }
                }
                return getArtifactInfo(node, mavenPath, gadget, shaNode);
             }

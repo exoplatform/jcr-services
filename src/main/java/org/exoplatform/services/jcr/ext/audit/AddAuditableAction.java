@@ -34,7 +34,7 @@ public class AddAuditableAction
    implements Action
 {
 
-   private final Log log = ExoLogger.getLogger("jcr.AddAuditableAction");
+   private static final Log LOG = ExoLogger.getLogger("jcr.AddAuditableAction");
 
    public boolean execute(Context ctx) throws Exception
    {
@@ -54,9 +54,9 @@ public class AddAuditableAction
       if (node.canAddMixin("exo:auditable"))
       {
          node.addMixin("exo:auditable");
-         if (log.isDebugEnabled())
+         if (LOG.isDebugEnabled())
          {
-            log.debug("exo:auditable adedd for " + node.getPath());
+            LOG.debug("exo:auditable adedd for " + node.getPath());
          }
       }
       if (node.isNodeType("exo:auditable"))
@@ -65,17 +65,17 @@ public class AddAuditableAction
          {
 
             auditService.createHistory(node);
-            if (log.isDebugEnabled())
+            if (LOG.isDebugEnabled())
             {
-               log.debug("Audit history created for " + node.getPath());
+               LOG.debug("Audit history created for " + node.getPath());
             }
 
          }
 
          auditService.addRecord(previousItem, currentItem, event);
-         if (log.isDebugEnabled())
+         if (LOG.isDebugEnabled())
          {
-            log.debug("Record '" + ExtendedEventType.nameFromValue(event) + "' added for " + currentItem.getPath());
+            LOG.debug("Record '" + ExtendedEventType.nameFromValue(event) + "' added for " + currentItem.getPath());
          }
          return true;
       }

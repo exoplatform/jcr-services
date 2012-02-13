@@ -56,7 +56,7 @@ import org.exoplatform.services.security.UsernameCredential;
  */
 @Path("/maven2-structure-corrector/")
 public class ArtifactStructureCorrector implements ResourceContainer {
-  private static final Log  log = ExoLogger.getLogger(ArtifactStructureCorrector.class);
+  private static final Log  LOG = ExoLogger.getLogger(ArtifactStructureCorrector.class);
 
   private RepositoryService repoService;
 
@@ -113,7 +113,7 @@ public class ArtifactStructureCorrector implements ResourceContainer {
 
     public void run() {
 
-      log.info("Maven artifact checksums Updater started");
+      LOG.info("Maven artifact checksums Updater started");
 
       try {
         Node rootNode = (Node) session.getItem(rootNodePath);
@@ -121,12 +121,12 @@ public class ArtifactStructureCorrector implements ResourceContainer {
         jcrSpaning(rootNode);
 
       } catch (PathNotFoundException e) {
-        log.error("Cannot get target node", e);
+        LOG.error("Cannot get target node", e);
       } catch (RepositoryException e) {
-        log.error("General repository exception", e);
+        LOG.error("General repository exception", e);
       }
 
-      log.info("Maven artifact checksums Updater finished!");
+      LOG.info("Maven artifact checksums Updater finished!");
     }
 
     private void jcrSpaning(Node current_root) throws RepositoryException {
@@ -154,7 +154,7 @@ public class ArtifactStructureCorrector implements ResourceContainer {
               addChecksumNode(resource_node);
 
             } catch (ItemExistsException e) {
-              log.info("There is checksum for : " + node.getName());
+              LOG.info("There is checksum for : " + node.getName());
             }
           }
 
@@ -174,7 +174,7 @@ public class ArtifactStructureCorrector implements ResourceContainer {
       try {
         String checksum = CRCGenerator.getChecksum(data.getStream(), algorithm);
 
-        log.info("Generate checksum for : " + src.getName());
+        LOG.info("Generate checksum for : " + src.getName());
 
         Node checkNode = parent.addNode(src.getName() + "." + algorithm.toLowerCase(), "nt:file");
 
@@ -189,9 +189,9 @@ public class ArtifactStructureCorrector implements ResourceContainer {
         IOUtils.closeQuietly(checksum_is);
 
       } catch (NoSuchAlgorithmException e) {
-        log.error("Cannot eval checksum with this algorithm", e);
+        LOG.error("Cannot eval checksum with this algorithm", e);
       } catch (IOException e) {
-        log.error("Streams exception while eval checksums", e);
+        LOG.error("Streams exception while eval checksums", e);
       }
 
     }

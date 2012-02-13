@@ -116,7 +116,7 @@ public class ArtifactManagingServiceImpl
 
    private String rootNodePath;
 
-   private static final Log log = ExoLogger.getLogger(ArtifactManagingServiceImpl.class);
+   private static final Log LOG = ExoLogger.getLogger(ArtifactManagingServiceImpl.class);
 
    private Map<String, String> mimeMap = new Hashtable<String, String>();
 
@@ -207,7 +207,7 @@ public class ArtifactManagingServiceImpl
          parentNode = (Node) session.getItem("/" + parentFolder.getAsPath());
       }
 
-      log.info("Write repository to zipped stream");
+      LOG.info("Write repository to zipped stream");
 
       ZipOutputStream zout = new ZipOutputStream(new BufferedOutputStream(out, BUFFER));
       try
@@ -218,7 +218,7 @@ public class ArtifactManagingServiceImpl
       }
       catch (IOException e)
       {
-         log.error("Cannot write to zip stream", e);
+         LOG.error("Cannot write to zip stream", e);
       }
 
    }
@@ -270,11 +270,11 @@ public class ArtifactManagingServiceImpl
             }
             catch (FileNotFoundException e)
             {
-               log.error("!!Can't create content fo file", e);
+               LOG.error("!!Can't create content fo file", e);
             }
             catch (IOException e)
             {
-               log.error("!!Can't write content fo file", e);
+               LOG.error("!!Can't write content fo file", e);
             }
             finally
             {
@@ -307,9 +307,9 @@ public class ArtifactManagingServiceImpl
             String entryName = parentNode.getPath() + File.separator + folder.getName();
             ZipEntry entry = new ZipEntry(entryName);
 
-            if (log.isDebugEnabled())
+            if (LOG.isDebugEnabled())
             {
-               log.debug("Zipping " + entryName);
+               LOG.debug("Zipping " + entryName);
             }
 
             Node dataNode = folder.getNode("jcr:content");
@@ -342,7 +342,7 @@ public class ArtifactManagingServiceImpl
     */
    public List<Descriptor> getDescriptors(SessionProvider sp, FolderDescriptor parentFolder) throws RepositoryException
    {
-      log.info("Get child nodes to : " + parentFolder.getAsString());
+      LOG.info("Get child nodes to : " + parentFolder.getAsString());
 
       Session session = currentSession(sp);
 
@@ -360,16 +360,16 @@ public class ArtifactManagingServiceImpl
       {
          targetNode = rootNode.getNode(strPath.substring(1));
       }
-      log.info(targetNode.getPath());
+      LOG.info(targetNode.getPath());
       NodeType[] a = targetNode.getMixinNodeTypes();
       StringBuilder mixins = new StringBuilder();
       for (NodeType type : a)
       {
          mixins.append(type.getName()).append(" ");
       }
-      log.info("**** Mixins : " + mixins.toString());
+      LOG.info("**** Mixins : " + mixins.toString());
 
-      log.info("**** Workspace : " + session.getWorkspace().getName());
+      LOG.info("**** Workspace : " + session.getWorkspace().getName());
 
       List<Descriptor> childNodes = new ArrayList<Descriptor>();
       for (NodeIterator iterator = targetNode.getNodes(); iterator.hasNext();)
@@ -395,7 +395,7 @@ public class ArtifactManagingServiceImpl
     */
    public void importArtifacts(SessionProvider sp, InputStream in) throws RepositoryException, FileNotFoundException
    {
-      log.info("Extract repository to temporary folder");
+      LOG.info("Extract repository to temporary folder");
       String path = System.getProperty("java.io.tmpdir") + File.separator + "maven2";
       File temporaryFolder = new File(getUniqueFilename(path));
       if (!temporaryFolder.mkdir())
@@ -431,7 +431,7 @@ public class ArtifactManagingServiceImpl
       }
       catch (IOException e)
       {
-         log.error("Cannot get zip entry from stream", e);
+         LOG.error("Cannot get zip entry from stream", e);
       }
       finally
       {
@@ -449,7 +449,7 @@ public class ArtifactManagingServiceImpl
       }
       catch (IOException e)
       {
-         log.error("Cannot remove temporary folder", e);
+         LOG.error("Cannot remove temporary folder", e);
       }
 
    }
@@ -470,7 +470,7 @@ public class ArtifactManagingServiceImpl
       }
       catch (Exception e)
       {
-         log.error("Exception during uploading local folder to JCR", e);
+         LOG.error("Exception during uploading local folder to JCR", e);
       }
    }
 
@@ -543,9 +543,9 @@ public class ArtifactManagingServiceImpl
          pathToRemove = "/" + artifact.getAsPath();
       }
 
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("Remove node: " + pathToRemove);
+         LOG.debug("Remove node: " + pathToRemove);
       }
 
       Node rmNode = (Node) session.getItem(pathToRemove);
@@ -579,7 +579,7 @@ public class ArtifactManagingServiceImpl
          pathToCheck = "/" + artifact.getAsPath(); // "/" - is root path
       }
 
-      log.debug("Checking Permission on node: " + pathToCheck);
+      LOG.debug("Checking Permission on node: " + pathToCheck);
       ExtendedNode rmNode = (ExtendedNode) session.getItem(pathToCheck);
       List<AccessControlEntry> list = rmNode.getACL().getPermissionEntries();
       return list;
@@ -604,7 +604,7 @@ public class ArtifactManagingServiceImpl
          pathToChange = "/" + artifact.getAsPath(); // "/" - is root path
       }
 
-      log.debug("Changing Permission on node: " + pathToChange);
+      LOG.debug("Changing Permission on node: " + pathToChange);
 
       ExtendedNode chNode = (ExtendedNode) session.getItem(pathToChange);
       if (!chNode.isNodeType("exo:privilegeable"))
@@ -634,7 +634,7 @@ public class ArtifactManagingServiceImpl
       }
       catch (Exception e)
       {
-         log.error("Cannot change permissions", e);
+         LOG.error("Cannot change permissions", e);
       }
 
       session.save();
@@ -670,7 +670,7 @@ public class ArtifactManagingServiceImpl
 
       String sqlQuery = String.format("SELECT * FROM nt:folder WHERE jcr:path LIKE '%s' ", pathConstraint);
 
-      log.info(sqlQuery);
+      LOG.info(sqlQuery);
       QueryManager manager = session.getWorkspace().getQueryManager();
       Query query = manager.createQuery(sqlQuery, Query.SQL);
 
@@ -705,9 +705,9 @@ public class ArtifactManagingServiceImpl
       // if Entry is not initialized yet (first launch)
       // 3. initializing maven root if not initialized
 
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("Starting ArtifactManagingService ...");
+         LOG.debug("Starting ArtifactManagingService ...");
       }
 
       sessionProvider = SessionProvider.createSystemProvider();
@@ -731,14 +731,26 @@ public class ArtifactManagingServiceImpl
 
             prepareRootNode(sessionProvider, rootNodePath);
          }
-         catch (Exception exc)
+         catch (RepositoryException exc)
          {
-            log.error("Cannot write init configuration to RegistryService", exc);
+            LOG.error("Cannot write init configuration to RegistryService", exc);
+         }
+         catch (IOException exc)
+         {
+            LOG.error("Cannot write init configuration to RegistryService", exc);
+         }
+         catch (SAXException exc)
+         {
+            LOG.error("Cannot write init configuration to RegistryService", exc);
+         }
+         catch (ParserConfigurationException exc)
+         {
+            LOG.error("Cannot write init configuration to RegistryService", exc);
          }
       }
       catch (RepositoryException e)
       {
-         log.error("Error while register nodetypes/checking existance", e);
+         LOG.error("Error while register nodetypes/checking existance", e);
       }
       finally
       {
@@ -871,11 +883,11 @@ public class ArtifactManagingServiceImpl
       }
       catch (FileNotFoundException e)
       {
-         log.error("Cannot create .tmp file for storing artifact", e);
+         LOG.error("Cannot create .tmp file for storing artifact", e);
       }
       catch (IOException e)
       {
-         log.error("IO exception on .tmp file for storing artifact", e);
+         LOG.error("IO exception on .tmp file for storing artifact", e);
       }
       finally
       {
@@ -893,7 +905,7 @@ public class ArtifactManagingServiceImpl
       }
       catch (IOException e)
       {
-         log.error("Cannot delete tmp file", e);
+         LOG.error("Cannot delete tmp file", e);
       }
 
    }
@@ -922,7 +934,7 @@ public class ArtifactManagingServiceImpl
       }
       catch (FileNotFoundException e)
       {
-         log.error("Cannot read from .tmp resource file", e);
+         LOG.error("Cannot read from .tmp resource file", e);
       }
    }
 
@@ -954,15 +966,15 @@ public class ArtifactManagingServiceImpl
       }
       catch (FileNotFoundException e)
       {
-         log.error("Cannot read from .tmp resource file", e);
+         LOG.error("Cannot read from .tmp resource file", e);
       }
       catch (IOException e)
       {
-         log.error("Cannot read from .tmp resource file", e);
+         LOG.error("Cannot read from .tmp resource file", e);
       }
       catch (NoSuchAlgorithmException e)
       {
-         log.error("No such algorithm for generating checksums", e);
+         LOG.error("No such algorithm for generating checksums", e);
       }
    }
 
@@ -1006,11 +1018,11 @@ public class ArtifactManagingServiceImpl
       }
       catch (XMLStreamException e)
       {
-         log.error("Error on creating metadata - XML", e);
+         LOG.error("Error on creating metadata - XML", e);
       }
       catch (IOException e)
       {
-         log.error("Error on creating metadata - FILE", e);
+         LOG.error("Error on creating metadata - FILE", e);
       }
       return (temp.exists()) ? temp : null;
    }
@@ -1079,11 +1091,11 @@ public class ArtifactManagingServiceImpl
       }
       catch (XMLStreamException e)
       {
-         log.error("Error on creating metadata - XML", e);
+         LOG.error("Error on creating metadata - XML", e);
       }
       catch (IOException e)
       {
-         log.error("Error on creating metadata - FILE", e);
+         LOG.error("Error on creating metadata - FILE", e);
       }
       return (temp.exists()) ? temp : null;
    }
@@ -1129,8 +1141,8 @@ public class ArtifactManagingServiceImpl
       element = doc.getDocumentElement();
       rootNodePath = getAttributeSmart(element, "value");
 
-      log.info("Workspace from RegistryService: " + repoWorkspaceName);
-      log.info("RootNode from RegistryService: " + rootNodePath);
+      LOG.info("Workspace from RegistryService: " + repoWorkspaceName);
+      LOG.info("RootNode from RegistryService: " + rootNodePath);
    }
 
    /**
@@ -1218,8 +1230,8 @@ public class ArtifactManagingServiceImpl
       repoWorkspaceName = props.getProperty("workspace");
       rootNodePath = props.getProperty("rootNode");
 
-      log.info("Workspace from configuration file: " + repoWorkspaceName);
-      log.info("RootNode from configuration file: " + rootNodePath);
+      LOG.info("Workspace from configuration file: " + repoWorkspaceName);
+      LOG.info("RootNode from configuration file: " + rootNodePath);
    }
 
    public List getListErrors()

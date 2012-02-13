@@ -41,6 +41,7 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
@@ -81,7 +82,7 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
    /**
     * Log.
     */
-   protected static Log log = ExoLogger.getLogger("jcr.MembershipHandlerImpl");
+   protected static final Log LOG = ExoLogger.getLogger("jcr.MembershipHandlerImpl");
 
    /**
     * MembershipHandlerImpl constructor.
@@ -195,9 +196,9 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
     */
    public Membership createMembershipInstance()
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("createMembershipInstance");
+         LOG.debug("createMembershipInstance");
       }
 
       return new MembershipImpl();
@@ -230,9 +231,9 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
     */
    private Membership findMembership(Session session, String id) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("findMembership");
+         LOG.debug("findMembership");
       }
 
       try
@@ -281,9 +282,9 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
    private Membership findMembershipByUserGroupAndType(Session session, String userName, String groupId, String type)
       throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("findMembershipByUserGroupAndType");
+         LOG.debug("findMembershipByUserGroupAndType");
       }
 
       MembershipImpl membership =
@@ -374,9 +375,9 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
     */
    private Collection findMembershipsByGroup(Session session, Group group) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("findMembershipByGroup");
+         LOG.debug("findMembershipByGroup");
       }
 
       try
@@ -440,9 +441,9 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
     */
    private Collection findMembershipsByUser(Session session, String userName) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("findMembeshipByUser");
+         LOG.debug("findMembeshipByUser");
       }
 
       List<Membership> types = new ArrayList<Membership>();
@@ -499,9 +500,9 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
     */
    private Collection findMembershipsByUserAndGroup(Session session, String userName, String groupId) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("findMembershipByUserAndGroup");
+         LOG.debug("findMembershipByUserAndGroup");
       }
 
       List<Membership> types = new ArrayList<Membership>();
@@ -616,9 +617,9 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
     */
    Membership removeMembership(Session session, String id, boolean broadcast) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("removeMembership");
+         LOG.debug("removeMembership");
       }
 
       try
@@ -698,9 +699,9 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
     */
    private Collection removeMembershipByUser(Session session, String userName, boolean broadcast) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("removeMembershipByUser");
+         LOG.debug("removeMembershipByUser");
       }
 
       List<Membership> types = new ArrayList<Membership>();
@@ -774,9 +775,8 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
          String mtPath = service.getStoragePath() + "/" + MembershipTypeHandlerImpl.STORAGE_JOS_MEMBERSHIP_TYPES;
          return (type != null && type.length() != 0 && session.itemExists(mtPath + "/" + type) ? ((Node)session
             .getItem(mtPath + "/" + type)).getUUID() : null);
-
       }
-      catch (Exception e)
+      catch (RepositoryException e)
       {
          throw new OrganizationServiceException("Can not find membership type '" + type + "'", e);
       }
@@ -798,9 +798,8 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
          String gPath = service.getStoragePath() + "/" + GroupHandlerImpl.STORAGE_JOS_GROUPS;
          return (groupId != null && groupId.length() != 0 && session.itemExists(gPath + groupId) ? ((Node)session
             .getItem(gPath + groupId)).getUUID() : null);
-
       }
-      catch (Exception e)
+      catch (RepositoryException e)
       {
          throw new OrganizationServiceException("Can not find group '" + groupId + "'", e);
       }
@@ -821,7 +820,11 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
       {
          return session.getNodeByUUID(UUID).getName();
       }
-      catch (Exception e)
+      catch (ItemNotFoundException e)
+      {
+         throw new OrganizationServiceException("Can not find membership type by uuid " + UUID, e);
+      }
+      catch (RepositoryException e)
       {
          throw new OrganizationServiceException("Can not find membership type by uuid " + UUID, e);
       }

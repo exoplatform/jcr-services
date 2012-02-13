@@ -32,7 +32,7 @@ import org.exoplatform.services.log.Log;
 public class AuditAction
    implements Action
 {
-   private final Log log = ExoLogger.getLogger("jcr.AuditAction");
+   private static final Log LOG = ExoLogger.getLogger("jcr.AuditAction");
 
    public boolean execute(Context ctx) throws Exception
    {
@@ -57,9 +57,9 @@ public class AuditAction
             auditService.createHistory(node);
 
          auditService.addRecord(previousItem, currentItem, event);
-         if (log.isDebugEnabled())
+         if (LOG.isDebugEnabled())
          {
-            log.debug("Record '" + ExtendedEventType.nameFromValue(event) + "' added for " + currentItem.getPath());
+            LOG.debug("Record '" + ExtendedEventType.nameFromValue(event) + "' added for " + currentItem.getPath());
          }
          return true;
       }

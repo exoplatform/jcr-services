@@ -39,6 +39,7 @@ import java.util.List;
 
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 /**
@@ -110,7 +111,7 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
    /**
     * Log.
     */
-   protected static Log log = ExoLogger.getLogger("jcr.UserHandlerImpl");
+   protected static final Log LOG = ExoLogger.getLogger("jcr.UserHandlerImpl");
 
    /**
     * UserHandlerImpl constructor.
@@ -174,9 +175,9 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
       throws Exception
    {
 
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("User.authenticate method is started");
+         LOG.debug("User.authenticate method is started");
       }
 
       try
@@ -244,9 +245,9 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
     */
    private void createUser(Session session, User user, boolean broadcast) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("User.createUser method is started");
+         LOG.debug("User.createUser method is started");
       }
 
       try
@@ -292,9 +293,9 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
     */
    public User createUserInstance()
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("User.createUserInstance() method is started");
+         LOG.debug("User.createUserInstance() method is started");
       }
 
       return new UserImpl();
@@ -305,9 +306,9 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
     */
    public User createUserInstance(String username)
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("User.createUserInstance(String) method is started");
+         LOG.debug("User.createUserInstance(String) method is started");
       }
 
       return new UserImpl(username);
@@ -327,9 +328,9 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
     */
    User findUserByName(Session session, String userName) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("User.findUserByName method is started");
+         LOG.debug("User.findUserByName method is started");
       }
 
       User user = (User)service.getCacheHandler().get(userName, CacheType.USER);
@@ -453,9 +454,9 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
     */
    private User removeUser(Session session, String userName, boolean broadcast) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("User.removeUser method is started");
+         LOG.debug("User.removeUser method is started");
       }
 
       try
@@ -533,9 +534,9 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
     */
    private void saveUser(Session session, User u, boolean broadcast) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("User.saveUser method is started");
+         LOG.debug("User.saveUser method is started");
       }
 
       try
@@ -655,7 +656,7 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
          node.setProperty(JOS_CREATED_DATE, calendar);
 
       }
-      catch (Exception e)
+      catch (RepositoryException e)
       {
          throw new OrganizationServiceException("Can not write user properties", e);
       }

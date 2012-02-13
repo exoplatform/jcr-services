@@ -20,6 +20,7 @@ import org.exoplatform.services.organization.User;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 /**
@@ -52,7 +53,7 @@ public class SimpleJCRUserListAccess extends JCRUserListAccess
          Node storageNode = (Node) session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_JOS_USERS);
          return (int) storageNode.getNodes().getSize();
       }
-      catch (Exception e)
+      catch (RepositoryException e)
       {
          throw new OrganizationServiceException("Can not get list size", e);
       }
