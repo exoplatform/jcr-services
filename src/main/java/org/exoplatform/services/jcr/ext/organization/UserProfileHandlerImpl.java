@@ -36,6 +36,7 @@ import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 /**
@@ -450,7 +451,7 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
          return userProfile;
 
       }
-      catch (Exception e)
+      catch (RepositoryException e)
       {
          throw new OrganizationServiceException("Can not read user profile data from node", e);
       }

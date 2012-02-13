@@ -34,6 +34,7 @@ import java.util.List;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
@@ -86,7 +87,7 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
    /**
     * Log.
     */
-   protected static Log log = ExoLogger.getLogger("jcr.GroupHandlerImpl");
+   protected static final Log LOG = ExoLogger.getLogger("jcr.GroupHandlerImpl");
 
    /**
     * GroupHandlerImpl constructor.
@@ -130,9 +131,9 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
     */
    private void addChild(Session session, Group parent, Group child, boolean broadcast) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("addChild started");
+         LOG.debug("addChild started");
       }
 
       try
@@ -196,9 +197,9 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
     */
    public void createGroup(Group group, boolean broadcast) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("createGroup method");
+         LOG.debug("createGroup method");
       }
 
       try
@@ -246,9 +247,9 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
     */
    private Group findGroupById(Session session, String groupId) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("findGroupById started");
+         LOG.debug("findGroupById started");
       }
 
       Group group = (Group)service.getCacheHandler().get(groupId, CacheType.GROUP);
@@ -307,9 +308,9 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
     */
    private Collection findGroupByMembership(Session session, String userName, String membershipType) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("findGroupByMembership started");
+         LOG.debug("findGroupByMembership started");
       }
 
       List<Group> types = new ArrayList<Group>();
@@ -380,9 +381,9 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
     */
    private Collection findGroups(Session session, Group parent, boolean recursive) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("findGroups started");
+         LOG.debug("findGroups started");
       }
 
       List<Group> types = new ArrayList<Group>();
@@ -419,9 +420,9 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
     */
    public Collection findGroupsOfUser(String user) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("findGroupsOfUser started");
+         LOG.debug("findGroupsOfUser started");
       }
 
       try
@@ -460,9 +461,9 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
     */
    private Collection getAllGroups(Session session) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("getAllGroups started");
+         LOG.debug("getAllGroups started");
       }
 
       try
@@ -507,9 +508,9 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
     */
    private Group removeGroup(Session session, Group group, boolean broadcast) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("removeGroup started");
+         LOG.debug("removeGroup started");
       }
 
       try
@@ -599,9 +600,9 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
     */
    private void saveGroup(Session session, Group group, boolean broadcast) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("saveGroup started");
+         LOG.debug("saveGroup started");
       }
 
       try
@@ -670,7 +671,7 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
          node.setProperty(JOS_GROUP_ID, group.getId());
          node.setProperty(JOS_PARENT_ID, group.getParentId());
       }
-      catch (Exception e)
+      catch (RepositoryException e)
       {
          throw new OrganizationServiceException("Can not write node properties", e);
       }

@@ -23,6 +23,7 @@ import java.util.Date;
 
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
 
 /**
  * Created by The eXo Platform SAS.
@@ -51,7 +52,7 @@ public abstract class CommonHandler {
       return node.getProperty(prop).getDate().getTime();
     } catch (PathNotFoundException e) {
       return null;
-    } catch (Exception e) {
+    } catch (RepositoryException e) {
       throw new OrganizationServiceException("Can not read property " + prop, e);
     }
   }
@@ -72,7 +73,7 @@ public abstract class CommonHandler {
       return node.getProperty(prop).getString();
     } catch (PathNotFoundException e) {
       return null;
-    } catch (Exception e) {
+    } catch (RepositoryException e) {
       throw new OrganizationServiceException("Can not read property " + prop, e);
     }
   }

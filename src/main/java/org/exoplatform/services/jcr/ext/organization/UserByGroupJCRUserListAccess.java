@@ -21,6 +21,7 @@ import org.exoplatform.services.organization.User;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
@@ -75,7 +76,7 @@ public class UserByGroupJCRUserListAccess extends JCRUserListAccess
       {
          return 0;
       }
-      catch (Exception e)
+      catch (RepositoryException e)
       {
          throw new OrganizationServiceException("Can not get list size", e);
       }

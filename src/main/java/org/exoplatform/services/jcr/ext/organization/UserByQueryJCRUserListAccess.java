@@ -22,6 +22,7 @@ import java.util.Date;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 /**
@@ -81,7 +82,7 @@ public class UserByQueryJCRUserListAccess extends JCRUserListAccess
 
          return result;
       }
-      catch (Exception e)
+      catch (RepositoryException e)
       {
          throw new OrganizationServiceException("Can not get list size", e);
       }
