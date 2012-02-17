@@ -1224,7 +1224,7 @@ public class ArtifactManagingServiceImpl
 
       if (props == null)
       {
-         throw new RuntimeException("Property parameters 'locations' expected");
+         throw new IllegalArgumentException("Property parameters 'locations' expected");
       }
 
       repoWorkspaceName = props.getProperty("workspace");

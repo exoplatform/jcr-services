@@ -42,7 +42,7 @@ public class JCRCacheHandler extends CacheHandler
 {
    private static char DELIMITER = ':';
 
-   private static final Log LOG = ExoLogger.getLogger("org.exoplatform.services.jcr.ext.organization.JCRCacheHandler");
+   private static final Log LOG = ExoLogger.getLogger("exo-jcr-services.JCRCacheHandler");
 
    private final JCROrganizationServiceImpl jcrOrganizationServiceImpl;
 

@@ -32,7 +32,7 @@ import org.exoplatform.services.log.Log;
 public class AuditAction
    implements Action
 {
-   private static final Log LOG = ExoLogger.getLogger("jcr.AuditAction");
+   private static final Log LOG = ExoLogger.getLogger("exo-jcr-services.AuditAction");
 
    public boolean execute(Context ctx) throws Exception
    {

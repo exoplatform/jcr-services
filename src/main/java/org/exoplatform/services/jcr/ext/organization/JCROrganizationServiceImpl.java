@@ -122,7 +122,7 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
    /**
     * Logger.
     */
-   private static final Log LOG = ExoLogger.getLogger("jcr.JCROrganizationService");
+   private static final Log LOG = ExoLogger.getLogger("exo-jcr-services.JCROrganizationService");
 
    /**
     * JCROrganizationServiceImpl constructor. Without registry service.
@@ -239,7 +239,7 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
       }
       catch (RepositoryException e)
       {
-         throw new RuntimeException("Can not configure storage", e);
+         throw new IllegalArgumentException("Can not configure storage", e);
       }
 
       super.start();
@@ -298,10 +298,6 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
          }
 
          return repository.getSystemSession(workspaceName);
-      }
-      catch (NullPointerException e)
-      {
-         throw new RepositoryException("Can not get system session because JCROrganizationService is not started", e);
       }
       catch (RepositoryConfigurationException e)
       {
@@ -457,7 +453,7 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
       {
          if (storagePath.equals("/"))
          {
-            throw new RuntimeException("Storage path can not be a root node");
+            throw new IllegalArgumentException("Storage path can not be a root node");
          }
       }
       else

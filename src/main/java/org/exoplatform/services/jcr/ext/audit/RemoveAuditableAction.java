@@ -32,7 +32,7 @@ import javax.jcr.Node;
 public class RemoveAuditableAction
    implements Action
 {
-   private final Log log = ExoLogger.getLogger("jcr.RemoveAuditableAction");
+   private static final Log LOG = ExoLogger.getLogger("exo-jcr-services.RemoveAuditableAction");
 
    public boolean execute(Context context) throws Exception
    {
