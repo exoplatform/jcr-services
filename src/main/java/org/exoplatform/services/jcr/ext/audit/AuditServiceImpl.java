@@ -119,7 +119,7 @@ public class AuditServiceImpl implements AuditService, Startable
    /**
     * Logger.
     */
-   private static final Log LOG = ExoLogger.getLogger("jcr.AuditService");
+   private static final Log LOG = ExoLogger.getLogger("exo-jcr-services.AuditService");
 
    private List<String> adminIdentitys = null;
 
@@ -881,12 +881,16 @@ public class AuditServiceImpl implements AuditService, Startable
    private void checkParams()
    {
       if (adminIdentity == null)
-         throw new RuntimeException("Admin identity is not configured");
+      {
+         throw new IllegalArgumentException("Admin identity is not configured");
+      }
 
       StringTokenizer listTokenizer = new StringTokenizer(adminIdentity, AccessControlList.DELIMITER);
 
       if (listTokenizer.countTokens() < 1)
-         throw new RuntimeException("AccessControlList " + adminIdentity + " is empty or have a bad format");
+      {
+         throw new IllegalArgumentException("AccessControlList " + adminIdentity + " is empty or have a bad format");
+      }
 
       adminIdentitys = new ArrayList<String>(listTokenizer.countTokens());
 

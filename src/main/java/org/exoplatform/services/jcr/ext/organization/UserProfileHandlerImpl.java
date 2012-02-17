@@ -69,7 +69,7 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
    /**
     * Log.
     */
-   protected static Log log = ExoLogger.getLogger("jcr.UserProfileHandlerImpl");
+   protected static final Log LOG = ExoLogger.getLogger("exo-jcr-services.UserProfileHandlerImpl");
 
    /**
     * UserProfileHandlerImpl constructor.
@@ -95,9 +95,9 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
     */
    public UserProfile createUserProfileInstance()
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("UserProfile.createUserProfileInstance() method is started");
+         LOG.debug("UserProfile.createUserProfileInstance() method is started");
       }
 
       return new UserProfileImpl();
@@ -108,9 +108,9 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
     */
    public UserProfile createUserProfileInstance(String userName)
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("UserProfile.createUserProfileInstance(String) method is started");
+         LOG.debug("UserProfile.createUserProfileInstance(String) method is started");
       }
 
       return new UserProfileImpl(userName);
@@ -145,9 +145,9 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
     */
    private UserProfile findUserProfileByName(Session session, String userName) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("UserProfile.findUserProfileByName method is started");
+         LOG.debug("UserProfile.findUserProfileByName method is started");
       }
 
       UserProfile profile = (UserProfile)service.getCacheHandler().get(userName, CacheType.USER_PROFILE);
@@ -197,9 +197,9 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
     */
    private Collection findUserProfiles(Session session) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("UserProfile.findUserProfiles method is started");
+         LOG.debug("UserProfile.findUserProfiles method is started");
       }
 
       try
@@ -253,9 +253,9 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
     */
    private UserProfile removeUserProfile(Session session, String userName, boolean broadcast) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("UserProfile.removeUserProfile method is started");
+         LOG.debug("UserProfile.removeUserProfile method is started");
       }
 
       try
@@ -333,9 +333,9 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
     */
    private void saveUserProfile(Session session, UserProfile profile, boolean broadcast) throws Exception
    {
-      if (log.isDebugEnabled())
+      if (LOG.isDebugEnabled())
       {
-         log.debug("UserProfile.saveUserProfile method is started");
+         LOG.debug("UserProfile.saveUserProfile method is started");
       }
 
       try

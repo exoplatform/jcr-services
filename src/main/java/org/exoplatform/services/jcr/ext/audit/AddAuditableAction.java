@@ -34,7 +34,7 @@ public class AddAuditableAction
    implements Action
 {
 
-   private static final Log LOG = ExoLogger.getLogger("jcr.AddAuditableAction");
+   private static final Log LOG = ExoLogger.getLogger("exo-jcr-services.AddAuditableAction");
 
    public boolean execute(Context ctx) throws Exception
    {

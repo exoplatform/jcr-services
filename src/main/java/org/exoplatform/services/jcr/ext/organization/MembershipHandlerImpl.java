@@ -82,7 +82,7 @@ public class MembershipHandlerImpl extends CommonHandler implements MembershipHa
    /**
     * Log.
     */
-   protected static final Log LOG = ExoLogger.getLogger("jcr.MembershipHandlerImpl");
+   protected static final Log LOG = ExoLogger.getLogger("exo-jcr-services.MembershipHandlerImpl");
 
    /**
     * MembershipHandlerImpl constructor.

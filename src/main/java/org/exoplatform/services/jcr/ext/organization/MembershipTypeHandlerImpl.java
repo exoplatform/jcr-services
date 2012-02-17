@@ -84,7 +84,7 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
    /**
     * Log.
     */
-   protected static final Log LOG = ExoLogger.getLogger("jcr.MembershipTypeHandler");
+   protected static final Log LOG = ExoLogger.getLogger("exo-jcr-services.MembershipTypeHandler");
 
    /**
     * Use this method to persist a new membership type.

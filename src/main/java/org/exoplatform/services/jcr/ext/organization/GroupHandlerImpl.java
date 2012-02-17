@@ -87,7 +87,7 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
    /**
     * Log.
     */
-   protected static final Log LOG = ExoLogger.getLogger("jcr.GroupHandlerImpl");
+   protected static final Log LOG = ExoLogger.getLogger("exo-jcr-services.GroupHandlerImpl");
 
    /**
     * GroupHandlerImpl constructor.

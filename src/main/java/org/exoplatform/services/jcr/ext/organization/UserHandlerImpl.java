@@ -111,7 +111,7 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
    /**
     * Log.
     */
-   protected static final Log LOG = ExoLogger.getLogger("jcr.UserHandlerImpl");
+   protected static final Log LOG = ExoLogger.getLogger("exo-jcr-services.UserHandlerImpl");
 
    /**
     * UserHandlerImpl constructor.
