@@ -58,6 +58,11 @@ public class UserImpl implements User, ExtendedCloneable
    private String lastName;
 
    /**
+    * The display name
+    */
+   private String displayName;
+
+   /**
     * The password of the user
     */
    private transient String password;
@@ -133,9 +138,17 @@ public class UserImpl implements User, ExtendedCloneable
    /**
     * {@inheritDoc}
     */
+   public String getDisplayName()
+   {
+      return displayName != null ? displayName : getFirstName() + " " + getLastName();
+   }
+
+   /**
+    * {@inheritDoc}
+    */
    public String getFullName()
    {
-      return getFirstName() + " " + getLastName();
+      return getDisplayName();
    }
 
    /**
@@ -197,6 +210,14 @@ public class UserImpl implements User, ExtendedCloneable
    /**
     * {@inheritDoc}
     */
+   public void setDisplayName(String displayName)
+   {
+      this.displayName = displayName;
+   }
+
+   /**
+    * {@inheritDoc}
+    */
    public void setFirstName(String s)
    {
       firstName = s;
@@ -207,6 +228,7 @@ public class UserImpl implements User, ExtendedCloneable
     */
    public void setFullName(String s)
    {
+      setDisplayName(s);
    }
 
    /**
