@@ -28,6 +28,7 @@ import org.exoplatform.services.jcr.config.RepositoryConfigurationException;
 import org.exoplatform.services.jcr.core.ExtendedNode;
 import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.jcr.core.nodetype.ExtendedNodeTypeManager;
+import org.exoplatform.services.jcr.core.nodetype.NodeTypeDataManager;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.services.jcr.ext.registry.RegistryEntry;
 import org.exoplatform.services.jcr.ext.registry.RegistryService;
@@ -632,7 +633,7 @@ public class ArtifactManagingServiceImpl
             }
          }
       }
-      catch (Exception e)
+      catch (RepositoryException e)
       {
          LOG.error("Cannot change permissions", e);
       }
@@ -716,11 +717,10 @@ public class ArtifactManagingServiceImpl
       {
          InputStream xml = getClass().getResourceAsStream(NT_FILE);
          ManageableRepository rep = repositoryService.getCurrentRepository();
-         rep.getNodeTypeManager().registerNodeTypes(xml, ExtendedNodeTypeManager.IGNORE_IF_EXISTS);
-
+         rep.getNodeTypeManager().registerNodeTypes(xml, ExtendedNodeTypeManager.IGNORE_IF_EXISTS,
+            NodeTypeDataManager.TEXT_XML);
          readParamsFromRegistryService(sessionProvider);
          prepareRootNode(sessionProvider, rootNodePath);
-
       }
       catch (PathNotFoundException e)
       {

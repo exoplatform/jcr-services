@@ -79,6 +79,11 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
    public static final String JOS_LAST_NAME = "jos:lastName";
 
    /**
+    * The user property that contain display name
+    */
+   public static final String JOS_DISPLAY_NAME = "jos:displayName";
+
+   /**
     * The child node to storage membership properties.
     */
    public static final String JOS_MEMBERSHIP = "jos:membership";
@@ -614,6 +619,7 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
          user.setPassword(readStringProperty(node, JOS_PASSWORD));
          user.setFirstName(readStringProperty(node, JOS_FIRST_NAME));
          user.setLastName(readStringProperty(node, JOS_LAST_NAME));
+         user.setDisplayName(readStringProperty(node, JOS_DISPLAY_NAME));
          return user;
       }
       catch (Exception e)
@@ -639,6 +645,7 @@ public class UserHandlerImpl extends CommonHandler implements UserHandler, UserE
          node.setProperty(JOS_FIRST_NAME, user.getFirstName());
          node.setProperty(JOS_LAST_NAME, user.getLastName());
          node.setProperty(JOS_PASSWORD, user.getPassword());
+         node.setProperty(JOS_DISPLAY_NAME, user.getDisplayName());
 
          if (user.getLastLoginTime() == null)
          {
