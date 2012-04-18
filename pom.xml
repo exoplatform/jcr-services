@@ -14,9 +14,9 @@
   <description>eXo JCR Ext Services</description>
   
   <scm>
-    <connection>scm:svn:http://svn.exoplatform.org/projects/jcr-services/branches/1.14.x</connection>
-    <developerConnection>scm:svn:http://svn.exoplatform.org/projects/jcr-services/branches/1.14.x</developerConnection>
-    <url>http://fisheye.exoplatform.org/browse/projects/jcr-services/branches/1.14.x</url>
+    <connection>scm:git:ssh://github.com/exodev/jcr-services.git</connection>
+    <developerConnection>scm:git:ssh://github.com/exodev/jcr-services.git</developerConnection>
+    <url>http://fisheye.exoplatform.org/browse/projects/jcr-services</url>
   </scm>
   
   <properties>
