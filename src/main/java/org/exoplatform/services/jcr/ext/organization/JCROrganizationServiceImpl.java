@@ -60,17 +60,17 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
 {
 
    /**
-    * The name of parameter that contain repository name.
+    * The name of parameter that contains repository name.
     */
    public static final String REPOSITORY_NAME = "repository";
 
    /**
-    * The name of parameter that contain storage path.
+    * The name of parameter that contains storage path.
     */
    public static final String STORAGE_PATH = "storage-path";
 
    /**
-    * The name of parameter that contain workspace name.
+    * The name of parameter that contains workspace name.
     */
    public static final String STORAGE_WORKSPACE = "storage-workspace";
 
@@ -120,17 +120,42 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
    protected InitParams initParams;
 
    /**
+    * The child node of group node where memeberships are stored.
+    */
+   public static final String JOS_MEMBERSHIP = "jos:memberships";
+
+   /**
+    * The node to storage groups.
+    */
+   public static final String STORAGE_JOS_GROUPS = "jos:groups";
+
+   /**
+    * The group nodetype.
+    */
+   public static final String JOS_HIERARCHY_GROUP = "jos:hierarchyGroup";
+
+   /**
+    * The node to storage membership types.
+    */
+   public static final String STORAGE_JOS_MEMBERSHIP_TYPES = "jos:membershipTypes";
+
+   /**
+    * The child node to storage user addition information.
+    */
+   public static final String JOS_PROFILE = "jos:profile";
+
+   /**
+    * The node to storage users.
+    */
+   public static final String STORAGE_JOS_USERS = "jos:users";
+
+   /**
     * Logger.
     */
    private static final Log LOG = ExoLogger.getLogger("exo-jcr-services.JCROrganizationService");
 
    /**
     * JCROrganizationServiceImpl constructor. Without registry service.
-    * 
-    * @param params The initialization parameters
-    * @param repositoryService The repository service
-    * @throws ConfigurationException The exception is thrown if can not
-    *           initialize service
     */
    public JCROrganizationServiceImpl(InitParams params, RepositoryService repositoryService, CacheService cservice)
       throws ConfigurationException
@@ -140,12 +165,6 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
 
    /**
     * JCROrganizationServiceImpl constructor.
-    * 
-    * @param initParams The initialization parameters
-    * @param repositoryService The repository service
-    * @param registryService The registry service
-    * @throws ConfigurationException The exception is thrown if can not
-    *           initialize service
     */
    public JCROrganizationServiceImpl(InitParams initParams, RepositoryService repositoryService,
       RegistryService registryService, CacheService cservice) throws ConfigurationException
@@ -162,10 +181,10 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
       this.initParams = initParams;
 
       // create DAO object
+      membershipDAO_ = new MembershipHandlerImpl(this);
+      groupDAO_ = new GroupHandlerImpl(this);
       userDAO_ = new UserHandlerImpl(this);
       userProfileDAO_ = new UserProfileHandlerImpl(this);
-      groupDAO_ = new GroupHandlerImpl(this);
-      membershipDAO_ = new MembershipHandlerImpl(this);
       membershipTypeDAO_ = new MembershipTypeHandlerImpl(this);
    }
 
@@ -175,11 +194,6 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
    @Override
    public void start()
    {
-      if (LOG.isDebugEnabled())
-      {
-         LOG.debug("Starting JCROrganizationService");
-      }
-
       if (registryService != null && !registryService.getForceXMLConfigurationValue(initParams))
       {
          SessionProvider sessionProvider = SessionProvider.createSystemProvider();
@@ -225,9 +239,9 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
             // will create new
             Node storage = session.getRootNode().addNode(storagePath.substring(1), "jos:organizationStorage");
 
-            storage.addNode(UserHandlerImpl.STORAGE_JOS_USERS, "jos:organizationUsers");
-            storage.addNode(GroupHandlerImpl.STORAGE_JOS_GROUPS, "jos:organizationGroups");
-            storage.addNode(MembershipTypeHandlerImpl.STORAGE_JOS_MEMBERSHIP_TYPES, "jos:organizationMembershipTypes");
+            storage.addNode(STORAGE_JOS_USERS, "jos:organizationUsers");
+            storage.addNode(STORAGE_JOS_GROUPS, "jos:organizationGroups");
+            storage.addNode(STORAGE_JOS_MEMBERSHIP_TYPES, "jos:organizationMembershipTypes");
 
             session.save(); // storage done configure
 
@@ -462,6 +476,10 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
       }
    }
 
+   /**
+    * Returns working repository. If repository name is configured then it will be returned 
+    * otherwise the current repository is used.
+    */
    protected ManageableRepository getWorkingRepository() throws RepositoryException, RepositoryConfigurationException
    {
       return repositoryName != null ? repositoryService.getRepository(repositoryName) : repositoryService

@@ -17,8 +17,6 @@
 package org.exoplatform.services.jcr.ext.organization;
 
 import org.exoplatform.commons.utils.SecurityHelper;
-import org.exoplatform.services.log.ExoLogger;
-import org.exoplatform.services.log.Log;
 import org.exoplatform.services.organization.CacheHandler.CacheType;
 import org.exoplatform.services.organization.UserProfile;
 import org.exoplatform.services.organization.UserProfileEventListener;
@@ -30,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map.Entry;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -47,14 +46,14 @@ import javax.jcr.Session;
  * @version $Id: UserProfileHandlerImpl.java 33732 2009-07-08 15:00:43Z
  *          pnedonosko $
  */
-public class UserProfileHandlerImpl extends CommonHandler implements UserProfileHandler,
+public class UserProfileHandlerImpl extends JCROrgServiceHandler implements UserProfileHandler,
    UserProfileEventListenerHandler
 {
 
    /**
-    * The child not to storage users profile properties.
+    * The prefix for properties name which store profile attributes.
     */
-   public static final String JOS_ATTRIBUTES = "jos:attributes";
+   public static final String ATTRIBUTE_PREFIX = "attr.";
 
    /**
     * The list of listeners to broadcast events.
@@ -62,32 +61,11 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
    protected final List<UserProfileEventListener> listeners = new ArrayList<UserProfileEventListener>();
 
    /**
-    * Organization service implementation covering the handler.
-    */
-   protected final JCROrganizationServiceImpl service;
-
-   /**
-    * Log.
-    */
-   protected static final Log LOG = ExoLogger.getLogger("exo-jcr-services.UserProfileHandlerImpl");
-
-   /**
     * UserProfileHandlerImpl constructor.
-    * 
-    * @param service The initialization data
     */
    UserProfileHandlerImpl(JCROrganizationServiceImpl service)
    {
-      this.service = service;
-   }
-
-   /**
-    * {@inheritDoc}
-    */
-   public void addUserProfileEventListener(UserProfileEventListener listener)
-   {
-      SecurityHelper.validateSecurityPermission(PermissionConstants.MANAGE_LISTENERS);
-      listeners.add(listener);
+      super(service);
    }
 
    /**
@@ -95,11 +73,6 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
     */
    public UserProfile createUserProfileInstance()
    {
-      if (LOG.isDebugEnabled())
-      {
-         LOG.debug("UserProfile.createUserProfileInstance() method is started");
-      }
-
       return new UserProfileImpl();
    }
 
@@ -108,11 +81,6 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
     */
    public UserProfile createUserProfileInstance(String userName)
    {
-      if (LOG.isDebugEnabled())
-      {
-         LOG.debug("UserProfile.createUserProfileInstance(String) method is started");
-      }
-
       return new UserProfileImpl(userName);
    }
 
@@ -121,55 +89,45 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
     */
    public UserProfile findUserProfileByName(String userName) throws Exception
    {
-      Session session = service.getStorageSession();
-      try
-      {
-         return findUserProfileByName(session, userName);
-      }
-      finally
-      {
-         session.logout();
-      }
-   }
-
-   /**
-    * This method should search for and return UserProfile record according to
-    * the username.
-    * 
-    * @param session The current session
-    * @param userName The user name
-    * @return return null if no record match the userName. return an UserProfile
-    *         instance if a record match the username.
-    * @throws Exception Throw Exception if the method fail to access the database
-    *           or find more than one record that match the username.
-    */
-   private UserProfile findUserProfileByName(Session session, String userName) throws Exception
-   {
-      if (LOG.isDebugEnabled())
-      {
-         LOG.debug("UserProfile.findUserProfileByName method is started");
-      }
-
-      UserProfile profile = (UserProfile)service.getCacheHandler().get(userName, CacheType.USER_PROFILE);
+      UserProfile profile = getFromCache(userName);
       if (profile != null)
       {
          return profile;
       }
 
+      Session session = service.getStorageSession();
       try
       {
-         profile = readUserProfile(session, userName);
+         profile = readProfile(session, userName);
          if (profile != null)
          {
-            service.getCacheHandler().put(userName, profile, CacheType.USER_PROFILE);
+            putInCache(profile);
          }
-
-         return profile;
       }
-      catch (Exception e)
+      finally
       {
-         throw new OrganizationServiceException("Can not find '" + userName + "' profile", e);
+         session.logout();
       }
+
+      return profile;
+   }
+
+   /**
+    * Reads user profile from storage based on user name.
+    */
+   private UserProfile readProfile(Session session, String userName) throws Exception
+   {
+      Node profileNode;
+      try
+      {
+         profileNode = utils.getProfileNode(session, userName);
+      }
+      catch (PathNotFoundException e)
+      {
+         return null;
+      }
+
+      return readProfile(userName, profileNode);
    }
 
    /**
@@ -177,51 +135,41 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
     */
    public Collection findUserProfiles() throws Exception
    {
+      List<UserProfile> profiles = new ArrayList<UserProfile>();
+
       Session session = service.getStorageSession();
       try
       {
-         return findUserProfiles(session);
+         NodeIterator userNodes = utils.getUsersStorageNode(session).getNodes();
+         while (userNodes.hasNext())
+         {
+            Node userNode = userNodes.nextNode();
+
+            String userName = userNode.getName();
+
+            Node profileNode;
+            try
+            {
+               profileNode = userNode.getNode(JCROrganizationServiceImpl.JOS_PROFILE);
+            }
+            catch (PathNotFoundException e)
+            {
+               continue;
+            }
+
+            UserProfile profile = readProfile(userName, profileNode);
+            if (profile != null)
+            {
+               profiles.add(profile);
+            }
+         }
       }
       finally
       {
          session.logout();
       }
-   }
 
-   /**
-    * Find and return all the UserProfile record in the database.
-    * 
-    * @param session The current session
-    * @return The collection of user profiles
-    * @throws Exception Throw exception if the method fail to access the database
-    */
-   private Collection findUserProfiles(Session session) throws Exception
-   {
-      if (LOG.isDebugEnabled())
-      {
-         LOG.debug("UserProfile.findUserProfiles method is started");
-      }
-
-      try
-      {
-         List<UserProfile> types = new ArrayList<UserProfile>();
-
-         Node storagePath = (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_JOS_USERS);
-         for (NodeIterator nodes = storagePath.getNodes(); nodes.hasNext();)
-         {
-            UserProfile userProfile = readUserProfile(session, nodes.nextNode().getName());
-            if (userProfile != null)
-            {
-               types.add(userProfile);
-            }
-         }
-         return types;
-
-      }
-      catch (Exception e)
-      {
-         throw new OrganizationServiceException("Can not find user profiles", e);
-      }
+      return profiles;
    }
 
    /**
@@ -241,66 +189,38 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
    }
 
    /**
-    * This method should remove the user profile record in the database.
-    * 
-    * @param session The current session
-    * @param userName The user profile record with the username should be removed
-    *          from the database
-    * @param broadcast Broadcast the event the listeners if broadcast is true.
-    * @return The UserProfile instance that has been removed.
-    * @throws Exception Throw exception if the method fail to remove the record
-    *           or any listener fail to handle the event
+    * Remove user profile from storage.
     */
    private UserProfile removeUserProfile(Session session, String userName, boolean broadcast) throws Exception
    {
-      if (LOG.isDebugEnabled())
-      {
-         LOG.debug("UserProfile.removeUserProfile method is started");
-      }
-
+      Node profileNode;
       try
       {
-         Node profileNode =
-            (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_JOS_USERS + "/" + userName
-               + "/" + UserHandlerImpl.JOS_PROFILE);
-         UserProfile userProfile = readObjectFromNode(session, profileNode.getNode(JOS_ATTRIBUTES));
-
-         if (broadcast)
-         {
-            preDelete(userProfile);
-         }
-
-         profileNode.remove();
-         session.save();
-
-         service.getCacheHandler().remove(userName, CacheType.USER_PROFILE);
-
-         if (broadcast)
-         {
-            postDelete(userProfile);
-         }
-
-         return userProfile;
+         profileNode = utils.getProfileNode(session, userName);
       }
       catch (PathNotFoundException e)
       {
          return null;
       }
-      catch (Exception e)
-      {
-         throw new OrganizationServiceException("Can not remove '" + userName + "' profile", e);
-      }
-   }
+      
+      UserProfile profile = readProfile(userName, profileNode);
 
-   /**
-    * Remove registered listener.
-    * 
-    * @param listener The registered listener for removing
-    */
-   public void removeUserProfileEventListener(UserProfileEventListener listener)
-   {
-      SecurityHelper.validateSecurityPermission(PermissionConstants.MANAGE_LISTENERS);
-      listeners.remove(listener);
+      if (broadcast)
+      {
+         preDelete(profile, broadcast);
+      }
+
+      profileNode.remove();
+      session.save();
+
+      removeFromCache(profile);
+
+      if (broadcast)
+      {
+         postDelete(profile);
+      }
+
+      return profile;
    }
 
    /**
@@ -320,191 +240,208 @@ public class UserProfileHandlerImpl extends CommonHandler implements UserProfile
    }
 
    /**
-    * This method should persist the profile instance to the database. If the
-    * profile is not existed yet. the method should create a new user profile
-    * record. If there is an existed record. The method should merge the data
-    * with the existed record.
-    * 
-    * @param session The current session
-    * @param profile the profile instance to persist.
-    * @param broadcast broadcast the event to the listener if broadcast is true
-    * @throws Exception throw exception if the method fail to access the database
-    *           or any listener fail to handle the event.
+    * Persist user profile to the storage.
     */
-   private void saveUserProfile(Session session, UserProfile profile, boolean broadcast) throws Exception
+   private void saveUserProfile(Session session, UserProfile profile, boolean broadcast) throws RepositoryException,
+      Exception
    {
-      if (LOG.isDebugEnabled())
+      Node userNode = utils.getUserNode(session, profile.getUserName());
+      Node profileNode = getNewProfileNode(userNode);
+
+      boolean isNewProfile = profileNode.isNew();
+
+      if (broadcast)
       {
-         LOG.debug("UserProfile.saveUserProfile method is started");
+         preSave(profile, isNewProfile);
       }
 
+      writeProfile(profile, profileNode);
+
+      session.save();
+      putInCache(profile);
+
+      if (broadcast)
+      {
+         postSave(profile, isNewProfile);
+      }
+   }
+
+   /**
+    * Create new profile node. 
+    */
+   private Node getNewProfileNode(Node userNode) throws RepositoryException
+   {
       try
       {
-         Node uNode =
-            (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_JOS_USERS + "/"
-               + profile.getUserName());
-
-         Node profileNode;
-         try
-         {
-            profileNode = (Node)session.getItem(uNode.getPath() + "/" + UserHandlerImpl.JOS_PROFILE);
-         }
-         catch (PathNotFoundException e)
-         {
-            profileNode = uNode.addNode(UserHandlerImpl.JOS_PROFILE);
-         }
-
-         Node attrNode;
-         try
-         {
-            attrNode = (Node)session.getItem(profileNode.getPath() + "/" + JOS_ATTRIBUTES);
-         }
-         catch (PathNotFoundException e)
-         {
-            attrNode = profileNode.addNode(JOS_ATTRIBUTES);
-         }
-
-         if (broadcast)
-         {
-            preSave(profile, false);
-         }
-
-         for (String key : profile.getUserInfoMap().keySet())
-         {
-            attrNode.setProperty(key, profile.getAttribute(key));
-         }
-
-         session.save();
-
-         service.getCacheHandler().put(profile.getUserName(), profile, CacheType.USER_PROFILE);
-
-         if (broadcast)
-         {
-            postSave(profile, false);
-         }
+         Node profileNode = userNode.getNode(JCROrganizationServiceImpl.JOS_PROFILE);
+         profileNode.remove();
       }
       catch (PathNotFoundException e)
       {
-         return;
       }
-      catch (Exception e)
-      {
-         throw new OrganizationServiceException("Can not save '" + profile.getUserName() + "' profile", e);
-      }
+
+      return userNode.addNode(JCROrganizationServiceImpl.JOS_PROFILE);
    }
 
    /**
-    * Read user profile data for specific user.
+    * Read user profile from storage.
     * 
-    * @param session The current session
-    * @param userName The user name
-    * @return The user profile data or null if profile does not exist
-    * @throws Exception An exception is thrown if method can not get access to
-    *           the database
+    * @param profileNode
+    *          the node which stores profile attributes as properties with
+    *          prefix {@link #ATTRIBUTE_PREFIX}
+    * @return {@link UserProfile} instance
+    * @throws RepositoryException
+    *          if unexpected exception is occurred during reading     
     */
-   private UserProfile readUserProfile(Session session, String userName) throws Exception
+   private UserProfile readProfile(String userName, Node profileNode) throws RepositoryException
    {
-      try
-      {
-         Node attrNode =
-            (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_JOS_USERS + "/" + userName
-               + "/" + UserHandlerImpl.JOS_PROFILE + "/" + JOS_ATTRIBUTES);
+      UserProfile profile = createUserProfileInstance(userName);
 
-         return readObjectFromNode(session, attrNode);
+      PropertyIterator attributes = profileNode.getProperties();
+      while (attributes.hasNext())
+      {
+         Property prop = attributes.nextProperty();
 
-      }
-      catch (PathNotFoundException e)
-      {
-         return null;
-      }
-      catch (Exception e)
-      {
-         throw new OrganizationServiceException("Can not read user profile data", e);
-      }
-   }
-
-   /**
-    * Read user profile from the node in the storage.
-    * 
-    * @param session The current session
-    * @param node The node to read from
-    * @return The user profile data
-    * @throws Exception An exception is thrown if method can not get access to
-    *           the database
-    */
-   private UserProfile readObjectFromNode(Session session, Node node) throws Exception
-   {
-      try
-      {
-         UserProfile userProfile = new UserProfileImpl(node.getParent().getParent().getName());
-         for (PropertyIterator props = node.getProperties(); props.hasNext();)
+         if (prop.getName().startsWith(ATTRIBUTE_PREFIX))
          {
-            Property prop = props.nextProperty();
+            String name = prop.getName().substring(ATTRIBUTE_PREFIX.length());
+            String value = prop.getString();
 
-            // ignore system properties
-            if (!(prop.getName()).startsWith("jcr:") && !(prop.getName()).startsWith("exo:")
-               && !(prop.getName()).startsWith("jos:"))
-            {
-               userProfile.setAttribute(prop.getName(), prop.getString());
-            }
+            profile.setAttribute(name, value);
          }
-         return userProfile;
-
       }
-      catch (RepositoryException e)
+      return profile;
+   }
+
+   /**
+    * Write profile to storage. 
+    * 
+    * @param profileNode
+    *          the node which stores profile attributes as properties with
+    *          prefix {@link #ATTRIBUTE_PREFIX}
+    * @param userProfile
+    *          the profile to store
+    * @throws RepositoryException
+    *          if unexpected exception is occurred during writing     
+    */
+   private void writeProfile(UserProfile userProfile, Node profileNode) throws RepositoryException
+   {
+      for (Entry<String, String> attribute : userProfile.getUserInfoMap().entrySet())
       {
-         throw new OrganizationServiceException("Can not read user profile data from node", e);
+         profileNode.setProperty(ATTRIBUTE_PREFIX + attribute.getKey(), attribute.getValue());
       }
    }
 
    /**
-    * PreSave event.
+    * Returns user profile from cache. Can return null.
+    */
+   private UserProfile getFromCache(String userName)
+   {
+      return (UserProfile)cache.get(userName, CacheType.USER_PROFILE);
+   }
+
+   /**
+    * Putting user profile in cache if profile is not null.
+    */
+   private void putInCache(UserProfile profile)
+   {
+      cache.put(profile.getUserName(), profile, CacheType.USER_PROFILE);
+   }
+
+   /**
+    * Removing user profile from cache.
+    */
+   private void removeFromCache(UserProfile profile)
+   {
+      cache.remove(profile.getUserName(), CacheType.USER_PROFILE);
+   }
+
+   /**
+    * Notifying listeners before profile creation.
     * 
-    * @param userProfile The userProfile to save
-    * @param isNew Is it new profile or not
-    * @throws Exception If listeners fail to handle the user event
+    * @param userProfile 
+    *          the user profile which is used in save operation
+    * @param isNew 
+    *          true, if we have a deal with new profile, otherwise it is false
+    *          which mean update operation is in progress
+    * @throws Exception 
+    *          if any listener failed to handle the event
     */
    private void preSave(UserProfile userProfile, boolean isNew) throws Exception
    {
       for (UserProfileEventListener listener : listeners)
+      {
          listener.preSave(userProfile, isNew);
+      }
    }
 
    /**
-    * PostSave event.
+    * Notifying listeners after profile creation.
     * 
-    * @param userProfile The user profile to save
-    * @param isNew Is it new profile or not
-    * @throws Exception If listeners fail to handle the user event
+    * @param userProfile 
+    *          the user profile which is used in save operation
+    * @param isNew 
+    *          true if we have deal with new profile, otherwise it is false
+    *          which mean update operation is in progress
+    * @throws Exception 
+    *          if any listener failed to handle the event
     */
    private void postSave(UserProfile userProfile, boolean isNew) throws Exception
    {
       for (UserProfileEventListener listener : listeners)
+      {
          listener.postSave(userProfile, isNew);
+      }
    }
 
    /**
-    * PreDelete event.
+    * Notifying listeners before profile deletion.
     * 
-    * @param userProfile The user profile to delete
-    * @throws Exception If listeners fail to handle the user event
+    * @param userProfile 
+    *          the user profile which is used in delete operation
+    * @throws Exception 
+    *          if any listener failed to handle the event
     */
-   private void preDelete(UserProfile userProfile) throws Exception
+   private void preDelete(UserProfile userProfile, boolean broadcast) throws Exception
    {
       for (UserProfileEventListener listener : listeners)
+      {
          listener.preDelete(userProfile);
+      }
    }
 
    /**
-    * PostDelete event.
+    * Notifying listeners after profile deletion.
     * 
-    * @param userProfile The user profile to delete
-    * @throws Exception If listeners fail to handle the user event
+    * @param userProfile 
+    *          the user profile which is used in delete operation
+    * @throws Exception 
+    *          if any listener failed to handle the event
     */
    private void postDelete(UserProfile userProfile) throws Exception
    {
       for (UserProfileEventListener listener : listeners)
+      {
          listener.postDelete(userProfile);
+      }
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public void addUserProfileEventListener(UserProfileEventListener listener)
+   {
+      SecurityHelper.validateSecurityPermission(PermissionConstants.MANAGE_LISTENERS);
+      listeners.add(listener);
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public void removeUserProfileEventListener(UserProfileEventListener listener)
+   {
+      SecurityHelper.validateSecurityPermission(PermissionConstants.MANAGE_LISTENERS);
+      listeners.remove(listener);
    }
 
    /**

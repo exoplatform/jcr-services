@@ -17,8 +17,6 @@
 package org.exoplatform.services.jcr.ext.organization;
 
 import org.exoplatform.commons.utils.SecurityHelper;
-import org.exoplatform.services.log.ExoLogger;
-import org.exoplatform.services.log.Log;
 import org.exoplatform.services.organization.CacheHandler;
 import org.exoplatform.services.organization.CacheHandler.CacheType;
 import org.exoplatform.services.organization.MembershipType;
@@ -32,112 +30,46 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.query.Query;
-import javax.jcr.query.QueryResult;
 
 /**
  * Created by The eXo Platform SAS.
  * 
  * @author <a href="mailto:peter.nedonosko@exoplatform.com.ua">Peter Nedonosko</a>
- * @version $Id$
+ * @version $Id: MembershipTypeHandlerImpl.java 79575 2012-02-17 13:23:37Z aplotnikov $
  */
-public class MembershipTypeHandlerImpl extends CommonHandler implements MembershipTypeHandler,
+public class MembershipTypeHandlerImpl extends JCROrgServiceHandler implements MembershipTypeHandler,
    MembershipTypeEventListenerHandler
 {
-
-   /**
-    * Membership type property that contain description.
-    */
-   public static final String JOS_DESCRIPTION = "jos:description";
-
-   /**
-    * The node to storage membership types.
-    */
-   public static final String STORAGE_JOS_MEMBERSHIP_TYPES = "jos:membershipTypes";
-
-   /**
-    * Organization service implementation covering the handler.
-    */
-   protected final JCROrganizationServiceImpl service;
-
    /**
     * The list of listeners to broadcast the events.
     */
    protected final List<MembershipTypeEventListener> listeners = new ArrayList<MembershipTypeEventListener>();
 
    /**
-    * MembershipTypeHandlerImpl constructor.
-    * 
-    * @param service
-    *          The initialization data
+    * Class contains the names of membership type properties only.
     */
-   MembershipTypeHandlerImpl(JCROrganizationServiceImpl service)
+   public static class MembershipTypeProperties
    {
-      this.service = service;
+      /**
+       * Membership type property that contains description.
+       */
+      public static final String JOS_DESCRIPTION = "jos:description";
    }
 
    /**
-    * Log.
+    * MembershipTypeHandlerImpl constructor.
     */
-   protected static final Log LOG = ExoLogger.getLogger("exo-jcr-services.MembershipTypeHandler");
-
-   /**
-    * Use this method to persist a new membership type.
-    * 
-    * @param session
-    *          The current session
-    * @param mt
-    *          The new membership type that the developer want to persist
-    * @param broadcast
-    *          Broadcast the event if the broadcast value is 'true'
-    * @return Return the MembershiptType object that contains the updated informations.
-    * @throws Exception
-    *           An exception is thrown if the method cannot access the database or a listener fail to
-    *           handle the event
-    */
-   MembershipType createMembershipType(Session session, MembershipType mt, boolean broadcast) throws Exception
+   MembershipTypeHandlerImpl(JCROrganizationServiceImpl service)
    {
-      if (LOG.isDebugEnabled())
-      {
-         LOG.debug("MembershipType.createMembershipType method is started");
-      }
-
-      try
-      {
-         Node storagePath = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_MEMBERSHIP_TYPES);
-         Node mtNode = storagePath.addNode(mt.getName());
-         
-         if (mt instanceof MembershipTypeImpl)
-         {
-            ((MembershipTypeImpl)mt).setUUId(mtNode.getUUID());
-         }
-
-         if (broadcast)
-         {
-            preSave(mt, true);
-         }
-
-         writeObjectToNode(mt, mtNode);
-         session.save();
-
-         service.getCacheHandler().put(mt.getName(), mt, CacheType.MEMBERSHIPTYPE);
-
-         if (broadcast)
-         {
-            postSave(mt, true);
-         }
-
-         return readObjectFromNode(mtNode);
-      }
-      catch (Exception e)
-      {
-         throw new OrganizationServiceException("Can not create membership type '" + mt.getName() + "'", e);
-      }
+      super(service);
    }
 
    /**
@@ -148,7 +80,7 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
       Session session = service.getStorageSession();
       try
       {
-         return createMembershipType(session, mt, broadcast);
+         return createMembershipType(session, (MembershipTypeImpl)mt, broadcast);
       }
       finally
       {
@@ -157,61 +89,41 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
    }
 
    /**
+    * Persists new membership type object.
+    */
+   private MembershipType createMembershipType(Session session, MembershipTypeImpl mt, boolean broadcast)
+      throws Exception
+   {
+      Node storageTypesNode = utils.getMembershipTypeStorageNode(session);
+      Node typeNode = storageTypesNode.addNode(mt.getName());
+
+      mt.setInternalId(typeNode.getUUID());
+
+      if (broadcast)
+      {
+         preSave(mt, true);
+      }
+
+      writeMembershipType(mt, typeNode);
+      session.save();
+
+      putInCache(mt);
+
+      if (broadcast)
+      {
+         postSave(mt, true);
+      }
+
+      return mt;
+   }
+
+
+   /**
     * {@inheritDoc}
     */
    public MembershipType createMembershipTypeInstance()
    {
-      if (LOG.isDebugEnabled())
-      {
-         LOG.debug("MembershipType.createMembershipTypeInstance method is started");
-      }
-
       return new MembershipTypeImpl();
-   }
-
-   /**
-    * Use this method to search for a membership type with the specified name.
-    * 
-    * @param session
-    *          The current Session
-    * @param name
-    *          the name of the membership type.
-    * @return null if no membership type that matched the name or the found membership type.
-    * @throws Exception
-    *           An exception is thrown if the method cannot access the database or more than one
-    *           membership type is found.
-    */
-   private MembershipType findMembershipType(Session session, String name) throws Exception
-   {
-      if (LOG.isDebugEnabled())
-      {
-         LOG.debug("MembershipType.findMembershipType method is started");
-      }
-
-      MembershipType mt = (MembershipType)service.getCacheHandler().get(name, CacheType.MEMBERSHIPTYPE);
-      if (mt != null)
-      {
-         return mt;
-      }
-
-      try
-      {
-         Node mtNode =
-            (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_MEMBERSHIP_TYPES + "/" + name);
-         mt = readObjectFromNode(mtNode);
-
-         service.getCacheHandler().put(name, mt, CacheType.MEMBERSHIPTYPE);
-
-         return mt;
-      }
-      catch (PathNotFoundException e)
-      {
-         return null;
-      }
-      catch (Exception e)
-      {
-         throw new OrganizationServiceException("Can not find membership type '" + name + "'", e);
-      }
    }
 
    /**
@@ -219,6 +131,12 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
     */
    public MembershipType findMembershipType(String name) throws Exception
    {
+      MembershipType mt = getFromCache(name);
+      if (mt != null)
+      {
+         return mt;
+      }
+
       Session session = service.getStorageSession();
       try
       {
@@ -231,38 +149,24 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
    }
 
    /**
-    * Use this method to get all the membership types in the database.
-    * 
-    * @param session
-    *          The current session
-    * @return A collection of the membership type. The collection cannot be null. If there is no
-    *         membership type in the database, the collection should be empty.
-    * @throws Exception
-    *           Usually an exception is thrown when the method cannot access the database.
+    * Find membership type.
     */
-   private Collection findMembershipTypes(Session session) throws Exception
+   private MembershipType findMembershipType(Session session, String name) throws Exception
    {
-      if (LOG.isDebugEnabled())
-      {
-         LOG.debug("MembershipType.findMembershipTypes method is started");
-      }
-
+      Node membershipTypeNode;
       try
       {
-         List<MembershipType> types = new ArrayList<MembershipType>();
-
-         Node storageNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_MEMBERSHIP_TYPES);
-         for (NodeIterator nodes = storageNode.getNodes(); nodes.hasNext();)
-         {
-            types.add(readObjectFromNode(nodes.nextNode()));
-         }
-         return types;
-
+         membershipTypeNode = utils.getMembershipTypeNode(session, name);
       }
-      catch (Exception e)
+      catch (PathNotFoundException e)
       {
-         throw new OrganizationServiceException("Can not find membership types", e);
+         return null;
       }
+
+      MembershipType mt = readMembershipType(membershipTypeNode);
+      putInCache(mt);
+
+      return mt;
    }
 
    /**
@@ -270,83 +174,26 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
     */
    public Collection findMembershipTypes() throws Exception
    {
+      List<MembershipType> types = new ArrayList<MembershipType>();
+
       Session session = service.getStorageSession();
       try
       {
-         return findMembershipTypes(session);
+         NodeIterator membershipTypes = utils.getMembershipTypeStorageNode(session).getNodes();
+         while (membershipTypes.hasNext())
+         {
+            MembershipType type = readMembershipType(membershipTypes.nextNode());
+            types.add(type);
+         }
       }
       finally
       {
          session.logout();
       }
+
+      return types;
    }
 
-   /**
-    * Use this method to remove a membership type.
-    * 
-    * @param session
-    *          The current session
-    * @param name
-    *          the membership type name
-    * @param broadcast
-    *          Broadcast the event to the registered listener if the broadcast value is 'true'
-    * @return The membership type object which has been removed from the database
-    * @throws Exception
-    *           An exception is thrown if the method cannot access the database or the membership
-    *           type is not found in the database or any listener fail to handle the event.
-    */
-   private MembershipType removeMembershipType(Session session, String name, boolean broadcast) throws Exception
-   {
-      if (LOG.isDebugEnabled())
-      {
-         LOG.debug("MembershipType.removeMembershipType method is started");
-      }
-
-      try
-      {
-         Node mtNode =
-            (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_MEMBERSHIP_TYPES + "/" + name);
-
-         // remove membership
-         String mStatement =
-            "select * from jos:userMembership where " + MembershipHandlerImpl.JOS_MEMBERSHIP_TYPE + "='"
-               + mtNode.getUUID() + "'";
-         Query mQuery = session.getWorkspace().getQueryManager().createQuery(mStatement, Query.SQL);
-         QueryResult mRes = mQuery.execute();
-         for (NodeIterator mNodes = mRes.getNodes(); mNodes.hasNext();)
-         {
-            Node mNode = mNodes.nextNode();
-            ((MembershipHandlerImpl)service.getMembershipHandler()).removeMembership(session, mNode.getUUID(),
-               broadcast);
-         }
-
-         // remove membership type
-         MembershipType mt = readObjectFromNode(mtNode);
-
-         if (broadcast)
-         {
-            preDelete(mt);
-         }
-
-         mtNode.remove();
-         session.save();
-
-         service.getCacheHandler().remove(name, CacheType.MEMBERSHIPTYPE);
-         service.getCacheHandler().remove(CacheHandler.MEMBERSHIPTYPE_PREFIX + name, CacheType.MEMBERSHIP);
-
-         if (broadcast)
-         {
-            postDelete(mt);
-         }
-
-         return mt;
-
-      }
-      catch (Exception e)
-      {
-         throw new OrganizationServiceException("Can not remove membership type '" + name + "'", e);
-      }
-   }
 
    /**
     * {@inheritDoc}
@@ -365,80 +212,48 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
    }
 
    /**
-    * Use this method to update an existed MembershipType data.
-    * 
-    * @param session
-    *          The current session
-    * @param mt
-    *          The membership type object to update.
-    * @param broadcast
-    *          Broadcast the event to all the registered listener if the broadcast value is 'true'
-    * @return Return the updated membership type object.
-    * @throws Exception
-    *           An exception is throwed if the method cannot access the database or any listener fail
-    *           to handle the event.
+    * Removing membership type and related membership entities.
     */
-   private MembershipType saveMembershipType(Session session, MembershipType mt, boolean broadcast) throws Exception
+   private MembershipType removeMembershipType(Session session, String name, boolean broadcast)
+      throws RepositoryException, Exception
    {
-      if (LOG.isDebugEnabled())
+      Node membershipTypeNode = utils.getMembershipTypeNode(session, name);
+      MembershipType type = readMembershipType(membershipTypeNode);
+
+      if (broadcast)
       {
-         LOG.debug("MembershipType.saveMembershipType method is started");
+         preDelete(type);
       }
 
-      try
+      removeMemberships(membershipTypeNode);
+      membershipTypeNode.remove();
+      session.save();
+
+      removeFromCache(name);
+      removeAllRelatedFromCache(name);
+
+      if (broadcast)
       {
-         MembershipTypeImpl mType = (MembershipTypeImpl)mt;
-
-         String mtUUID;
-         if (mType.getUUId() != null)
-         {
-            mtUUID = mType.getUUId();
-         }
-         else
-         {
-            mtUUID = ((MembershipTypeImpl)findMembershipType(session, mType.getName())).getUUId();
-            mType.setUUId(mtUUID);
-         }
-         Node mtNode = session.getNodeByUUID(mtUUID);
-
-         String srcPath = mtNode.getPath();
-         int pos = srcPath.lastIndexOf('/');
-         String prevName = srcPath.substring(pos + 1);
-
-         if (!prevName.equals(mType.getName()))
-         {
-            String destPath = srcPath.substring(0, pos) + "/" + mType.getName();
-            session.move(srcPath, destPath);
-            mtNode = (Node)session.getItem(destPath);
-         }
-
-         if (broadcast)
-         {
-            preSave(mType, false);
-         }
-
-         writeObjectToNode(mType, mtNode);
-         session.save();
-
-         if (!prevName.equals(mType.getName()))
-         {
-            service.getCacheHandler().remove(prevName, CacheType.MEMBERSHIPTYPE);
-            service.getCacheHandler().move(CacheHandler.MEMBERSHIPTYPE_PREFIX + prevName,
-               CacheHandler.MEMBERSHIPTYPE_PREFIX + mType.getName(), CacheType.MEMBERSHIP);
-         }
-
-         service.getCacheHandler().put(mType.getName(), mType, CacheType.MEMBERSHIPTYPE);
-
-         if (broadcast)
-         {
-            postSave(mType, false);
-         }
-
-         return mType;
+         postDelete(type);
       }
-      catch (Exception e)
+
+      return type;
+   }
+
+   /**
+    * Removes related membership entity.
+    */
+   private void removeMemberships(Node membershipTypeNode) throws Exception
+   {
+      PropertyIterator refTypes = membershipTypeNode.getReferences();
+      while (refTypes.hasNext())
       {
-         throw new OrganizationServiceException("Can not save membership type '" + mt.getName() + "'", e);
+         Property refTypeProp = refTypes.nextProperty();
+
+         Node refTypeNode = refTypeProp.getParent();
+         Node refUserNode = refTypeNode.getParent();
+
+         membershipHandler.removeMembership(refUserNode, refTypeNode);
       }
    }
 
@@ -450,7 +265,7 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
       Session session = service.getStorageSession();
       try
       {
-         return saveMembershipType(session, mt, broadcast);
+         return saveMembershipType(session, (MembershipTypeImpl)mt, broadcast);
       }
       finally
       {
@@ -459,48 +274,211 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
    }
 
    /**
-    * Read membership type properties from the node in the storage.
-    * 
-    * @param node
-    *          The node to read from
-    * @return The membership type
-    * @throws Exception
-    *           An exception is thrown if method can not get access to the database
+    * Persists new membership type entity.
     */
-   private MembershipType readObjectFromNode(Node node) throws Exception
+   private MembershipType saveMembershipType(Session session, MembershipTypeImpl mType, boolean broadcast)
+      throws Exception
+   {
+      Node mtNode = getOrCreateMembershipTypeNode(session, mType);
+
+      boolean isNew = mtNode.isNew();
+
+      if (broadcast)
+      {
+         preSave(mType, isNew);
+      }
+
+      String oldType = mtNode.getName();
+      String newType = mType.getName();
+
+      if (!oldType.equals(newType))
+      {
+         String oldPath = mtNode.getPath();
+         String newPath = utils.getMembershipTypeNodePath(newType);
+
+         session.move(oldPath, newPath);
+         
+         moveMembershipsInCache(oldType, newType);
+         removeFromCache(oldType);
+      }
+
+      putInCache(mType);
+
+      if (broadcast)
+      {
+         postSave(mType, isNew);
+      }
+
+      return mType;
+   }
+
+   /**
+    * Creates and returns membership type node. If node already exists it will be returned 
+    * otherwise the new one will be created.
+    */
+   private Node getOrCreateMembershipTypeNode(Session session, MembershipTypeImpl mType) throws Exception
    {
       try
       {
-         MembershipType mt = new MembershipTypeImpl(node.getUUID());
-         mt.setName(node.getName());
-         mt.setDescription(readStringProperty(node, JOS_DESCRIPTION));
-         return mt;
+         return mType.getInternalId() != null ? session.getNodeByUUID(mType.getInternalId()) : utils.getMembershipTypeNode(session,
+            mType.getName());
       }
-      catch (Exception e)
+      catch (ItemNotFoundException e)
       {
-         throw new OrganizationServiceException("Can not read membership type properties", e);
+         return createNewMembershipTypeNode(session, mType);
+      }
+      catch (PathNotFoundException e)
+      {
+         return createNewMembershipTypeNode(session, mType);
       }
    }
 
    /**
-    * Write membership type properties to the node.
-    * 
-    * @param mt
-    *          The membership type
-    * @param node
-    *          The node in the storage
-    * @throws Exception
-    *           An exception is thrown if method can not get access to the database
+    * Creates and returns new membership type node.
     */
-   private void writeObjectToNode(MembershipType mt, Node node) throws Exception
+   private Node createNewMembershipTypeNode(Session session, MembershipTypeImpl mType) throws Exception
    {
-      try
+      Node storageTypesNode = utils.getMembershipTypeStorageNode(session);
+      return storageTypesNode.addNode(mType.getName());
+   }
+
+   /**
+    * Reads membership type from the node.
+    * 
+    * @param mtNode
+    *          the node where membership type properties are stored
+    */
+   private MembershipType readMembershipType(Node node) throws Exception
+   {
+      MembershipTypeImpl mt = new MembershipTypeImpl();
+      mt.setName(node.getName());
+      mt.setInternalId(node.getUUID());
+      mt.setDescription(utils.readString(node, MembershipTypeProperties.JOS_DESCRIPTION));
+
+      return mt;
+   }
+
+   /**
+    * Writes membership type properties to the node.
+    * 
+    * @param membershipType
+    *          the membership type to store
+    * @param mtNode
+    *          the node where membership type properties will be stored
+    */
+   private void writeMembershipType(MembershipType membershipType, Node mtNode) throws Exception
+   {
+      mtNode.setProperty(MembershipTypeProperties.JOS_DESCRIPTION, membershipType.getDescription());
+   }
+
+   /**
+    * Gets membership type from cache.
+    */
+   private MembershipType getFromCache(String name)
+   {
+      return (MembershipType)cache.get(name, CacheType.MEMBERSHIPTYPE);
+   }
+
+   /**
+    * Removes membership type from cache.
+    */
+   private void removeFromCache(String name)
+   {
+      cache.remove(name, CacheType.MEMBERSHIPTYPE);
+   }
+
+   /**
+    * Removes all related memberships from cache.
+    */
+   private void removeAllRelatedFromCache(String name)
+   {
+      cache.remove(CacheHandler.MEMBERSHIPTYPE_PREFIX + name, CacheType.MEMBERSHIP);
+   }
+
+   /**
+    * Moves memberships in cache from old key to new one.
+    */
+   private void moveMembershipsInCache(String oldType, String newType)
+   {
+      cache.move(CacheHandler.MEMBERSHIPTYPE_PREFIX + oldType, CacheHandler.MEMBERSHIPTYPE_PREFIX + newType,
+         CacheType.MEMBERSHIP);
+   }
+
+   /**
+    * Puts membership type in cache.
+    */
+   private void putInCache(MembershipType mt)
+   {
+      cache.put(mt.getName(), mt, CacheType.MEMBERSHIPTYPE);
+   }
+
+   /**
+    * Notifying listeners before membership type creation.
+    * 
+    * @param type 
+    *          the membership which is used in create operation
+    * @param isNew 
+    *          true, if we have a deal with new membership type, otherwise it is false
+    *          which mean update operation is in progress
+    * @throws Exception 
+    *          if any listener failed to handle the event
+    */
+   private void preSave(MembershipType type, boolean isNew) throws Exception
+   {
+      for (MembershipTypeEventListener listener : listeners)
       {
-         node.setProperty(JOS_DESCRIPTION, mt.getDescription());
+         listener.preSave(type, isNew);
       }
-      catch (RepositoryException e)
+   }
+
+   /**
+    * Notifying listeners after membership type creation.
+    * 
+    * @param type 
+    *          the membership which is used in create operation
+    * @param isNew 
+    *          true, if we have a deal with new membership type, otherwise it is false
+    *          which mean update operation is in progress
+    * @throws Exception 
+    *          if any listener failed to handle the event
+    */
+   private void postSave(MembershipType type, boolean isNew) throws Exception
+   {
+      for (MembershipTypeEventListener listener : listeners)
       {
-         throw new OrganizationServiceException("Can not write membership type properties", e);
+         listener.postSave(type, isNew);
+      }
+   }
+
+   /**
+    * Notifying listeners before membership type deletion.
+    * 
+    * @param type 
+    *          the membership which is used in delete operation
+    * @throws Exception 
+    *          if any listener failed to handle the event
+    */
+   private void preDelete(MembershipType type) throws Exception
+   {
+      for (MembershipTypeEventListener listener : listeners)
+      {
+         listener.preDelete(type);
+      }
+   }
+
+   /**
+    * Notifying listeners after membership type deletion.
+    * 
+    * @param type 
+    *          the membership which is used in delete operation
+    * @throws Exception 
+    *          if any listener failed to handle the event
+    */
+   private void postDelete(MembershipType type) throws Exception
+   {
+      for (MembershipTypeEventListener listener : listeners)
+      {
+         listener.postDelete(type);
       }
    }
 
@@ -520,50 +498,6 @@ public class MembershipTypeHandlerImpl extends CommonHandler implements Membersh
    {
       SecurityHelper.validateSecurityPermission(PermissionConstants.MANAGE_LISTENERS);
       listeners.add(listener);
-   }
-
-   /**
-    * PreSave event.
-    */
-   private void preSave(MembershipType type, boolean isNew) throws Exception
-   {
-      for (MembershipTypeEventListener listener : listeners)
-      {
-         listener.preSave(type, isNew);
-      }
-   }
-
-   /**
-    * PostSave event.
-    */
-   private void postSave(MembershipType type, boolean isNew) throws Exception
-   {
-      for (MembershipTypeEventListener listener : listeners)
-      {
-         listener.postSave(type, isNew);
-      }
-   }
-
-   /**
-    * PreDelete event.
-    */
-   private void preDelete(MembershipType type) throws Exception
-   {
-      for (MembershipTypeEventListener listener : listeners)
-      {
-         listener.preDelete(type);
-      }
-   }
-
-   /**
-    * PostDelete event.
-    */
-   private void postDelete(MembershipType type) throws Exception
-   {
-      for (MembershipTypeEventListener listener : listeners)
-      {
-         listener.postDelete(type);
-      }
    }
 
    /**

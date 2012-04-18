@@ -27,13 +27,13 @@ import java.util.Date;
  * Date: 24.07.2008
  * 
  * @author <a href="mailto:peter.nedonosko@exoplatform.com.ua">Peter Nedonosko</a>
- * @version $Id$
+ * @version $Id: MembershipTypeImpl.java 76870 2011-11-22 10:38:54Z dkuleshov $
  */
 public class MembershipTypeImpl implements MembershipType, ExtendedCloneable
 {
 
    /**
-    * The description of the membership type
+    * The description of the membership type.
     */
    private String description;
 
@@ -43,44 +43,29 @@ public class MembershipTypeImpl implements MembershipType, ExtendedCloneable
    private String name;
 
    /**
-    * The UUID of the membership type in the storage
+    * The internal identifier.
     */
-   private String UUId;
+   private String internalId;
 
    /**
     * MembershipTypeImpl constructor.
     */
    MembershipTypeImpl()
    {
-      this.UUId = null;
-   }
-
-   /**
-    * MembershipTypeImpl constructor.
-    * 
-    * @param UUId
-    *          - membership node id
-    */
-   MembershipTypeImpl(String UUId)
-   {
-      this.UUId = UUId;
    }
 
    /**
     * MembershipTypeImpl constructor.
     */
-   MembershipTypeImpl(String UUId, String name, String description)
+   MembershipTypeImpl(String internalId, String name, String description)
    {
-      this.UUId = UUId;
+      this.internalId = internalId;
       this.name = name;
       this.description = description;
    }
 
    /**
-    * Get the date when the membership type was created to the database.
-    * 
-    * @deprecated This method is not used.
-    * @return The date that the membership type was created to the database
+    * {@inheritDoc}
     */
    public Date getCreatedDate()
    {
@@ -96,10 +81,7 @@ public class MembershipTypeImpl implements MembershipType, ExtendedCloneable
    }
 
    /**
-    * Get the date when membership type was modified last time.
-    * 
-    * @deprecated This method is not used.
-    * @return The last time that an user modify the data of the membership type.
+    * {@inheritDoc}
     */
    public Date getModifiedDate()
    {
@@ -115,10 +97,7 @@ public class MembershipTypeImpl implements MembershipType, ExtendedCloneable
    }
 
    /**
-    * Get owner of the membership type.
-    * 
-    * @deprecated This method is not used.
-    * @return The owner of the membership type
+    * {@inheritDoc}
     */
    public String getOwner()
    {
@@ -126,29 +105,23 @@ public class MembershipTypeImpl implements MembershipType, ExtendedCloneable
    }
 
    /**
-    * Get UUId of the membership type in the storage.
-    * 
-    * @return The UUID of the membership type in the storage
+    * Returns the internal identifier.
     */
-   public String getUUId()
+   String getInternalId()
    {
-      return UUId;
+      return internalId;
    }
 
    /**
-    * Set UUId of the membership type.
+    * Set internal identifier of the membership type.
     */
-   void setUUId(String UUId)
+   void setInternalId(String internalId)
    {
-      this.UUId = UUId;
+      this.internalId = internalId;
    }
 
    /**
-    * Set date creation of the membership type.
-    * 
-    * @deprecated This method is not used.
-    * @param d
-    *          The created date
+    * {@inheritDoc}
     */
    public void setCreatedDate(Date d)
    {
@@ -163,21 +136,14 @@ public class MembershipTypeImpl implements MembershipType, ExtendedCloneable
    }
 
    /**
-    * Set date modification of the membership type.
-    * 
-    * @deprecated This method is not used.
-    * @param d
-    *          The modified date
+    * {@inheritDoc}
     */
    public void setModifiedDate(Date d)
    {
    }
 
    /**
-    * Set the new name for membership type.
-    * 
-    * @param s
-    *          The name of the membership type
+    * {@inheritDoc}
     */
    public void setName(String s)
    {
@@ -185,11 +151,7 @@ public class MembershipTypeImpl implements MembershipType, ExtendedCloneable
    }
 
    /**
-    * Set the owner for membership type.
-    * 
-    * @deprecated This method is not used.
-    * @param s
-    *          The new owner of the membership type
+    * {@inheritDoc}
     */
    public void setOwner(String s)
    {

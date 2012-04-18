@@ -21,7 +21,7 @@ package org.exoplatform.services.jcr.ext.organization;
 
 /**
  * @author <a href="abazko@exoplatform.com">Anatoliy Bazko</a>
- * @version $Id$
+ * @version $Id: TestGroupImpl.java 73771 2011-09-20 10:26:40Z tolusha $
  */
 public class TestGroupImpl extends AbstractOrganizationServiceTest
 {
@@ -33,18 +33,20 @@ public class TestGroupImpl extends AbstractOrganizationServiceTest
    {
       GroupImpl child1 = (GroupImpl)gHandler.createGroupInstance();
       child1.setGroupName(groupName1);
+      child1.setLabel("label");
 
       gHandler.addChild(null, child1, true);
-      assertNotNull(child1.getUUId());
+      assertNotNull(child1.getInternalId());
       assertNull(child1.getParentId());
       assertEquals("/" + groupName1, child1.getId());
       assertEquals(groupName1, child1.getGroupName());
       
       GroupImpl child2 = (GroupImpl)gHandler.createGroupInstance();
       child2.setGroupName(groupName2);
+      child2.setLabel("label");
 
       gHandler.addChild(child1, child2, true);
-      assertNotNull(child2.getUUId());
+      assertNotNull(child2.getInternalId());
       assertEquals("/" + groupName1, child2.getParentId());
       assertEquals("/" + groupName1 + "/" + groupName2, child2.getId());
       assertEquals(groupName2, child2.getGroupName());

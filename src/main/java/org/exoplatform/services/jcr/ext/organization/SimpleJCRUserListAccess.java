@@ -20,7 +20,6 @@ import org.exoplatform.services.organization.User;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 /**
@@ -34,9 +33,6 @@ public class SimpleJCRUserListAccess extends JCRUserListAccess
 
    /**
     * JCRUserListAccess constructor.
-    * 
-    * @param service
-    *          The JCROrganizationService
     */
    public SimpleJCRUserListAccess(JCROrganizationServiceImpl service)
    {
@@ -48,15 +44,8 @@ public class SimpleJCRUserListAccess extends JCRUserListAccess
     */
    protected int getSize(Session session) throws Exception
    {
-      try
-      {
-         Node storageNode = (Node) session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_JOS_USERS);
-         return (int) storageNode.getNodes().getSize();
-      }
-      catch (RepositoryException e)
-      {
-         throw new OrganizationServiceException("Can not get list size", e);
-      }
+      Node usersStorageNode = utils.getUsersStorageNode(session);
+      return (int)usersStorageNode.getNodes().getSize();
    }
 
    /**
@@ -65,31 +54,34 @@ public class SimpleJCRUserListAccess extends JCRUserListAccess
    protected User[] load(Session session, int index, int length) throws Exception
    {
       if (index < 0)
+      {
          throw new IllegalArgumentException("Illegal index: index must be a positive number");
+      }
 
       if (length < 0)
+      {
          throw new IllegalArgumentException("Illegal length: length must be a positive number");
+      }
 
       User[] users = new User[length];
 
       try
       {
-         Node storageNode = (Node) session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_JOS_USERS);
-         NodeIterator results = storageNode.getNodes();
+         Node usersStorageNode = utils.getUsersStorageNode(session);
 
-         UserHandlerImpl uHandler = new UserHandlerImpl(service);
-
+         NodeIterator usersNodes = usersStorageNode.getNodes();
          for (int p = 0, counter = 0; counter < length; p++)
          {
-            if (!results.hasNext())
+            if (!usersNodes.hasNext())
+            {
                throw new IllegalArgumentException(
-                        "Illegal index or length: sum of the index and the length cannot be greater than the list size");
+                  "Illegal index or length: sum of the index and the length cannot be greater than the list size");
+            }
 
-            Node result = results.nextNode();
-
+            Node result = usersNodes.nextNode();
             if (p >= index)
             {
-               users[counter++] = uHandler.readObjectFromNode(result);
+               users[counter++] = uHandler.readUser(result);
             }
          }
 

@@ -25,7 +25,7 @@ import org.exoplatform.services.organization.Group;
  * Date: 24.07.2008
  * 
  * @author <a href="mailto:peter.nedonosko@exoplatform.com.ua">Peter Nedonosko</a>
- * @version $Id$
+ * @version $Id: GroupImpl.java 76870 2011-11-22 10:38:54Z dkuleshov $
  */
 public class GroupImpl implements Group, ExtendedCloneable
 {
@@ -56,57 +56,24 @@ public class GroupImpl implements Group, ExtendedCloneable
    private String parentId;
 
    /**
-    * The UUId of the group in the storage.
+    * The internal group identifier.
     */
-   private String UUId;
+   private String internalId;
 
    /**
     * GroupImpl constructor.
     */
    GroupImpl()
    {
-      UUId = null;
    }
 
    /**
     * GroupImpl constructor.
-    * 
-    * @param name
-    *          The name of the group
-    * @param parentId
-    *          The parentId of the group
-    * @param UUId
-    *          The group's UUId in the storage
     */
-   GroupImpl(String name, String parentId, String UUId)
+   GroupImpl(String name, String parentId)
    {
-      this.UUId = UUId;
-
-      setParentId(parentId);
       setGroupName(name);
-   }
-
-   /** 
-      * Set parentId to this Group. 
-      * <br>NOTE: this method will not update groupId, to change it use groupId setter.    
-      * <br>For internal use. 
-      *  
-      * @param parentId String with parentId  
-      */
-   void setParentId(String parentId)
-   {
-      this.parentId = (parentId == null || parentId.equals("") ? null : parentId);
-   }
-
-   /** 
-    * Set UUId to this Group. 
-    * <br>For internal use. 
-    *  
-    * @param UUId String with group UUId  
-    */
-   void setUUId(String UUId)
-   {
-      this.UUId = UUId;
+      setParentId(parentId);
    }
 
    /**
@@ -150,13 +117,11 @@ public class GroupImpl implements Group, ExtendedCloneable
    }
 
    /**
-    * Get group's UUId.
-    * 
-    * @return The UUId of the group in the storage
+    * Returns internal group identifier.
     */
-   public String getUUId()
+   String getInternalId()
    {
-      return UUId;
+      return internalId;
    }
 
    /**
@@ -174,6 +139,23 @@ public class GroupImpl implements Group, ExtendedCloneable
    {
       groupName = name;
       groupId = (parentId == null ? "" : parentId) + "/" + groupName;
+   }
+
+   /**
+    * Sets new parenId and refresh groupId.
+    */
+   public void setParentId(String parentId)
+   {
+      this.parentId = (parentId == null || parentId.equals("") ? null : parentId);
+      setGroupName(groupName);
+   }
+
+   /**
+    * Sets internal group identifier.  
+    */
+   void setInternalId(String internalId)
+   {
+      this.internalId = internalId;
    }
 
    /**

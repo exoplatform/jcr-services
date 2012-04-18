@@ -23,7 +23,6 @@ import org.exoplatform.services.jcr.config.RepositoryConfigurationException;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.organization.CacheHandler;
-import org.exoplatform.services.organization.Group;
 
 import java.io.Serializable;
 
@@ -36,7 +35,7 @@ import javax.jcr.RepositoryException;
  * We need dedicated method for this. 
  * 
  * @author <a href="abazko@exoplatform.com">Anatoliy Bazko</a>
- * @version $Id$
+ * @version $Id: JCRCacheHandler.java 79575 2012-02-17 13:23:37Z aplotnikov $
  */
 public class JCRCacheHandler extends CacheHandler
 {
@@ -48,42 +47,11 @@ public class JCRCacheHandler extends CacheHandler
 
    /**
     * JCRCacheHandler constructor.
-    * 
-    * @param cservice
-    *          Cache service
     */
    public JCRCacheHandler(CacheService cservice, JCROrganizationServiceImpl jcrOrganizationServiceImpl)
    {
       super(cservice);
       this.jcrOrganizationServiceImpl = jcrOrganizationServiceImpl;
-   }
-
-   /**
-    * Hierarchically removing groups and membership records in the cache.
-    * 
-    * @param groupId
-    *          the parent group id
-    */
-   public void removeGroupHierarchy(String groupId)
-   {
-      try
-      {
-         for (Group group : groupCache.getCachedObjects())
-         {
-            if (group.getId().startsWith(groupId))
-            {
-               remove(group.getId(), CacheType.GROUP);
-               remove(CacheHandler.GROUP_PREFIX + group.getId(), CacheType.MEMBERSHIP);
-            }
-         }
-      }
-      catch (Exception e)
-      {
-         if (LOG.isTraceEnabled())
-         {
-            LOG.trace("An exception occurred: " + e.getMessage());
-         }
-      }
    }
 
    /**

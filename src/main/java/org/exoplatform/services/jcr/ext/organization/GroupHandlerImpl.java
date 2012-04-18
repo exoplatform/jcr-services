@@ -17,8 +17,8 @@
 package org.exoplatform.services.jcr.ext.organization;
 
 import org.exoplatform.commons.utils.SecurityHelper;
-import org.exoplatform.services.log.ExoLogger;
-import org.exoplatform.services.log.Log;
+import org.exoplatform.services.jcr.core.ExtendedNode;
+import org.exoplatform.services.organization.CacheHandler;
 import org.exoplatform.services.organization.CacheHandler.CacheType;
 import org.exoplatform.services.organization.Group;
 import org.exoplatform.services.organization.GroupEventListener;
@@ -34,45 +34,19 @@ import java.util.List;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.query.Query;
-import javax.jcr.query.QueryResult;
 
 /**
  * Created by The eXo Platform SAS Date: 24.07.2008
  * 
  * @author <a href="mailto:peter.nedonosko@exoplatform.com.ua">Peter
  *         Nedonosko</a>
- * @version $Id$
+ * @version $Id: GroupHandlerImpl.java 79575 2012-02-17 13:23:37Z aplotnikov $
  */
-public class GroupHandlerImpl extends CommonHandler implements GroupHandler, GroupEventListenerHandler
+public class GroupHandlerImpl extends JCROrgServiceHandler implements GroupHandler, GroupEventListenerHandler
 {
-
-   /**
-    * The group property that contain description.
-    */
-   public static final String JOS_DESCRIPTION = "jos:description";
-
-   /**
-    * The group property that contain groupId.
-    */
-   public static final String JOS_GROUP_ID = "jos:groupId";
-
-   /**
-    * The group property that contain parentId.
-    */
-   public static final String JOS_PARENT_ID = "jos:parentId";
-
-   /**
-    * The group property that contain label.
-    */
-   public static final String JOS_LABEL = "jos:label";
-
-   /**
-    * The node to storage groups.
-    */
-   public static final String STORAGE_JOS_GROUPS = "jos:groups";
 
    /**
     * The list of listeners to broadcast events.
@@ -80,23 +54,27 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
    protected final List<GroupEventListener> listeners = new ArrayList<GroupEventListener>();
 
    /**
-    * Organization service implementation covering the handler.
+    * Class contains names of group properties.
     */
-   protected final JCROrganizationServiceImpl service;
+   public static class GroupProperties
+   {
+      /**
+       * The group property that contain description.
+       */
+      public static final String JOS_DESCRIPTION = "jos:description";
 
-   /**
-    * Log.
-    */
-   protected static final Log LOG = ExoLogger.getLogger("exo-jcr-services.GroupHandlerImpl");
+      /**
+       * The group property that contain label.
+       */
+      public static final String JOS_LABEL = "jos:label";
+   }
 
    /**
     * GroupHandlerImpl constructor.
-    * 
-    * @param service The initialization data
     */
    GroupHandlerImpl(JCROrganizationServiceImpl service)
    {
-      this.service = service;
+      super(service);
    }
 
    /**
@@ -107,7 +85,7 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
       Session session = service.getStorageSession();
       try
       {
-         addChild(session, parent, child, broadcast);
+         addChild(session, (GroupImpl)parent, (GroupImpl)child, broadcast);
       }
       finally
       {
@@ -116,80 +94,32 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
    }
 
    /**
-    * Use this method to create a new group.
-    * 
-    * @param session The current session
-    * @param parent The parent group of the new group. use 'null' if you want to
-    *          create the group at the root level.
-    * @param child The group that you want to create.
-    * @param broadcast Broacast the new group event to all the registered
-    *          listener if broadcast is true
-    * @throws Exception An exception is throwed if the method fail to persist the
-    *           new group or there is already one child group with the same group
-    *           name in the database or any registered listener fail to handle
-    *           the event.
+    * Adds child group.
     */
-   private void addChild(Session session, Group parent, Group child, boolean broadcast) throws Exception
+   private void addChild(Session session, GroupImpl parent, GroupImpl child, boolean broadcast) throws Exception
    {
-      if (LOG.isDebugEnabled())
+      Node parentNode = utils.getGroupNode(session, parent);
+      Node groupNode = parentNode.addNode(child.getGroupName(), JCROrganizationServiceImpl.JOS_HIERARCHY_GROUP);
+
+      String parentId = parent == null ? null : parent.getId();
+
+      child.setParentId(parentId);
+      child.setInternalId(groupNode.getUUID());
+
+      if (broadcast)
       {
-         LOG.debug("addChild started");
+         preSave(child, true);
       }
 
-      try
+      writeGroup(child, groupNode);
+      session.save();
+
+      putInCache(child);
+
+      if (broadcast)
       {
-         Node parentNode =
-            (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_GROUPS
-               + (parent == null ? "" : parent.getId()));
-         Node gNode = parentNode.addNode(child.getGroupName(), "jos:hierarchyGroup");
-
-         String parentId = parent == null ? null : parent.getId();
-
-         // new logic: reuse group instance if JCR org-service manages it, create a new instance otherwise
-         GroupImpl group;
-         if (child instanceof GroupImpl)
-         {
-            group = (GroupImpl)child;
-            // ressign Ids according the parent  
-            group.setParentId(parentId);
-            group.setGroupName(group.getGroupName());
-            group.setUUId(gNode.getUUID());
-         }
-         else
-         {
-            group = new GroupImpl(child.getGroupName(), parentId, gNode.getUUID());
-         }
-         group.setDescription(child.getDescription());
-         group.setLabel(child.getLabel() != null ? child.getLabel() : child.getGroupName());
-
-         if (broadcast)
-         {
-            preSave(group, true);
-         }
-
-         writeObjectToNode(group, gNode);
-         session.save();
-
-         service.getCacheHandler().put(child.getId(), group, CacheType.GROUP);
-
-         if (broadcast)
-         {
-            postSave(group, true);
-         }
+         postSave(child, true);
       }
-      catch (Exception e)
-      {
-         throw new OrganizationServiceException("Can not add child group with groupId '" + child.getId() + "'", e);
-      }
-   }
-
-   /**
-    * {@inheritDoc}
-    */
-   public void addGroupEventListener(GroupEventListener listener)
-   {
-      SecurityHelper.validateSecurityPermission(PermissionConstants.MANAGE_LISTENERS);
-      listeners.add(listener);
    }
 
    /**
@@ -197,19 +127,7 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
     */
    public void createGroup(Group group, boolean broadcast) throws Exception
    {
-      if (LOG.isDebugEnabled())
-      {
-         LOG.debug("createGroup method");
-      }
-
-      try
-      {
-         addChild(null, group, broadcast);
-      }
-      catch (Exception e)
-      {
-         throw new OrganizationServiceException("Can not create group", e);
-      }
+      addChild(null, group, broadcast);
    }
 
    /**
@@ -225,56 +143,34 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
     */
    public Group findGroupById(String groupId) throws Exception
    {
+      Group group = getFromCache(groupId);
+      if (group != null)
+      {
+         return group;
+      }
+      
       Session session = service.getStorageSession();
       try
       {
-         return findGroupById(session, groupId);
+         Node groupNode;
+         try
+         {
+            groupNode = utils.getGroupNode(session, groupId);
+         }
+         catch (PathNotFoundException e)
+         {
+            return null;
+         }
+
+         group = readGroup(groupNode);
+         putInCache(group);
       }
       finally
       {
          session.logout();
       }
-   }
 
-   /**
-    * Use this method to search for a group.
-    * 
-    * @param session The current session
-    * @param groupId the id of the group that you want to search for
-    * @return null if no record matched the group id or the found group
-    * @throws Exception An exception is throwed if the method cannot access the
-    *           database or more than one group is found.
-    */
-   private Group findGroupById(Session session, String groupId) throws Exception
-   {
-      if (LOG.isDebugEnabled())
-      {
-         LOG.debug("findGroupById started");
-      }
-
-      Group group = (Group)service.getCacheHandler().get(groupId, CacheType.GROUP);
-      if (group != null)
-      {
-         return group;
-      }
-
-      try
-      {
-         Node gNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_GROUPS + groupId);
-         group = readObjectFromNode(gNode);
-
-         service.getCacheHandler().put(groupId, group, CacheType.GROUP);
-
-         return group;
-      }
-      catch (PathNotFoundException e)
-      {
-         return null;
-      }
-      catch (Exception e)
-      {
-         throw new OrganizationServiceException("Can not find group by groupId '" + groupId + "'", e);
-      }
+      return group;
    }
 
    /**
@@ -282,73 +178,38 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
     */
    public Collection findGroupByMembership(String userName, String membershipType) throws Exception
    {
+      List<Group> groups = new ArrayList<Group>();
+
       Session session = service.getStorageSession();
       try
       {
-         return findGroupByMembership(session, userName, membershipType);
+         Node userNode;
+         try
+         {
+            userNode = utils.getUserNode(session, userName);
+         }
+         catch (PathNotFoundException e)
+         {
+            return new ArrayList<Group>();
+         }
+         
+         PropertyIterator refUserProps = userNode.getReferences();
+         while (refUserProps.hasNext())
+         {
+            Node refUserNode = refUserProps.nextProperty().getParent();
+            if (membershipType == null || refUserNode.hasNode(membershipType))
+            {
+               Node groupNode = refUserNode.getParent().getParent();
+               groups.add(readGroup(groupNode));
+            }
+         }
       }
       finally
       {
          session.logout();
       }
-   }
 
-   /**
-    * Use this method to find all the groups of an user with the specified
-    * membership type.
-    * 
-    * @param session The current session
-    * @param userName The user that the method should search for.
-    * @param membershipType The type of the membership. Since an user can have
-    *          one or more membership in a group, this parameter is necessary. If
-    *          the membershipType is null, it should mean any membership type.
-    * @return A collection of the found groups
-    * @throws Exception An exception is thrown if the method cannot access the
-    *           database.
-    */
-   private Collection findGroupByMembership(Session session, String userName, String membershipType) throws Exception
-   {
-      if (LOG.isDebugEnabled())
-      {
-         LOG.debug("findGroupByMembership started");
-      }
-
-      List<Group> types = new ArrayList<Group>();
-      try
-      {
-         Node user =
-            (Node)session.getItem(service.getStoragePath() + "/" + UserHandlerImpl.STORAGE_JOS_USERS + "/" + userName);
-         NodeIterator memberships = user.getNodes(UserHandlerImpl.JOS_MEMBERSHIP);
-         nextGroup : while (memberships.hasNext())
-         {
-            Node membership = memberships.nextNode();
-
-            if (membershipType != null
-               && !membershipType.equals(membership.getProperty(MembershipHandlerImpl.JOS_MEMBERSHIP_TYPE).getNode()
-                  .getName()))
-            {
-               continue nextGroup; // membership doesn't match
-            }
-
-            Node group = membership.getProperty(MembershipHandlerImpl.JOS_GROUP).getNode();
-            for (Group eg : types)
-            {
-               if (eg.getId().equals(readStringProperty(group, JOS_GROUP_ID)))
-                  continue nextGroup; // already listed
-            }
-            types.add(readObjectFromNode(group)); // add
-         }
-
-         return types;
-      }
-      catch (PathNotFoundException e)
-      {
-         return types;
-      }
-      catch (Exception e)
-      {
-         throw new OrganizationServiceException("Can not find groups by membership", e);
-      }
+      return groups;
    }
 
    /**
@@ -368,51 +229,35 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
    }
 
    /**
-    * Use this method to find all the children group of a group.
+    * Find children groups. Parent group is not included in result.
     * 
-    * @param session The current session
-    * @param parent The group that you want to search. Use null if you want to
-    *          search from the root.
-    * @param recursive Recursive search groups
-    * @param recurent
-    * @return A collection of the children group
-    * @throws Exception An exception is throwed is the method cannot access the
-    *           database
+    * @param recursive
+    *          if true, the search should be recursive. It means go down to the tree 
+    *          until bottom will reach
     */
    private Collection findGroups(Session session, Group parent, boolean recursive) throws Exception
    {
-      if (LOG.isDebugEnabled())
-      {
-         LOG.debug("findGroups started");
-      }
+      List<Group> groups = new ArrayList<Group>();
+      String parentId = parent == null ? "" : parent.getId();
 
-      List<Group> types = new ArrayList<Group>();
-      try
+      NodeIterator childNodes = utils.getGroupNode(session, parentId).getNodes();
+
+      while (childNodes.hasNext())
       {
-         String parentId = parent == null ? "" : parent.getId();
-         Node parentNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_GROUPS + parentId);
-         for (NodeIterator gNodes = parentNode.getNodes(); gNodes.hasNext();)
+         Node groupNode = childNodes.nextNode();
+         if (!groupNode.getName().startsWith(JCROrganizationServiceImpl.JOS_MEMBERSHIP))
          {
-            Node gNode = gNodes.nextNode();
-            Group g = readObjectFromNode(gNode);
-            types.add(g);
+            Group group = readGroup(groupNode);
+            groups.add(group);
 
             if (recursive)
             {
-               types.addAll(findGroups(session, g, recursive));
+               groups.addAll(findGroups(session, group, recursive));
             }
          }
-         return types;
+      }
 
-      }
-      catch (PathNotFoundException e)
-      {
-         return types;
-      }
-      catch (Exception e)
-      {
-         throw new OrganizationServiceException("Can not find groups", e);
-      }
+      return groups;
    }
 
    /**
@@ -420,19 +265,7 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
     */
    public Collection findGroupsOfUser(String user) throws Exception
    {
-      if (LOG.isDebugEnabled())
-      {
-         LOG.debug("findGroupsOfUser started");
-      }
-
-      try
-      {
-         return findGroupByMembership(user, null);
-      }
-      catch (Exception e)
-      {
-         throw new OrganizationServiceException("Can not find groups", e);
-      }
+      return findGroupByMembership(user, null);
    }
 
    /**
@@ -443,36 +276,11 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
       Session session = service.getStorageSession();
       try
       {
-         return getAllGroups(session);
+         return findGroups(session, null, true);
       }
       finally
       {
          session.logout();
-      }
-   }
-
-   /**
-    * Use this method to get all the groups.
-    * 
-    * @param session The current session
-    * @return The collection of groups
-    * @throws Exception An exception is thrown is the method cannot access the
-    *           database
-    */
-   private Collection getAllGroups(Session session) throws Exception
-   {
-      if (LOG.isDebugEnabled())
-      {
-         LOG.debug("getAllGroups started");
-      }
-
-      try
-      {
-         return findGroups(session, null, true);
-      }
-      catch (Exception e)
-      {
-         throw new OrganizationServiceException("Can not get all groups ", e);
       }
    }
 
@@ -493,71 +301,231 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
    }
 
    /**
-    * Use this method to remove a group from the group database.
-    * 
-    * @param session The current session
-    * @param group The group to be removed. The group parameter should be
-    *          obtained form the findGroupId(..) method. When the groupn is
-    *          removed, the memberships of the group should be removed as well.
-    * @param broadcast Broadcast the event to the registered listener if the
-    *          broadcast value is 'true'
-    * @return Return the removed group.
-    * @throws Exception An exception is throwed if the method fail to remove the
-    *           group from the database, the group is not existed in the
-    *           database, or any listener fail to handle the event.
+    * Removes group and all related membership entities. Throws exception if children exist.
     */
    private Group removeGroup(Session session, Group group, boolean broadcast) throws Exception
    {
-      if (LOG.isDebugEnabled())
+      if (group == null)
       {
-         LOG.debug("removeGroup started");
+         throw new OrganizationServiceException("Can not remove group, since it is null");
       }
 
+      Node groupNode = utils.getGroupNode(session, group);
+
+      // need to minus one because of child "jos:memberships" node
+      long childrenCount = ((ExtendedNode)groupNode).getNodesLazily(1).getSize() - 1;
+      
+      if (childrenCount > 0)
+      {
+         throw new OrganizationServiceException("Can not remove group till children exist");
+      }
+
+      if (broadcast)
+      {
+         preDelete(group);
+      }
+      
+      removeMemberships(groupNode, broadcast);
+      groupNode.remove();
+      session.save();
+
+      removeFromCache(group.getId());
+      removeAllRelatedFromCache(group.getId());
+
+      if (broadcast)
+      {
+         postDelete(group);
+      }
+
+      return group;
+   }
+
+   /**
+    * Remove all membership entities related to current group.
+    */
+   private void removeMemberships(Node groupNode, boolean broadcast) throws RepositoryException
+   {
+      NodeIterator refUsers = groupNode.getNode(JCROrganizationServiceImpl.JOS_MEMBERSHIP).getNodes();
+      while (refUsers.hasNext())
+      {
+         refUsers.nextNode().remove();
+      }
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public void saveGroup(Group group, boolean broadcast) throws Exception
+   {
+      Session session = service.getStorageSession();
       try
       {
-         Node gNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_GROUPS + group.getId());
-
-         // remove child groups
-         for (NodeIterator gNodes = gNode.getNodes(); gNodes.hasNext();)
-         {
-            removeGroup(session, readObjectFromNode(gNodes.nextNode()), true);
-         }
-
-         // remove membership
-         String mStatement =
-            "select * from jos:userMembership where " + MembershipHandlerImpl.JOS_GROUP + "='" + gNode.getUUID() + "'";
-         Query mQuery = session.getWorkspace().getQueryManager().createQuery(mStatement, Query.SQL);
-         QueryResult mRes = mQuery.execute();
-         for (NodeIterator mNodes = mRes.getNodes(); mNodes.hasNext();)
-         {
-            Node mNode = mNodes.nextNode();
-            ((MembershipHandlerImpl)service.getMembershipHandler()).removeMembership(session, mNode.getUUID(),
-               broadcast);
-         }
-
-         // remove group
-         Group g = readObjectFromNode(gNode);
+         Node groupNode = utils.getGroupNode(session, group);
 
          if (broadcast)
          {
-            preDelete(group);
+            preSave(group, false);
          }
 
-         gNode.remove();
+         writeGroup(group, groupNode);
          session.save();
 
-         service.getCacheHandler().removeGroupHierarchy(group.getId());
+         putInCache(group);
 
          if (broadcast)
          {
-            postDelete(group);
+            postSave(group, false);
          }
-
-         return g;
       }
-      catch (Exception e)
+      finally
       {
-         throw new OrganizationServiceException("Can not remove group with groupId '" + group.getId() + "'", e);
+         session.logout();
+      }
+   }
+
+   /**
+    * Read group properties from node.
+    * 
+    * @param groupNode
+    *          the node where group properties are stored
+    * @return {@link Group}
+    * @throws OrganizationServiceException
+    *          if unexpected exception is occurred during reading
+    */
+   private Group readGroup(Node groupNode) throws Exception
+   {
+      String groupName = groupNode.getName();
+      String desc = utils.readString(groupNode, GroupProperties.JOS_DESCRIPTION);
+      String label = utils.readString(groupNode, GroupProperties.JOS_LABEL);
+      String parentId = utils.getGroupIds(groupNode).parentId;
+
+      GroupImpl group = new GroupImpl(groupName, parentId);
+      group.setInternalId(groupNode.getUUID());
+      group.setDescription(desc);
+      group.setLabel(label);
+
+      return group;
+   }
+
+   /**
+    * Write group properties to the node.
+    * 
+    * @param groupNode
+    *          the node where group properties are stored
+    * @return {@link Group}
+    * @throws OrganizationServiceException
+    *          if unexpected exception is occurred during writing
+    */
+   private void writeGroup(Group group, Node node) throws OrganizationServiceException
+   {
+      try
+      {
+         node.setProperty(GroupProperties.JOS_LABEL, group.getLabel());
+         node.setProperty(GroupProperties.JOS_DESCRIPTION, group.getDescription());
+      }
+      catch (RepositoryException e)
+      {
+         throw new OrganizationServiceException("Can not write group properties", e);
+      }
+   }
+
+   /**
+    * Reads group from cache. 
+    */
+   private Group getFromCache(String groupId)
+   {
+      return (Group)cache.get(groupId, CacheType.GROUP);
+   }
+
+   /**
+    * Puts group in cache. 
+    */
+   private void putInCache(Group group)
+   {
+      cache.put(group.getId(), group, CacheType.GROUP);
+   }
+
+   /**
+    * Removes group from cache.
+    */
+   private void removeFromCache(String groupId)
+   {
+      cache.remove(groupId, CacheType.GROUP);
+   }
+
+   /**
+    * Removes related entities from cache.
+    */
+   private void removeAllRelatedFromCache(String groupId)
+   {
+      cache.remove(CacheHandler.GROUP_PREFIX + groupId, CacheType.MEMBERSHIP);
+   }
+
+   /**
+    * Notifying listeners before group creation.
+    * 
+    * @param group 
+    *          the group which is used in create operation
+    * @param isNew 
+    *          true, if we have a deal with new group, otherwise it is false
+    *          which mean update operation is in progress
+    * @throws Exception 
+    *          if any listener failed to handle the event
+    */
+   private void preSave(Group group, boolean isNew) throws Exception
+   {
+      for (GroupEventListener listener : listeners)
+      {
+         listener.preSave(group, isNew);
+      }
+   }
+
+   /**
+    * Notifying listeners after group creation.
+    * 
+    * @param group 
+    *          the group which is used in create operation
+    * @param isNew 
+    *          true, if we have a deal with new group, otherwise it is false
+    *          which mean update operation is in progress
+    * @throws Exception 
+    *          if any listener failed to handle the event
+    */
+   private void postSave(Group group, boolean isNew) throws Exception
+   {
+      for (GroupEventListener listener : listeners)
+         listener.postSave(group, isNew);
+   }
+
+   /**
+    * Notifying listeners before group deletion.
+    * 
+    * @param group 
+    *          the group which is used in delete operation
+    * @throws Exception 
+    *          if any listener failed to handle the event
+    */
+   private void preDelete(Group group) throws Exception
+   {
+      for (GroupEventListener listener : listeners)
+      {
+         listener.preDelete(group);
+      }
+   }
+
+   /**
+    * Notifying listeners after group deletion.
+    * 
+    * @param group 
+    *          the group which is used in delete operation
+    * @throws Exception 
+    *          if any listener failed to handle the event
+    */
+   private void postDelete(Group group) throws Exception
+   {
+      for (GroupEventListener listener : listeners)
+      {
+         listener.postDelete(group);
       }
    }
 
@@ -575,156 +543,10 @@ public class GroupHandlerImpl extends CommonHandler implements GroupHandler, Gro
    /**
     * {@inheritDoc}
     */
-   public void saveGroup(Group group, boolean broadcast) throws Exception
+   public void addGroupEventListener(GroupEventListener listener)
    {
-      Session session = service.getStorageSession();
-      try
-      {
-         saveGroup(session, group, broadcast);
-      }
-      finally
-      {
-         session.logout();
-      }
-   }
-
-   /**
-    * Use this method to update the properties of an existed group.
-    * 
-    * @param session The current session
-    * @param group The group object with the updated information.
-    * @param broadcast Broadcast the event to all the registered listener if the
-    *          broadcast value is true
-    * @throws Exception An exception is thorwed if the method cannot access the
-    *           database or any listener fail to handle the event
-    */
-   private void saveGroup(Session session, Group group, boolean broadcast) throws Exception
-   {
-      if (LOG.isDebugEnabled())
-      {
-         LOG.debug("saveGroup started");
-      }
-
-      try
-      {
-         Node gNode = (Node)session.getItem(service.getStoragePath() + "/" + STORAGE_JOS_GROUPS + group.getId());
-
-         if (broadcast)
-         {
-            preSave(group, false);
-         }
-
-         writeObjectToNode(group, gNode);
-         session.save();
-
-         service.getCacheHandler().put(group.getId(), group, CacheType.GROUP);
-
-         if (broadcast)
-         {
-            postSave(group, false);
-         }
-      }
-      catch (Exception e)
-      {
-         throw new OrganizationServiceException("Can not save group '" + group.getId() + "'", e);
-      }
-   }
-
-   /**
-    * Read group properties from node.
-    * 
-    * @param node The node in the storage to read from
-    * @return The group
-    * @throws Exception An exception is thrown if the method can not get access
-    *           to the database
-    */
-   private Group readObjectFromNode(Node node) throws Exception
-   {
-      try
-      {
-         String groupId = readStringProperty(node, JOS_GROUP_ID);
-         Group group = new GroupImpl(node.getName(), groupId.substring(0, groupId.lastIndexOf('/')), node.getUUID());
-         group.setDescription(readStringProperty(node, JOS_DESCRIPTION));
-         group.setLabel(readStringProperty(node, JOS_LABEL));
-         return group;
-      }
-      catch (Exception e)
-      {
-         throw new OrganizationServiceException("Can not read node properties", e);
-      }
-   }
-
-   /**
-    * Write group properties to the node in the storage.
-    * 
-    * @param group The group to write
-    * @param node The node in the storage
-    * @throws Exception An exception is thrown if the method can not get access
-    *           to the database
-    */
-   private void writeObjectToNode(Group group, Node node) throws Exception
-   {
-      try
-      {
-         node.setProperty(JOS_LABEL, group.getLabel());
-         node.setProperty(JOS_DESCRIPTION, group.getDescription());
-         node.setProperty(JOS_GROUP_ID, group.getId());
-         node.setProperty(JOS_PARENT_ID, group.getParentId());
-      }
-      catch (RepositoryException e)
-      {
-         throw new OrganizationServiceException("Can not write node properties", e);
-      }
-   }
-
-   /**
-    * PreSave event.
-    * 
-    * @param group The group to save
-    * @param isNew Is it new group or not
-    * @throws Exception If listeners fail to handle the user event
-    */
-   private void preSave(Group group, boolean isNew) throws Exception
-   {
-      for (GroupEventListener listener : listeners)
-         listener.preSave(group, isNew);
-   }
-
-   /**
-    * PostSave event.
-    * 
-    * @param group The group to save
-    * @param isNew Is it new group or not
-    * @throws Exception If listeners fail to handle the user event
-    */
-   private void postSave(Group group, boolean isNew) throws Exception
-   {
-      for (GroupEventListener listener : listeners)
-         listener.postSave(group, isNew);
-   }
-
-   /**
-    * PreDelete event.
-    * 
-    * @param group The group to delete
-    * @throws Exception If listeners fail to handle the user event
-    */
-   private void preDelete(Group group) throws Exception
-   {
-      for (GroupEventListener listener : listeners)
-         listener.preDelete(group);
-   }
-
-   /**
-    * PostDelete event.
-    * 
-    * @param group The group to delete
-    * @throws Exception If listeners fail to handle the user event
-    */
-   private void postDelete(Group group) throws Exception
-   {
-      for (GroupEventListener listener : listeners)
-         listener.postDelete(group);
+      SecurityHelper.validateSecurityPermission(PermissionConstants.MANAGE_LISTENERS);
+      listeners.add(listener);
    }
 
    /**

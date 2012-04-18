@@ -26,7 +26,7 @@ import java.util.Map;
  * Created by The eXo Platform SAS Date: 24.07.2008
  * 
  * @author <a href="mailto:peter.nedonosko@exoplatform.com.ua">Peter Nedonosko</a>
- * @version $Id$
+ * @version $Id: UserProfileImpl.java 78288 2011-12-30 09:39:45Z aplotnikov $
  */
 public class UserProfileImpl implements UserProfile, ExtendedCloneable
 {
@@ -37,7 +37,7 @@ public class UserProfileImpl implements UserProfile, ExtendedCloneable
    private Map<String, String> attributes;
 
    /**
-    * The name of user.
+    * The user name.
     */
    private String userName;
 
@@ -51,9 +51,6 @@ public class UserProfileImpl implements UserProfile, ExtendedCloneable
 
    /**
     * UserProfileImpl constructor.
-    * 
-    * @param name
-    *          The user name
     */
    public UserProfileImpl(String name)
    {
@@ -102,14 +99,7 @@ public class UserProfileImpl implements UserProfile, ExtendedCloneable
    }
 
    /**
-    * Set user name
-    * 
-    * @param username
-    *          user name
-    * 
-    *@deprecated The third party developer should not used this method. We should pass the username
-    *             to the @see UserProfileHandler.createUserInstance() and set the username for the
-    *             instance once only.
+    * {@inheritDoc}
     */
    public void setUserName(String username)
    {
@@ -138,17 +128,17 @@ public class UserProfileImpl implements UserProfile, ExtendedCloneable
     */
    public UserProfileImpl clone()
    {
-      UserProfileImpl upi;
+      UserProfileImpl profile;
       try
       {
-         upi = (UserProfileImpl)super.clone();
-         upi.attributes = new HashMap<String, String>(attributes);
+         profile = (UserProfileImpl)super.clone();
+         profile.attributes = new HashMap<String, String>(attributes);
       }
       catch (CloneNotSupportedException e)
       {
          return this;
       }
 
-      return upi;
+      return profile;
    }
 }

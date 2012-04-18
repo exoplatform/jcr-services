@@ -16,10 +16,10 @@
  */
 package org.exoplatform.services.jcr.ext.organization;
 
-import javax.jcr.Session;
-
 import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.services.organization.User;
+
+import javax.jcr.Session;
 
 /**
  * Created by The eXo Platform SAS.
@@ -27,71 +27,81 @@ import org.exoplatform.services.organization.User;
  * @author <a href="mailto:anatoliy.bazko@exoplatform.com.ua">Anatoliy Bazko</a>
  * @version $Id: MyResourceAccess.java 111 2008-11-11 11:11:11Z $
  */
-public abstract class JCRUserListAccess implements ListAccess<User> {
+public abstract class JCRUserListAccess implements ListAccess<User>
+{
 
-  /**
-   * The JCROrganizationService.
-   */
-  protected JCROrganizationServiceImpl service;
+   protected final JCROrganizationServiceImpl service;
 
-  /**
-   * JCRUserListAccess constructor.
-   * 
-   * @param service
-   *          The JCROrganizationService
-   */
-  public JCRUserListAccess(JCROrganizationServiceImpl service) {
-    this.service = service;
-  }
+   protected final Utils utils;
 
-  /**
-   * {@inheritDoc}
-   */
-  public User[] load(int index, int length) throws Exception, IllegalArgumentException {
-    Session session = service.getStorageSession();
-    try {
-      return load(session, index, length);
-    } finally {
-      session.logout();
-    }
-  }
+   protected final UserHandlerImpl uHandler;
 
-  /**
-   * {@inheritDoc}
-   */
-  public int getSize() throws Exception {
-    Session session = service.getStorageSession();
-    try {
-      return getSize(session);
-    } finally {
-      session.logout();
-    }
-  }
+   /**
+    * JCRUserListAccess constructor.
+    */
+   public JCRUserListAccess(JCROrganizationServiceImpl service)
+   {
+      this.service = service;
+      this.uHandler = (UserHandlerImpl)service.getUserHandler();
+      this.utils = new Utils(service);
+   }
 
-  /**
-   * Load users into array.
-   * 
-   * @param session
-   *          The current session
-   * @param index
-   *          Offset
-   * @param length
-   *          Number of users
-   * @return result array of users
-   * @throws Exception
-   *           if any error occurs
-   */
-  protected abstract User[] load(Session session, int index, int length) throws Exception;
+   /**
+    * {@inheritDoc}
+    */
+   public User[] load(int index, int length) throws Exception, IllegalArgumentException
+   {
+      Session session = service.getStorageSession();
+      try
+      {
+         return load(session, index, length);
+      }
+      finally
+      {
+         session.logout();
+      }
+   }
 
-  /**
-   * Determine the count of available users.
-   * 
-   * @param session
-   *          The current session
-   * @return list size
-   * @throws Exception
-   *           if any error occurs
-   */
-  protected abstract int getSize(Session session) throws Exception;
+   /**
+    * {@inheritDoc}
+    */
+   public int getSize() throws Exception
+   {
+      Session session = service.getStorageSession();
+      try
+      {
+         return getSize(session);
+      }
+      finally
+      {
+         session.logout();
+      }
+   }
+
+   /**
+    * Loads users into array.
+    * 
+    * @param session
+    *          The current session
+    * @param index
+    *          Offset
+    * @param length
+    *          Number of users
+    * @return result array of users
+    * @throws Exception
+    *           if any error occurred
+    */
+   protected abstract User[] load(Session session, int index, int length) throws Exception;
+
+   /**
+    * Determines the count of available users.
+    * 
+    * @param session
+    *          The current session
+    * @return list size
+    * @throws Exception
+    *           if any error occurrred
+    */
+   protected abstract int getSize(Session session) throws Exception;
 
 }

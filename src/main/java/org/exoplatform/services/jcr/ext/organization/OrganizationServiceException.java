@@ -23,30 +23,33 @@ package org.exoplatform.services.jcr.ext.organization;
  * Date: 22.08.2008
  * 
  * @author <a href="mailto:peter.nedonosko@exoplatform.com.ua">Peter Nedonosko</a>
- * @version $Id$
+ * @version $Id: OrganizationServiceException.java 33732 2009-07-08 15:00:43Z pnedonosko $
  */
-public class OrganizationServiceException extends Exception {
+public class OrganizationServiceException extends Exception
+{
 
-  /**
-   * OrganizationServiceException constructor.
-   * 
-   * @param message
-   *          The message to display
-   * @param cause
-   *          The cause of exception
-   */
-  public OrganizationServiceException(String message, Throwable cause) {
-    super(message, cause);
-  }
+   /**
+    * OrganizationServiceException constructor.
+    * 
+    * @param message
+    *         the detailed message
+    * @param cause
+    *          the cause
+    */
+   public OrganizationServiceException(String message, Throwable cause)
+   {
+      super(message, cause);
+   }
 
-  /**
-   * OrganizationServiceException constructor.
-   * 
-   * @param message
-   *          The message to display
-   */
-  public OrganizationServiceException(String message) {
-    super(message);
-  }
+   /**
+    * OrganizationServiceException constructor.
+    * 
+    * @param message
+    *          the detailed message
+    */
+   public OrganizationServiceException(String message)
+   {
+      super(message);
+   }
 
 }

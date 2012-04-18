@@ -27,7 +27,7 @@ import java.util.Date;
  * Date: 24.07.2008
  * 
  * @author <a href="mailto:peter.nedonosko@exoplatform.com.ua">Peter Nedonosko</a>
- * @version $Id$
+ * @version $Id: UserImpl.java 80140 2012-03-07 11:08:07Z aplotnikov $
  */
 public class UserImpl implements User, ExtendedCloneable
 {
@@ -73,42 +73,23 @@ public class UserImpl implements User, ExtendedCloneable
    private String userName;
 
    /**
-    * The UUId of the user in the storage
+    * The internal identifier of the user.
     */
-   private String UUId;
+   private String internalId;
 
    /**
     * UserImpl constructor.
     */
    UserImpl()
    {
-      this.UUId = null;
    }
 
    /**
     * UserImpl constructor.
-    * 
-    * @param name
-    *          The user name
     */
    UserImpl(String name)
    {
       this.userName = name;
-      this.UUId = null;
-   }
-
-   /**
-    * UserImpl constructor.
-    * 
-    * @param name
-    *          The user name
-    * @param UUId
-    *          The UUId of the use in the storage
-    */
-   UserImpl(String name, String UUId)
-   {
-      this.userName = name;
-      this.UUId = UUId;
    }
 
    /**
@@ -192,6 +173,14 @@ public class UserImpl implements User, ExtendedCloneable
    }
 
    /**
+    * Returns internal identifier.
+    */
+   String getInternalId()
+   {
+      return internalId;
+   }
+
+   /**
     * {@inheritDoc}
     */
    public void setCreatedDate(Date t)
@@ -271,22 +260,13 @@ public class UserImpl implements User, ExtendedCloneable
    }
 
    /**
-    * Set user UUId.
+    * Set internal id.
     */
-   void setUUId(String UUid)
+   void setInternalId(String internalId)
    {
-      this.UUId = UUid;
+      this.internalId = internalId;
    }
 
-   /**
-    * Get user UUId.
-    * 
-    * @return UUId of the user in the storage
-    */
-   public String getUUId()
-   {
-      return UUId;
-   }
 
    /**
     * {@inheritDoc}

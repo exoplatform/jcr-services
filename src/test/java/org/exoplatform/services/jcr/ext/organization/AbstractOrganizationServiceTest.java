@@ -30,6 +30,7 @@ import org.exoplatform.services.organization.UserProfileHandler;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -216,15 +217,26 @@ public class AbstractOrganizationServiceTest extends BaseStandaloneTest
       {
          String groupId = iter.next();
 
-         Group group = gHandler.findGroupById(groupId);
-         if (group != null)
-         {
-            gHandler.removeGroup(group, true);
-         }
-
+         removeGroups(groupId);
          iter.remove();
       }
 
       super.tearDown();
+   }
+
+   private void removeGroups(String parentId) throws Exception
+   {
+      Group group = gHandler.findGroupById(parentId);
+      if (group != null)
+      {
+
+         Collection<Group> childs = gHandler.findGroups(group);
+         for (Group child : childs)
+         {
+            removeGroups(child.getId());
+         }
+
+         gHandler.removeGroup(group, true);
+      }
    }
 }

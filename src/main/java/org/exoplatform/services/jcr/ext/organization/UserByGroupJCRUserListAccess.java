@@ -21,10 +21,7 @@ import org.exoplatform.services.organization.User;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.query.Query;
-import javax.jcr.query.QueryResult;
 
 /**
  * Created by The eXo Platform SAS.
@@ -42,11 +39,6 @@ public class UserByGroupJCRUserListAccess extends JCRUserListAccess
 
    /**
     * JCRUserListAccess constructor.
-    * 
-    * @param service
-    *          The JCROrganizationService
-    * @param groupId
-    *          The group identifier
     */
    public UserByGroupJCRUserListAccess(JCROrganizationServiceImpl service, String groupId)
    {
@@ -62,23 +54,13 @@ public class UserByGroupJCRUserListAccess extends JCRUserListAccess
    {
       try
       {
-         Node gNode =
-            (Node)session.getItem(service.getStoragePath() + "/" + GroupHandlerImpl.STORAGE_JOS_GROUPS + groupId);
+         Node groupNode = utils.getGroupNode(session, groupId);
 
-         String statement =
-            "select * from jos:userMembership where " + MembershipHandlerImpl.JOS_GROUP + "='" + gNode.getUUID() + "'";
-         Query mquery = session.getWorkspace().getQueryManager().createQuery(statement, Query.SQL);
-         QueryResult mres = mquery.execute();
-
-         return (int)mres.getNodes().getSize();
+         return (int)groupNode.getNode(JCROrganizationServiceImpl.JOS_MEMBERSHIP).getNodes().getSize();
       }
       catch (PathNotFoundException e)
       {
          return 0;
-      }
-      catch (RepositoryException e)
-      {
-         throw new OrganizationServiceException("Can not get list size", e);
       }
    }
 
@@ -89,50 +71,47 @@ public class UserByGroupJCRUserListAccess extends JCRUserListAccess
    protected User[] load(Session session, int index, int length) throws Exception
    {
       if (index < 0)
+      {
          throw new IllegalArgumentException("Illegal index: index must be a positive number");
+      }
 
       if (length < 0)
+      {
          throw new IllegalArgumentException("Illegal length: length must be a positive number");
+      }
 
       try
       {
          User[] users = new User[length];
 
-         Node gNode =
-            (Node)session.getItem(service.getStoragePath() + "/" + GroupHandlerImpl.STORAGE_JOS_GROUPS + groupId);
+         Node groupNode = utils.getGroupNode(session, groupId);
 
-         String statement =
-            "select * from jos:userMembership where " + MembershipHandlerImpl.JOS_GROUP + "='" + gNode.getUUID() + "'";
-         Query mquery = session.getWorkspace().getQueryManager().createQuery(statement, Query.SQL);
-         QueryResult mres = mquery.execute();
+         int counter = 0;
+         int userIndex = 0;
 
-         NodeIterator results = mres.getNodes();
-
-         UserHandlerImpl uHandler = new UserHandlerImpl(service);
-
-         for (int p = 0, counter = 0; counter < length; p++)
+         NodeIterator refUsers = groupNode.getNode(JCROrganizationServiceImpl.JOS_MEMBERSHIP).getNodes();
+         while (refUsers.hasNext())
          {
-            if (!results.hasNext())
-               throw new IllegalArgumentException(
-                  "Illegal index or length: sum of the index and the length cannot be greater than the list size");
+            Node refUserNode = refUsers.nextNode();
+            Node userNode = utils.getUserNode(session, refUserNode.getName());
 
-            Node result = results.nextNode().getParent();
-
-            if (p >= index)
+            if (userIndex >= index)
             {
-               users[counter++] = uHandler.readObjectFromNode(result);
+               users[counter++] = uHandler.readUser(userNode);
+               if (counter > length)
+               {
+                  return users;
+               }
             }
-         }
 
+            userIndex++;
+         }
+         
          return users;
       }
       catch (PathNotFoundException e)
       {
          return new User[0];
-      }
-      catch (Exception e)
-      {
-         throw new OrganizationServiceException("Can not load users", e);
       }
    }
 }

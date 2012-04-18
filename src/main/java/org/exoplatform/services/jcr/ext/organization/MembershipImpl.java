@@ -25,28 +25,31 @@ import org.exoplatform.services.organization.Membership;
  * Date: 24.07.2008
  * 
  * @author <a href="mailto:peter.nedonosko@exoplatform.com.ua">Peter Nedonosko</a>
- * @version $Id$
+ * @version $Id: MembershipImpl.java 76870 2011-11-22 10:38:54Z dkuleshov $
  */
 public class MembershipImpl implements Membership, ExtendedCloneable
 {
 
    /**
-    * The group id
+    * The group id.
     */
    private String groupId;
 
    /**
-    * The membership type id
+    * The membership type id.
     */
    private String membershipType;
 
    /**
-    * The user name
+    * The user name.
     */
    private String userName;
 
    /**
-    * The id of the membership
+    * The identifier of the membership. Consists of 3 elements separated by comma:<br>
+    * <li>group node identifier</li>
+    * <li>user name</li>
+    * <li>type name</li>
     */
    private String id;
 
@@ -55,26 +58,6 @@ public class MembershipImpl implements Membership, ExtendedCloneable
     */
    MembershipImpl()
    {
-   }
-
-   /**
-    * MembershipImpl constructor.
-    * 
-    * @param id
-    *          The membership record identifier
-    * @param userName
-    *          The user name
-    * @param groupId
-    *          The group id
-    * @param membershipType
-    *          The membership type
-    */
-   MembershipImpl(String id, String userName, String groupId, String membershipType)
-   {
-      this.id = id;
-      this.userName = userName;
-      this.groupId = groupId;
-      this.membershipType = membershipType;
    }
 
    /**
@@ -110,7 +93,7 @@ public class MembershipImpl implements Membership, ExtendedCloneable
    }
 
    /**
-    * Set membership id.
+    * Set membership identifier.
     */
    void setId(String id)
    {

@@ -205,9 +205,9 @@ public class TestMultipleRepositories extends AbstractOrganizationServiceTest
             storageSession.getRootNode().addNode(organizationService.getStoragePath().substring(1),
                "jos:organizationStorage");
 
-         storage.addNode(UserHandlerImpl.STORAGE_JOS_USERS, "jos:organizationUsers");
-         storage.addNode(GroupHandlerImpl.STORAGE_JOS_GROUPS, "jos:organizationGroups");
-         storage.addNode(MembershipTypeHandlerImpl.STORAGE_JOS_MEMBERSHIP_TYPES, "jos:organizationMembershipTypes");
+         storage.addNode(JCROrganizationServiceImpl.STORAGE_JOS_USERS, "jos:organizationUsers");
+         storage.addNode(JCROrganizationServiceImpl.STORAGE_JOS_GROUPS, "jos:organizationGroups");
+         storage.addNode(JCROrganizationServiceImpl.STORAGE_JOS_MEMBERSHIP_TYPES, "jos:organizationMembershipTypes");
 
          storageSession.save();
       }
