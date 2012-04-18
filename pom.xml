@@ -10,13 +10,13 @@
   <version>1.15.0-Beta01-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>eXo JCR :: Ext :: Services</name>
-  <url>http://www.exoplatform.org</url>
+  <url>http://fisheye.exoplatform.org/browse/projects/jcr-services</url>
   <description>eXo JCR Ext Services</description>
   
   <scm>
-    <connection>scm:svn:http://svn.exoplatform.org/projects/jcr-services/trunk</connection>
-    <developerConnection>scm:svn:http://svn.exoplatform.org/projects/jcr-services/trunk</developerConnection>
-    <url>http://fisheye.exoplatform.org/browse/projects/jcr-services/trunk</url>
+    <connection>scm:git:ssh://github.com/exodev/jcr-services.git</connection>
+    <developerConnection>scm:git:ssh://github.com/exodev/jcr-services.git</developerConnection>
+    <url>http://fisheye.exoplatform.org/browse/projects/jcr-services</url>
   </scm>
   
   <properties>
