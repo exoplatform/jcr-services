@@ -10,7 +10,7 @@
   <version>1.15.0-Beta01-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>eXo JCR :: Ext :: Services</name>
-  <url>http://fisheye.exoplatform.org/browse/projects/jcr-services</url>
+  <url>http://www.exoplatform.org</url>
   <description>eXo JCR Ext Services</description>
   
   <scm>
