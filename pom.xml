@@ -28,6 +28,9 @@
      <wikbook.source>${pom.basedir}/src/main/wikbook</wikbook.source>
      <wikbook.target>${project.build.directory}/wikbook</wikbook.target>
      <wikbook.version>0.9.26</wikbook.version>
+
+     <version.release.plugin>2.2.1</version.release.plugin>
+     <version.buildnumber.plugin>1.0</version.buildnumber.plugin>
   </properties>
   
   <dependencies>
