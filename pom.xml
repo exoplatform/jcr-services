@@ -14,8 +14,8 @@
   <description>eXo JCR Ext Services</description>
   
   <scm>
-    <connection>scm:git:ssh://github.com/exodev/jcr-services.git</connection>
-    <developerConnection>scm:git:ssh://github.com/exodev/jcr-services.git</developerConnection>
+    <connection>scm:git:git://github.com/exodev/jcr-services.git</connection>
+    <developerConnection>scm:git:git@github.com/exodev/jcr-services.git</developerConnection>
     <url>http://fisheye.exoplatform.org/browse/projects/jcr-services</url>
   </scm>
   
