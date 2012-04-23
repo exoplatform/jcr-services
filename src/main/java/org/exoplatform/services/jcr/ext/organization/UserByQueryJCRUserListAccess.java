@@ -150,6 +150,16 @@ public class UserByQueryJCRUserListAccess extends JCRUserListAccess
 
    /**
     * {@inheritDoc}
+    * 
+    * It is not possible to reuse because session is closed in query.
+    */
+   protected boolean canReuseIterator()
+   {
+      return false;
+   }
+
+   /**
+    * {@inheritDoc}
     */
    protected NodeIterator createIterator(Session session) throws RepositoryException
    {

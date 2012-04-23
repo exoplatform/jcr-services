@@ -90,7 +90,7 @@ public abstract class JCRUserListAccess implements ListAccess<User>
          User[] entities = new User[length];
          int processed = 0;
 
-         while (iterator.hasNext() || processed != length)
+         while (iterator.hasNext() && processed != length)
          {
             entities[processed++] = (User)readObject(iterator.nextNode());
          }
@@ -144,11 +144,19 @@ public abstract class JCRUserListAccess implements ListAccess<User>
     */
    protected void reuseIterator(Session session, int newPosition) throws RepositoryException
    {
-      if (!(iterator != null && iterator.getPosition() == newPosition))
+      if (!(canReuseIterator() && iterator != null && iterator.getPosition() == newPosition))
       {
          iterator = createIterator(session);
          iterator.skip(newPosition);
       }
+   }
+
+   /**
+    * Indicates if we able to reuse current iterator.
+    */
+   protected boolean canReuseIterator()
+   {
+      return true;
    }
 
    /**
