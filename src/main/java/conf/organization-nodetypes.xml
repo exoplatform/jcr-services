@@ -52,6 +52,11 @@
         protected="false" multiple="false">
         <valueConstraints/>
       </propertyDefinition>
+      <propertyDefinition name="jos:userName" requiredType="String"
+        autoCreated="false" mandatory="true" onParentVersion="COPY"
+        protected="false" multiple="false">
+        <valueConstraints/>
+      </propertyDefinition>
       <propertyDefinition name="jos:password" requiredType="String"
         autoCreated="false" mandatory="true" onParentVersion="COPY"
         protected="false" multiple="false">

@@ -17,29 +17,53 @@
 package org.exoplatform.services.jcr.ext.organization;
 
 import org.exoplatform.commons.utils.ListAccess;
+import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.services.organization.User;
+import org.exoplatform.services.organization.UserHandler;
 
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 /**
  * Created by The eXo Platform SAS.
  * 
  * @author <a href="mailto:anatoliy.bazko@exoplatform.com.ua">Anatoliy Bazko</a>
- * @version $Id: MyResourceAccess.java 111 2008-11-11 11:11:11Z $
+ * @version $Id: JCRListAccess.java 111 2008-11-11 11:11:11Z $
  */
 public abstract class JCRUserListAccess implements ListAccess<User>
 {
 
+   /**
+    * Default value of page size. 
+    */
+   public static final int DEFAULT_PAGE_SIZE = 20;
+
+   /**
+    * JCR implementation of {@link OrganizationService}.
+    */
    protected final JCROrganizationServiceImpl service;
 
-   protected final Utils utils;
-
+   /**
+    * JCR implementation of {@link UserHandler}.
+    */
    protected final UserHandlerImpl uHandler;
 
    /**
-    * JCRUserListAccess constructor.
+    * Utility class.
     */
-   public JCRUserListAccess(JCROrganizationServiceImpl service)
+   protected final Utils utils;
+
+   /**
+    * Iterator by children items. 
+    */
+   protected NodeIterator iterator;
+
+   /**
+    * JCRListAccess constructor.
+    */
+   public JCRUserListAccess(JCROrganizationServiceImpl service) throws RepositoryException
    {
       this.service = service;
       this.uHandler = (UserHandlerImpl)service.getUserHandler();
@@ -51,14 +75,50 @@ public abstract class JCRUserListAccess implements ListAccess<User>
     */
    public User[] load(int index, int length) throws Exception, IllegalArgumentException
    {
+      validateParameters(index, length);
+
+      if (length == 0)
+      {
+         return new User[0];
+      }
+
       Session session = service.getStorageSession();
       try
       {
-         return load(session, index, length);
+         reuseIterator(session, index);
+
+         User[] entities = new User[length];
+         int processed = 0;
+
+         while (iterator.hasNext() || processed != length)
+         {
+            entities[processed++] = (User)readObject(iterator.nextNode());
+         }
+
+         if (processed != length)
+         {
+            throw new IllegalArgumentException(
+               "Illegal index or length: sum of the index and the length cannot be greater than the list size");
+         }
+
+         return entities;
       }
       finally
       {
          session.logout();
+      }
+   }
+
+   private void validateParameters(int index, int length) throws IllegalArgumentException
+   {
+      if (index < 0)
+      {
+         throw new IllegalArgumentException("Illegal index: index must be a positive number");
+      }
+
+      if (length < 0)
+      {
+         throw new IllegalArgumentException("Illegal length: length must be a positive number");
       }
    }
 
@@ -79,28 +139,30 @@ public abstract class JCRUserListAccess implements ListAccess<User>
    }
 
    /**
-    * Loads users into array.
-    * 
-    * @param session
-    *          The current session
-    * @param index
-    *          Offset
-    * @param length
-    *          Number of users
-    * @return result array of users
-    * @throws Exception
-    *           if any error occurred
+    * Check if possible to reuse current iterator (which means possibility to fetch next nodes in row).
+    * Otherwise the new one will be created.
     */
-   protected abstract User[] load(Session session, int index, int length) throws Exception;
+   protected void reuseIterator(Session session, int newPosition) throws RepositoryException
+   {
+      if (!(iterator != null && iterator.getPosition() == newPosition))
+      {
+         iterator = createIterator(session);
+         iterator.skip(newPosition);
+      }
+   }
+
+   /**
+    * Reads entity from node.
+    */
+   protected abstract Object readObject(Node node) throws Exception;
+
+   /**
+    * Returns iterator over entities.
+    */
+   protected abstract NodeIterator createIterator(Session session) throws RepositoryException;
 
    /**
     * Determines the count of available users.
-    * 
-    * @param session
-    *          The current session
-    * @return list size
-    * @throws Exception
-    *           if any error occurrred
     */
    protected abstract int getSize(Session session) throws Exception;
 

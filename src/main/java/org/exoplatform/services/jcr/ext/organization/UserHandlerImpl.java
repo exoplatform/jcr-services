@@ -78,6 +78,11 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
       public static final String JOS_FIRST_NAME = "jos:firstName";
 
       /**
+       * The user property that contains fist name.
+       */
+      public static final String JOS_USER_NAME = "jos:userName";
+
+      /**
        * The user property that contain last login time.
        */
       public static final String JOS_LAST_LOGIN_TIME = "jos:lastLoginTime";
@@ -458,23 +463,23 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
    /**
     * Read user properties from the node in the storage.
     * 
-    * @param useNode
+    * @param userNode
     *          the node where user properties are stored
     * @return {@link User}
     */
-   public UserImpl readUser(Node useNode) throws Exception
+   public UserImpl readUser(Node userNode) throws Exception
    {
-      UserImpl user = new UserImpl(useNode.getName());
+      UserImpl user = new UserImpl(userNode.getName());
 
-      Date creationDate = utils.readDate(useNode, UserProperties.JOS_CREATED_DATE);
-      Date lastLoginTime = utils.readDate(useNode, UserProperties.JOS_LAST_LOGIN_TIME);
-      String email = utils.readString(useNode, UserProperties.JOS_EMAIL);
-      String password = utils.readString(useNode, UserProperties.JOS_PASSWORD);
-      String firstName = utils.readString(useNode, UserProperties.JOS_FIRST_NAME);
-      String lastName = utils.readString(useNode, UserProperties.JOS_LAST_NAME);
-      String displayName = utils.readString(useNode, UserProperties.JOS_DISPLAY_NAME);
+      Date creationDate = utils.readDate(userNode, UserProperties.JOS_CREATED_DATE);
+      Date lastLoginTime = utils.readDate(userNode, UserProperties.JOS_LAST_LOGIN_TIME);
+      String email = utils.readString(userNode, UserProperties.JOS_EMAIL);
+      String password = utils.readString(userNode, UserProperties.JOS_PASSWORD);
+      String firstName = utils.readString(userNode, UserProperties.JOS_FIRST_NAME);
+      String lastName = utils.readString(userNode, UserProperties.JOS_LAST_NAME);
+      String displayName = utils.readString(userNode, UserProperties.JOS_DISPLAY_NAME);
 
-      user.setInternalId(useNode.getUUID());
+      user.setInternalId(userNode.getUUID());
       user.setCreatedDate(creationDate);
       user.setLastLoginTime(lastLoginTime);
       user.setEmail(email);
@@ -500,6 +505,7 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
       node.setProperty(UserProperties.JOS_LAST_NAME, user.getLastName());
       node.setProperty(UserProperties.JOS_PASSWORD, user.getPassword());
       node.setProperty(UserProperties.JOS_DISPLAY_NAME, user.getDisplayName());
+      node.setProperty(UserProperties.JOS_USER_NAME, node.getName());
 
       Calendar calendar = Calendar.getInstance();
       calendar.setTime(user.getCreatedDate());

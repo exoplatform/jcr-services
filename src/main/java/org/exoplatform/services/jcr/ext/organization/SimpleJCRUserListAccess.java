@@ -16,10 +16,11 @@
  */
 package org.exoplatform.services.jcr.ext.organization;
 
-import org.exoplatform.services.organization.User;
+import org.exoplatform.services.jcr.core.ExtendedNode;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 /**
@@ -32,11 +33,17 @@ public class SimpleJCRUserListAccess extends JCRUserListAccess
 {
 
    /**
+    * The parent node where all users nodes are persisted.
+    */
+   private final ExtendedNode usersStorageNode;
+
+   /**
     * JCRUserListAccess constructor.
     */
-   public SimpleJCRUserListAccess(JCROrganizationServiceImpl service)
+   public SimpleJCRUserListAccess(JCROrganizationServiceImpl service) throws RepositoryException
    {
       super(service);
+      usersStorageNode = getUsersStorageNode();
    }
 
    /**
@@ -44,52 +51,38 @@ public class SimpleJCRUserListAccess extends JCRUserListAccess
     */
    protected int getSize(Session session) throws Exception
    {
-      Node usersStorageNode = utils.getUsersStorageNode(session);
-      return (int)usersStorageNode.getNodes().getSize();
+      return (int)usersStorageNode.getNodesCount();
    }
 
    /**
     * {@inheritDoc}
     */
-   protected User[] load(Session session, int index, int length) throws Exception
+   protected Object readObject(Node node) throws Exception
    {
-      if (index < 0)
-      {
-         throw new IllegalArgumentException("Illegal index: index must be a positive number");
-      }
+      return uHandler.readUser(node);
+   }
 
-      if (length < 0)
-      {
-         throw new IllegalArgumentException("Illegal length: length must be a positive number");
-      }
+   /**
+    * {@inheritDoc}
+    */
+   protected NodeIterator createIterator(Session session) throws RepositoryException
+   {
+      return usersStorageNode.getNodesLazily(DEFAULT_PAGE_SIZE);
+   }
 
-      User[] users = new User[length];
-
+   /**
+    * Returns users storage node.
+    */
+   private ExtendedNode getUsersStorageNode() throws RepositoryException
+   {
+      Session session = service.getStorageSession();
       try
       {
-         Node usersStorageNode = utils.getUsersStorageNode(session);
-
-         NodeIterator usersNodes = usersStorageNode.getNodes();
-         for (int p = 0, counter = 0; counter < length; p++)
-         {
-            if (!usersNodes.hasNext())
-            {
-               throw new IllegalArgumentException(
-                  "Illegal index or length: sum of the index and the length cannot be greater than the list size");
-            }
-
-            Node result = usersNodes.nextNode();
-            if (p >= index)
-            {
-               users[counter++] = uHandler.readUser(result);
-            }
-         }
-
-         return users;
+         return (ExtendedNode)utils.getUsersStorageNode(service.getStorageSession());
       }
-      catch (Exception e)
+      finally
       {
-         throw new OrganizationServiceException("Can not load users", e);
+         session.logout();
       }
    }
 }

@@ -17,14 +17,18 @@
 package org.exoplatform.services.jcr.ext.organization;
 
 import org.exoplatform.services.jcr.ext.organization.UserHandlerImpl.UserProperties;
-import org.exoplatform.services.organization.User;
+import org.exoplatform.services.jcr.impl.core.query.QueryImpl;
 
+import java.sql.Timestamp;
 import java.util.Date;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.query.InvalidQueryException;
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryResult;
 
 /**
  * Created by The eXo Platform SAS.
@@ -41,10 +45,10 @@ public class UserByQueryJCRUserListAccess extends JCRUserListAccess
    private org.exoplatform.services.organization.Query query;
 
    /**
-    * JCRUserListAccess constructor.
+    * UserByQueryJCRUserListAccess constructor.
     */
    public UserByQueryJCRUserListAccess(JCROrganizationServiceImpl service,
-      org.exoplatform.services.organization.Query query)
+      org.exoplatform.services.organization.Query query) throws RepositoryException
    {
       super(service);
       this.query = query;
@@ -55,131 +59,118 @@ public class UserByQueryJCRUserListAccess extends JCRUserListAccess
     */
    protected int getSize(Session session) throws Exception
    {
-      try
-      {
-         int result = 0;
-
-         Node usersStorageNode = utils.getUsersStorageNode(session);
-
-         NodeIterator userNodes = usersStorageNode.getNodes();
-         while (userNodes.hasNext())
-         {
-            Node uNode = userNodes.nextNode();
-
-            if (acceptQuery(uNode))
-            {
-               result++;
-            }
-         }
-
-         return result;
-      }
-      catch (RepositoryException e)
-      {
-         throw new OrganizationServiceException("Can not get list size", e);
-      }
+      iterator = createIterator(session);
+      return (int)iterator.getSize();
    }
 
    /**
-    * {@inheritDoc}
+    * Removes asterisk from beginning and from end of statement.
     */
-   protected User[] load(Session session, int index, int length) throws Exception
-   {
-      if (index < 0)
-      {
-         throw new IllegalArgumentException("Illegal index: index must be a positive number");
-      }
-
-      if (length < 0)
-      {
-         throw new IllegalArgumentException("Illegal length: length must be a positive number");
-      }
-
-      User[] users = new User[length];
-
-      Node usersStorageNode = utils.getUsersStorageNode(session);
-
-      NodeIterator userNodes = usersStorageNode.getNodes();
-      for (int p = 0, counter = 0; counter < length;)
-      {
-         if (!userNodes.hasNext())
-         {
-            throw new IllegalArgumentException(
-               "Illegal index or length: sum of the index and the length cannot be greater than the list size");
-         }
-
-         Node userNode = userNodes.nextNode();
-         if (!acceptQuery(userNode))
-         {
-            continue;
-         }
-
-         if (p++ >= index)
-         {
-            users[counter++] = uHandler.readUser(userNode);
-         }
-      }
-
-      return users;
-   }
-
-   private boolean acceptQuery(Node uNode) throws Exception
-   {
-      if (query.getUserName() != null && !isLike(uNode.getName(), query.getUserName(), true))
-      {
-         return false;
-      }
-
-      if (query.getFirstName() != null
-         && !isLike(utils.readString(uNode, UserProperties.JOS_FIRST_NAME), query.getFirstName(), true))
-      {
-         return false;
-      }
-
-      if (query.getLastName() != null
-         && !isLike(utils.readString(uNode, UserProperties.JOS_LAST_NAME), query.getLastName(), true))
-      {
-         return false;
-      }
-
-      if (query.getEmail() != null
-         && !isLike(utils.readString(uNode, UserProperties.JOS_EMAIL), query.getEmail(), false))
-      {
-         return false;
-      }
-
-      Date lastLoginTime = utils.readDate(uNode, UserProperties.JOS_LAST_LOGIN_TIME);
-      if (query.getFromLoginDate() != null
-         && (lastLoginTime == null || query.getFromLoginDate().getTime() > lastLoginTime.getTime()))
-      {
-         return false;
-      }
-
-      if (query.getToLoginDate() != null
-         && (lastLoginTime == null || query.getToLoginDate().getTime() < lastLoginTime.getTime()))
-      {
-         return false;
-      }
-
-      return true;
-   }
-
-   private boolean isLike(String jcrField, String queryField, boolean caseSensitive)
-   {
-      return caseSensitive ? jcrField.toUpperCase().indexOf(removeAsterisk(queryField.toUpperCase())) != -1 : jcrField
-         .indexOf(removeAsterisk(queryField)) != -1;
-   }
-
    private String removeAsterisk(String str)
    {
       if (str.startsWith("*"))
       {
          str = str.substring(1);
       }
+
       if (str.endsWith("*"))
       {
          str = str.substring(0, str.length() - 1);
       }
+
       return str;
+   }
+
+   /**
+    * Transforms {@link org.exoplatform.services.organization.Query} into {@link Query}.
+    */
+   private QueryImpl makeQuery(Session session) throws InvalidQueryException, RepositoryException
+   {
+      StatementContext context = new StatementContext();
+      context.statement = new StringBuilder("SELECT * FROM jos:user");
+      
+      if (query.getUserName() != null)
+      {
+         addStringStatement(context, UserProperties.JOS_USER_NAME, query.getUserName());
+      }
+      
+      if (query.getFirstName() != null)
+      {
+         addStringStatement(context, UserProperties.JOS_FIRST_NAME, query.getFirstName());
+      }
+
+      if (query.getLastName() != null)
+      {
+         addStringStatement(context, UserProperties.JOS_LAST_NAME, query.getLastName());
+      }
+
+      if (query.getEmail() != null)
+      {
+         addStringStatement(context, UserProperties.JOS_EMAIL, query.getEmail());
+      }
+
+      if (query.getFromLoginDate() != null)
+      {
+         addDateStatement(context, UserProperties.JOS_LAST_LOGIN_TIME, ">=", query.getFromLoginDate());
+      }
+      
+      if (query.getToLoginDate() != null)
+      {
+         addDateStatement(context, UserProperties.JOS_LAST_LOGIN_TIME, "<=", query.getFromLoginDate());
+      }
+
+      return (QueryImpl)session.getWorkspace().getQueryManager().createQuery(context.statement.toString(), Query.SQL);
+   }
+   
+   private void addStringStatement(StatementContext context, String field, String value)
+   {
+      addStatement(context, "UPPER(" + field + ")", "like", "'%" + removeAsterisk(value).toUpperCase() + "%'");
+   }
+
+   private void addDateStatement(StatementContext context, String field, String operand, Date value)
+   {
+      String timeStamp = new Timestamp(value.getTime()).toString();
+      addStatement(context, field, operand, "TIMESTAMP '" + timeStamp + "'");
+   }
+
+   private void addStatement(StatementContext context, String field, String operand, String value)
+   {
+      if (context.hasWhere)
+      {
+         context.statement.append(" AND");
+      }
+      else
+      {
+         context.hasWhere = true;
+         context.statement.append(" WHERE");
+      }
+
+      context.statement.append(" " + field + " " + operand + " " + value);
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   protected NodeIterator createIterator(Session session) throws RepositoryException
+   {
+      QueryImpl query = makeQuery(session);
+      QueryResult result = query.execute();
+
+      return result.getNodes();
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   protected Object readObject(Node node) throws Exception
+   {
+      return uHandler.readUser(node);
+   }
+
+   private class StatementContext
+   {
+      private StringBuilder statement;
+      
+      private boolean hasWhere;
    }
 }

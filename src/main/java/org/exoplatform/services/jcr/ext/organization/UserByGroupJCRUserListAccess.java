@@ -16,11 +16,14 @@
  */
 package org.exoplatform.services.jcr.ext.organization;
 
-import org.exoplatform.services.organization.User;
+import org.exoplatform.services.jcr.core.ExtendedNode;
+
+import java.util.NoSuchElementException;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 /**
@@ -33,85 +36,100 @@ public class UserByGroupJCRUserListAccess extends JCRUserListAccess
 {
 
    /**
-    * The groupId.
+    * The parent node where all nodes with users's names related to current group are persisted.
     */
-   private String groupId;
+   private final ExtendedNode refUsers;
 
    /**
-    * JCRUserListAccess constructor.
+    * UserByGroupJCRUserListAccess constructor.
     */
-   public UserByGroupJCRUserListAccess(JCROrganizationServiceImpl service, String groupId)
+   public UserByGroupJCRUserListAccess(JCROrganizationServiceImpl service, String groupId) throws RepositoryException
    {
       super(service);
-      this.groupId = groupId;
+      refUsers = getRefUsersNode(groupId);
    }
 
    /**
     * {@inheritDoc}
     */
-   @Override
    protected int getSize(Session session) throws Exception
    {
+      return refUsers == null ? 0 : (int)refUsers.getNodesCount();
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   protected Object readObject(Node node) throws Exception
+   {
+      Node userNode = utils.getUserNode(node.getSession(), node.getName());
+      return uHandler.readUser(userNode);
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   protected NodeIterator createIterator(Session session) throws RepositoryException
+   {
+      return refUsers == null ? new EmptyNodeIterator() : refUsers.getNodesLazily(DEFAULT_PAGE_SIZE);
+   }
+
+   private ExtendedNode getRefUsersNode(String groupId) throws PathNotFoundException, RepositoryException
+   {
+      Session session = service.getStorageSession();
       try
       {
-         Node groupNode = utils.getGroupNode(session, groupId);
-
-         return (int)groupNode.getNode(JCROrganizationServiceImpl.JOS_MEMBERSHIP).getNodes().getSize();
+         Node groupNode = utils.getGroupNode(service.getStorageSession(), groupId);
+         return (ExtendedNode)groupNode.getNode(JCROrganizationServiceImpl.JOS_MEMBERSHIP);
       }
       catch (PathNotFoundException e)
+      {
+         return null;
+      }
+      finally
+      {
+         session.logout();
+      }
+   }
+
+   /**
+    * Empty {@link NodeIterator}.
+    */
+   private class EmptyNodeIterator implements NodeIterator
+   {
+
+      public void skip(long skipNum)
+      {
+      }
+
+      public long getSize()
       {
          return 0;
       }
-   }
 
-   /**
-    * {@inheritDoc}
-    */
-   @Override
-   protected User[] load(Session session, int index, int length) throws Exception
-   {
-      if (index < 0)
+      public long getPosition()
       {
-         throw new IllegalArgumentException("Illegal index: index must be a positive number");
+         return 0;
       }
 
-      if (length < 0)
+      public boolean hasNext()
       {
-         throw new IllegalArgumentException("Illegal length: length must be a positive number");
+         return false;
       }
 
-      try
+      public Object next()
       {
-         User[] users = new User[length];
-
-         Node groupNode = utils.getGroupNode(session, groupId);
-
-         int counter = 0;
-         int userIndex = 0;
-
-         NodeIterator refUsers = groupNode.getNode(JCROrganizationServiceImpl.JOS_MEMBERSHIP).getNodes();
-         while (refUsers.hasNext())
-         {
-            Node refUserNode = refUsers.nextNode();
-            Node userNode = utils.getUserNode(session, refUserNode.getName());
-
-            if (userIndex >= index)
-            {
-               users[counter++] = uHandler.readUser(userNode);
-               if (counter > length)
-               {
-                  return users;
-               }
-            }
-
-            userIndex++;
-         }
-         
-         return users;
+         throw new NoSuchElementException("Iteration has no more elements");
       }
-      catch (PathNotFoundException e)
+
+      public void remove()
       {
-         return new User[0];
+         throw new UnsupportedOperationException("Operation is not supported");
+      }
+
+      public Node nextNode()
+      {
+         throw new NoSuchElementException("Iteration has no more elements");
       }
    }
 }
