@@ -116,7 +116,7 @@ public class UserByQueryJCRUserListAccess extends JCRUserListAccess
       
       if (query.getToLoginDate() != null)
       {
-         addDateStatement(context, UserProperties.JOS_LAST_LOGIN_TIME, "<=", query.getFromLoginDate());
+         addDateStatement(context, UserProperties.JOS_LAST_LOGIN_TIME, "<=", query.getToLoginDate());
       }
 
       return (QueryImpl)session.getWorkspace().getQueryManager().createQuery(context.statement.toString(), Query.SQL);
