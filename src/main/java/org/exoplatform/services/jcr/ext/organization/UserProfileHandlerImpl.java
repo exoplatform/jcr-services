@@ -246,7 +246,7 @@ public class UserProfileHandlerImpl extends JCROrgServiceHandler implements User
       Exception
    {
       Node userNode = utils.getUserNode(session, profile.getUserName());
-      Node profileNode = getNewProfileNode(userNode);
+      Node profileNode = getProfileNode(userNode);
 
       boolean isNewProfile = profileNode.isNew();
 
@@ -269,18 +269,16 @@ public class UserProfileHandlerImpl extends JCROrgServiceHandler implements User
    /**
     * Create new profile node. 
     */
-   private Node getNewProfileNode(Node userNode) throws RepositoryException
+   private Node getProfileNode(Node userNode) throws RepositoryException
    {
       try
       {
-         Node profileNode = userNode.getNode(JCROrganizationServiceImpl.JOS_PROFILE);
-         profileNode.remove();
+         return userNode.getNode(JCROrganizationServiceImpl.JOS_PROFILE);
       }
       catch (PathNotFoundException e)
       {
+         return userNode.addNode(JCROrganizationServiceImpl.JOS_PROFILE);
       }
-
-      return userNode.addNode(JCROrganizationServiceImpl.JOS_PROFILE);
    }
 
    /**
