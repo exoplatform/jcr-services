@@ -26,25 +26,16 @@ import org.exoplatform.services.cache.CacheService;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.config.RepositoryConfigurationException;
 import org.exoplatform.services.jcr.core.ManageableRepository;
-import org.exoplatform.services.jcr.ext.common.SessionProvider;
-import org.exoplatform.services.jcr.ext.registry.RegistryEntry;
 import org.exoplatform.services.jcr.ext.registry.RegistryService;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.organization.BaseOrganizationService;
 import org.picocontainer.Startable;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.xml.sax.SAXException;
-
-import java.io.IOException;
 
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Created by The eXo Platform SAS. <br/>
@@ -73,6 +64,11 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
     * The name of parameter that contains workspace name.
     */
    public static final String STORAGE_WORKSPACE = "storage-workspace";
+
+   /**
+    * The name of parameter that contains enable cache.
+    */
+   public static final String CACHE_ENABLED = "cache-enabled";
 
    /**
     * Default storage path.
@@ -110,14 +106,14 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
    protected String storageWorkspace;
 
    /**
-    * Cache for organization service entities.
+    * Contain passed value of cache enabled in parameters.
     */
-   protected final JCRCacheHandler cacheHandler;
+   protected boolean cacheEnabled;
 
    /**
-    * Initialization parameters.
+    * Cache for organization service entities.
     */
-   protected InitParams initParams;
+   protected JCRCacheHandler cacheHandler;
 
    /**
     * The child node of group node where memeberships are stored.
@@ -150,6 +146,11 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
    public static final String STORAGE_JOS_USERS = "jos:users";
 
    /**
+    * Default cache enabled.
+    */
+   public static final boolean CACHE_ENABLED_DEFAULT = true;
+
+   /**
     * Logger.
     */
    private static final Log LOG = ExoLogger.getLogger("exo-jcr-services.JCROrganizationService");
@@ -171,14 +172,15 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
    {
       this.repositoryService = repositoryService;
       this.registryService = registryService;
-      this.cacheHandler = new JCRCacheHandler(cservice, this);
+
+      initializeParameters(initParams);
+
+      this.cacheHandler = new JCRCacheHandler(cservice, this, cacheEnabled);
 
       if (initParams == null)
       {
          throw new ConfigurationException("Initialization parameters expected !!!");
       }
-
-      this.initParams = initParams;
 
       // create DAO object
       membershipDAO_ = new MembershipHandlerImpl(this);
@@ -194,37 +196,6 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
    @Override
    public void start()
    {
-      if (registryService != null && !registryService.getForceXMLConfigurationValue(initParams))
-      {
-         SessionProvider sessionProvider = SessionProvider.createSystemProvider();
-         try
-         {
-            readParamsFromRegistryService(sessionProvider);
-         }
-         catch (Exception e)
-         {
-            readParamsFromFile();
-            try
-            {
-               writeParamsToRegistryService(sessionProvider);
-            }
-            catch (Exception exc)
-            {
-               LOG.error("Cannot write init configuration to RegistryService.", exc);
-            }
-         }
-         finally
-         {
-            sessionProvider.close();
-         }
-      }
-      else
-      {
-         readParamsFromFile();
-      }
-
-      checkParams();
-
       // create /exo:organization
       try
       {
@@ -244,7 +215,6 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
             storage.addNode(STORAGE_JOS_MEMBERSHIP_TYPES, "jos:organizationMembershipTypes");
 
             session.save(); // storage done configure
-
          }
          finally
          {
@@ -320,95 +290,22 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
    }
 
    /**
-    * Read parameters from RegistryService.
-    * 
-    * @param sessionProvider The SessionProvider
-    * @throws RepositoryException if any Exception is occurred
-    */
-   private void readParamsFromRegistryService(SessionProvider sessionProvider) throws PathNotFoundException,
-      RepositoryException
-   {
-
-      String entryPath = RegistryService.EXO_SERVICES + "/" + SERVICE_NAME + "/" + REPOSITORY_NAME;
-      RegistryEntry registryEntry = registryService.getEntry(sessionProvider, entryPath);
-      Document doc = registryEntry.getDocument();
-      Element element = doc.getDocumentElement();
-      repositoryName = getAttributeSmart(element, "value");
-
-      entryPath = RegistryService.EXO_SERVICES + "/" + SERVICE_NAME + "/" + STORAGE_PATH;
-      registryEntry = registryService.getEntry(sessionProvider, entryPath);
-      doc = registryEntry.getDocument();
-      element = doc.getDocumentElement();
-      storagePath = getAttributeSmart(element, "value");
-
-      entryPath = RegistryService.EXO_SERVICES + "/" + SERVICE_NAME + "/" + STORAGE_WORKSPACE;
-      registryEntry = registryService.getEntry(sessionProvider, entryPath);
-      doc = registryEntry.getDocument();
-      element = doc.getDocumentElement();
-      storageWorkspace = getAttributeSmart(element, "value");
-
-      if (repositoryName != null)
-      {
-         LOG.info("Repository from RegistryService: " + repositoryName);
-      }
-
-      if (storageWorkspace != null)
-      {
-         LOG.info("Workspace from RegistryService: " + storageWorkspace);
-      }
-
-      if (storagePath != null)
-      {
-         LOG.info("Root node from RegistryService: " + storagePath);
-      }
-   }
-
-   /**
-    * Write parameters to RegistryService.
-    * 
-    * @param sessionProvider The SessionProvider
-    * @throws ParserConfigurationException
-    * @throws SAXException
-    * @throws IOException
-    * @throws RepositoryException
-    */
-   private void writeParamsToRegistryService(SessionProvider sessionProvider) throws IOException, SAXException,
-      ParserConfigurationException, RepositoryException
-   {
-
-      Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-      Element root = doc.createElement(SERVICE_NAME);
-      doc.appendChild(root);
-
-      Element element = doc.createElement(REPOSITORY_NAME);
-      setAttributeSmart(element, "value", repositoryName);
-      root.appendChild(element);
-
-      element = doc.createElement(STORAGE_PATH);
-      setAttributeSmart(element, "value", storagePath);
-      root.appendChild(element);
-
-      element = doc.createElement(STORAGE_WORKSPACE);
-      setAttributeSmart(element, "value", storageWorkspace);
-      root.appendChild(element);
-
-      RegistryEntry serviceEntry = new RegistryEntry(doc);
-      registryService.createEntry(sessionProvider, RegistryService.EXO_SERVICES, serviceEntry);
-   }
-
-   /**
     * Read parameters from file.
     */
-   private void readParamsFromFile()
+   private void initializeParameters(InitParams initParams)
    {
       ValueParam paramRepository = initParams.getValueParam(REPOSITORY_NAME);
       repositoryName = paramRepository != null ? paramRepository.getValue() : null;
 
       ValueParam paramStoragePath = initParams.getValueParam(STORAGE_PATH);
-      storagePath = paramStoragePath != null ? paramStoragePath.getValue() : null;
+      storagePath = paramStoragePath != null ? paramStoragePath.getValue() : STORAGE_PATH_DEFAULT;
 
       ValueParam paramStorageWorkspace = initParams.getValueParam(STORAGE_WORKSPACE);
       storageWorkspace = paramStorageWorkspace != null ? paramStorageWorkspace.getValue() : null;
+
+      ValueParam paramDisableCache = initParams.getValueParam(CACHE_ENABLED);
+      cacheEnabled =
+         paramDisableCache != null ? Boolean.parseBoolean(paramDisableCache.getValue()) : CACHE_ENABLED_DEFAULT;
 
       if (repositoryName != null)
       {
@@ -424,56 +321,8 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
       {
          LOG.info("Root node from configuration file: " + storagePath);
       }
-   }
 
-   /**
-    * Get attribute value.
-    * 
-    * @param element The element to get attribute value
-    * @param attr The attribute name
-    * @return Value of attribute if present and null in other case
-    */
-   private String getAttributeSmart(Element element, String attr)
-   {
-      return element.hasAttribute(attr) ? element.getAttribute(attr) : null;
-   }
-
-   /**
-    * Set attribute value. If value is null the attribute will be removed.
-    * 
-    * @param element The element to set attribute value
-    * @param attr The attribute name
-    * @param value The value of attribute
-    */
-   private void setAttributeSmart(Element element, String attr, String value)
-   {
-      if (value == null)
-      {
-         element.removeAttribute(attr);
-      }
-      else
-      {
-         element.setAttribute(attr, value);
-      }
-   }
-
-   /**
-    * Check read params and initialize.
-    */
-   private void checkParams()
-   {
-      // path
-      if (storagePath != null)
-      {
-         if (storagePath.equals("/"))
-         {
-            throw new IllegalArgumentException("Storage path can not be a root node");
-         }
-      }
-      else
-      {
-         this.storagePath = STORAGE_PATH_DEFAULT;
-      }
+      LOG.info("Cache is enabled " + cacheEnabled);
    }
 
    /**

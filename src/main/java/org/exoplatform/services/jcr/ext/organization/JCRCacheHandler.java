@@ -45,13 +45,16 @@ public class JCRCacheHandler extends CacheHandler
 
    private final JCROrganizationServiceImpl jcrOrganizationServiceImpl;
 
+   protected boolean enabled;
+
    /**
     * JCRCacheHandler constructor.
     */
-   public JCRCacheHandler(CacheService cservice, JCROrganizationServiceImpl jcrOrganizationServiceImpl)
+   public JCRCacheHandler(CacheService cservice, JCROrganizationServiceImpl jcrOrganizationServiceImpl, boolean enabled)
    {
       super(cservice);
       this.jcrOrganizationServiceImpl = jcrOrganizationServiceImpl;
+      this.enabled = enabled;
    }
 
    /**
@@ -128,4 +131,48 @@ public class JCRCacheHandler extends CacheHandler
       return cacheKey;
    }
 
+   /**
+    * {@inheritDoc}
+    */
+   public void put(Serializable key, Object value, CacheType cacheType)
+   {
+      if (enabled)
+      {
+         super.put(key, value, cacheType);
+      }
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public Object get(Serializable key, CacheType cacheType)
+   {
+      if (enabled)
+      {
+         return super.get(key, cacheType);
+      }
+      return null;
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public void remove(Serializable key, CacheType cacheType)
+   {
+      if (enabled)
+      {
+         super.remove(key, cacheType);
+      }
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public void move(Serializable oldKey, Serializable newKey, CacheType cacheType)
+   {
+      if (enabled)
+      {
+         super.move(oldKey, newKey, cacheType);
+      }
+   }
 }

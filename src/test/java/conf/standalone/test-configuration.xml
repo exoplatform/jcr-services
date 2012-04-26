@@ -579,6 +579,10 @@
         <description>Workspace in default repository where organization storage will be created</description>
         <value>ws</value>
       </value-param>
+      <value-param>
+        <name>cache-enabled</name>
+        <value>true</value>
+      </value-param>
     </init-params>
   </component>
   

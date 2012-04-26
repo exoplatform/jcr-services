@@ -302,6 +302,9 @@ public class MembershipTypeHandlerImpl extends JCROrgServiceHandler implements M
          removeFromCache(oldType);
       }
 
+      writeMembershipType(mType, mtNode);
+      session.save();
+
       putInCache(mType);
 
       if (broadcast)
