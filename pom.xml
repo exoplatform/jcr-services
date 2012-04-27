@@ -282,11 +282,6 @@
 
           <!-- Copy the image for HTML-->
           <postProcess>
-            <copy todir="${wikbook.target}/output/images">
-              <fileset dir="${wikbook.source}/images">
-                <include name="**" />
-              </fileset>
-            </copy>
             <copy todir="${wikbook.target}/output">
               <fileset dir="${wikbook.target}/src/resources">
                 <include name="**/*.css" />
