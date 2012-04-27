@@ -322,7 +322,7 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
          LOG.info("Root node from configuration file: " + storagePath);
       }
 
-      LOG.info("Cache is enabled " + cacheEnabled);
+      LOG.info("Cache is " + (cacheEnabled ? "enabled" : "disabled"));
    }
 
    /**
