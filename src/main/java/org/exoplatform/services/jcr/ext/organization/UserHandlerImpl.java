@@ -137,10 +137,6 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
       {
          return authenticate(session, userName, password, pe);
       }
-      catch (RepositoryException e)
-      {
-         throw new OrganizationServiceException("Can authenticate user " + userName, e);
-      }
       finally
       {
          session.logout();
@@ -175,15 +171,6 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
             new String(pe.encrypt(utils.readString(userNode, UserProperties.JOS_PASSWORD).getBytes()));
          authenticated = encryptedPassword.equals(password);
       }
-
-      if (authenticated)
-      {
-         Calendar lastLoginTime = Calendar.getInstance();
-         userNode.setProperty(UserProperties.JOS_LAST_LOGIN_TIME, lastLoginTime);
-         session.save();
-      }
-
-      removeFromCache(userName);
 
       return authenticated;
    }
