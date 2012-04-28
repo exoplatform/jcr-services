@@ -494,7 +494,9 @@ public class GroupHandlerImpl extends JCROrgServiceHandler implements GroupHandl
    private void postSave(Group group, boolean isNew) throws Exception
    {
       for (GroupEventListener listener : listeners)
+      {
          listener.postSave(group, isNew);
+      }
    }
 
    /**

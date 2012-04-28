@@ -360,7 +360,7 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
 
       if (broadcast)
       {
-         preDelete(user);
+         postDelete(user);
       }
 
       return user;
