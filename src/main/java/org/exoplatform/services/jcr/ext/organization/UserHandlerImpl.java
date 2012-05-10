@@ -278,7 +278,8 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
     */
    public LazyPageList findUsers(org.exoplatform.services.organization.Query query) throws Exception
    {
-      return new LazyPageList(new UserByQueryJCRUserListAccess(service, query), 10);
+      return query.isEmpty() ? new LazyPageList(new SimpleJCRUserListAccess(service), 10) : new LazyPageList(
+         new UserByQueryJCRUserListAccess(service, query), 10);
    }
 
    /**
@@ -318,7 +319,7 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
     */
    public ListAccess<User> findUsersByQuery(Query query) throws Exception
    {
-      return new UserByQueryJCRUserListAccess(service, query);
+      return query.isEmpty() ? new SimpleJCRUserListAccess(service) : new UserByQueryJCRUserListAccess(service, query);
    }
 
    /**
@@ -401,7 +402,7 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
    private void saveUser(Session session, UserImpl user, boolean broadcast) throws Exception
    {
       Node userNode = getUserNode(session, user);
-      
+
       if (broadcast)
       {
          preSave(user, false);
@@ -420,7 +421,7 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
          removeFromCache(oldName);
          moveMembershipsInCache(oldName, newName);
       }
-      
+
       writeUser(user, userNode);
       session.save();
 
