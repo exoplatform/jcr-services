@@ -131,8 +131,6 @@ public abstract class BaseStandaloneTest extends TestCase
 
    protected void tearDown() throws Exception
    {
-
-      log.info("tearDown() BEGIN " + getClass().getName() + "." + getName());
       if (session != null)
       {
          try
@@ -167,13 +165,7 @@ public abstract class BaseStandaloneTest extends TestCase
       }
 
       super.tearDown();
-      // log.info("tearDown() END " + getClass().getName() + "." + getName());
    }
-
-   // protected abstract String getConfPath();
-   //
-   // public void initRepository() throws RepositoryException {
-   // }
 
    // ====== utils =======
 

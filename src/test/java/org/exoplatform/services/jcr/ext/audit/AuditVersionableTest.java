@@ -16,6 +16,14 @@
  */
 package org.exoplatform.services.jcr.ext.audit;
 
+import org.exoplatform.services.jcr.core.ExtendedNode;
+import org.exoplatform.services.jcr.datamodel.InternalQName;
+import org.exoplatform.services.jcr.ext.BaseStandaloneTest;
+import org.exoplatform.services.jcr.impl.ext.action.SessionActionCatalog;
+import org.exoplatform.services.jcr.observation.ExtendedEvent;
+import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
+
 import javax.jcr.AccessDeniedException;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemExistsException;
@@ -27,14 +35,6 @@ import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.version.VersionException;
-
-import org.exoplatform.services.log.Log;
-import org.exoplatform.services.jcr.core.ExtendedNode;
-import org.exoplatform.services.jcr.datamodel.InternalQName;
-import org.exoplatform.services.jcr.ext.BaseStandaloneTest;
-import org.exoplatform.services.jcr.impl.ext.action.SessionActionCatalog;
-import org.exoplatform.services.jcr.observation.ExtendedEvent;
-import org.exoplatform.services.log.ExoLogger;
 
 /**
  * Created by The eXo Platform SAS. <br/>
@@ -166,13 +166,11 @@ public class AuditVersionableTest extends BaseStandaloneTest {
           && ar.getPropertyName().equals(propQName)) {
         String vuuid = ar.getVersion();
         String vname = ar.getVersionName();
-        log.info("Audit " + ar.getEventTypeName() + ", version " + vuuid + " " + vname);
         assertEquals("Version UUIDs should be equals", v1UUID, vuuid);
       } else if (ar.getEventType() == ExtendedEvent.PROPERTY_CHANGED
           && ar.getPropertyName().equals(propQName)) {
         String vuuid = ar.getVersion();
         String vname = ar.getVersionName();
-        log.info("Audit " + ar.getEventTypeName() + ", version " + vuuid + " " + vname);
         assertEquals("Version UUIDs should be equals", v2UUID, vuuid);
       }
     }
@@ -215,8 +213,6 @@ public class AuditVersionableTest extends BaseStandaloneTest {
       String vuuid = ar.getVersion();
       // Version av = (Version) session.getNodeByUUID(vuuid);
       String vname = ar.getVersionName();
-      log.info("Audit " + node1.getPath() + " " + ar.getEventTypeName() + ", version " + vuuid
-          + " " + vname);
       if (ar.getEventType() == ExtendedEvent.PROPERTY_ADDED
           && ar.getPropertyName().equals(propQName)) {
         assertEquals("Version UUIDs should be equals", v1UUID, vuuid);
@@ -239,8 +235,6 @@ public class AuditVersionableTest extends BaseStandaloneTest {
     for (AuditRecord ar : ah.getAuditRecords()) {
       String vuuid = ar.getVersion();
       String vname = ar.getVersionName();
-      log.info("Audit " + node2.getPath() + " " + ar.getEventTypeName() + ", version " + vuuid
-          + " " + vname);
       if (ar.getEventType() == ExtendedEvent.PROPERTY_ADDED
           && ar.getPropertyName().equals(propQName)) {
         assertEquals("Version UUIDs should be equals", v2UUID, vuuid);
@@ -252,8 +246,6 @@ public class AuditVersionableTest extends BaseStandaloneTest {
     for (AuditRecord ar : ah.getAuditRecords()) {
       String vuuid = ar.getVersion();
       String vname = ar.getVersionName();
-      log.info("Audit " + node1.getPath() + " " + ar.getEventTypeName() + ", version " + vuuid
-          + " " + vname);
       if (ar.getEventType() == ExtendedEvent.PROPERTY_ADDED
           && ar.getPropertyName().equals(propQName)) {
         assertEquals("Version UUIDs should be equals", v1UUID, vuuid);
