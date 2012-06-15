@@ -16,7 +16,7 @@
   <scm>
     <connection>scm:git:git://github.com/exoplatform/jcr-services.git</connection>
     <developerConnection>scm:git:git@github.com/exoplatform/jcr-services.git</developerConnection>
-    <url>http://fisheye.exoplatform.org/browse/projects/jcr-services</url>
+    <url>https://fisheye.exoplatform.org/browse/jcr-services-dev</url>
   </scm>
   
   <properties>
