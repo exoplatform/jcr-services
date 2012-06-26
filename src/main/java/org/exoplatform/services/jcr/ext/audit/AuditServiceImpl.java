@@ -49,7 +49,7 @@ import org.exoplatform.services.jcr.impl.core.value.ValueFactoryImpl;
 import org.exoplatform.services.jcr.impl.dataflow.TransientNodeData;
 import org.exoplatform.services.jcr.impl.dataflow.TransientPropertyData;
 import org.exoplatform.services.jcr.impl.dataflow.TransientValueData;
-import org.exoplatform.services.jcr.impl.dataflow.ValueDataConvertor;
+import org.exoplatform.services.jcr.impl.dataflow.ValueDataUtil;
 import org.exoplatform.services.jcr.impl.dataflow.session.SessionChangesLog;
 import org.exoplatform.services.jcr.util.IdGenerator;
 import org.exoplatform.services.log.ExoLogger;
@@ -214,16 +214,7 @@ public class AuditServiceImpl implements AuditService, Startable
       QPath path = QPath.makeChildPath(auditHistory.getQPath(), AuditService.EXO_AUDITHISTORY_LASTRECORD);
       // searching last name of node
       PropertyData pData = (PropertyData)dataManager.getItemData(path);
-      String auditRecordName;
-      try
-      {
-         auditRecordName = String.valueOf((int)ValueDataConvertor.readLong(pData.getValues().get(0)) + 1);
-      }
-      catch (IOException e)
-      {
-         throw new RepositoryException("Error on add audit record. Problem in calculating new record name. "
-            + e.getLocalizedMessage());
-      }
+      String auditRecordName = String.valueOf(ValueDataUtil.getLong(pData.getValues().get(0)) + 1);
 
       // exo:auditRecord
       List<AccessControlEntry> access = new ArrayList<AccessControlEntry>();
@@ -336,33 +327,27 @@ public class AuditServiceImpl implements AuditService, Startable
          PropertyData bvProp =
             (PropertyData)dataManager.getItemData(vancestor, new QPathEntry(Constants.JCR_BASEVERSION, 1),
                ItemType.PROPERTY);
-         try
+
+         versionUUID = ValueDataUtil.getString(bvProp.getValues().get(0));
+
+         // using JCR API objects
+         Version version = (Version)dataManager.getItemByIdentifier(versionUUID, false);
+         versionName = new StringBuilder(version.getName());
+
+         if (!dataManager.isNew(version.getParent().getUUID()))
          {
-            versionUUID = ValueDataConvertor.readString(bvProp.getValues().get(0));
-
-            // using JCR API objects
-            Version version = (Version)dataManager.getItemByIdentifier(versionUUID, false);
-            versionName = new StringBuilder(version.getName());
-
-            if (!dataManager.isNew(version.getParent().getUUID()))
-            {
-               VersionHistory versionHistory =
+            VersionHistory versionHistory =
                (VersionHistory)dataManager.getItemByIdentifier(version.getParent().getUUID(), false);
-               String[] labels = versionHistory.getVersionLabels(version);
-               for (int i = 0; i < labels.length; i++)
+            String[] labels = versionHistory.getVersionLabels(version);
+            for (int i = 0; i < labels.length; i++)
+            {
+               String vl = labels[i];
+               if (i == 0)
                {
-                  String vl = labels[i];
-                  if (i == 0)
-                  {
-                     versionName.append(" ");
-                  }
-                  versionName.append("'").append(vl).append("' ");
+                  versionName.append(" ");
                }
+               versionName.append("'").append(vl).append("' ");
             }
-         }
-         catch (IOException e)
-         {
-            throw new RepositoryException("Can't read jcr:baseVersion property, error " + e, e);
          }
 
          TransientPropertyData auditVersion =
@@ -536,27 +521,27 @@ public class AuditServiceImpl implements AuditService, Startable
                   ValueData value = propertyData.getValues().get(0);
                   if (propertyData.getQPath().getName().equals(AuditService.EXO_AUDITRECORD_USER))
                   {
-                     user = ValueDataConvertor.readString(value);
+                     user = ValueDataUtil.getString(value);
                   }
                   else if (propertyData.getQPath().getName().equals(AuditService.EXO_AUDITRECORD_EVENTTYPE))
                   {
-                     eventType = (int)ValueDataConvertor.readLong(value);
+                     eventType = ValueDataUtil.getLong(value).intValue();
                   }
                   else if (propertyData.getQPath().getName().equals(AuditService.EXO_AUDITRECORD_CREATED))
                   {
-                     date = ValueDataConvertor.readDate(value);
+                     date = ValueDataUtil.getDate(value);
                   }
                   else if (propertyData.getQPath().getName().equals(AuditService.EXO_AUDITRECORD_PROPERTYNAME))
                   {
-                     propertyName = InternalQName.parse(ValueDataConvertor.readString(value));
+                     propertyName = InternalQName.parse(ValueDataUtil.getString(value));
                   }
                   else if (propertyData.getQPath().getName().equals(AuditService.EXO_AUDITRECORD_AUDITVERSION))
                   {
-                     version = ValueDataConvertor.readString(value);
+                     version = ValueDataUtil.getString(value);
                   }
                   else if (propertyData.getQPath().getName().equals(AuditService.EXO_AUDITRECORD_AUDITVERSIONNAME))
                   {
-                     versionName = ValueDataConvertor.readString(value);
+                     versionName = ValueDataUtil.getString(value);
                   }
                   else if (propertyData.getQPath().getName().equals(AuditService.EXO_AUDITRECORD_OLDVALUE))
                   {
@@ -572,15 +557,7 @@ public class AuditServiceImpl implements AuditService, Startable
                   }
                }
             }
-            catch (UnsupportedEncodingException e)
-            {
-               throw new RepositoryException(e);
-            }
             catch (IllegalStateException e)
-            {
-               throw new RepositoryException(e);
-            }
-            catch (IOException e)
             {
                throw new RepositoryException(e);
             }
@@ -676,18 +653,10 @@ public class AuditServiceImpl implements AuditService, Startable
          if (pData != null)
             try
             {
-               String ahUuid = ValueDataConvertor.readString(pData.getValues().get(0));
+               String ahUuid = ValueDataUtil.getString(pData.getValues().get(0));
                return (NodeData)dataManager.getItemData(ahUuid);
             }
-            catch (UnsupportedEncodingException e)
-            {
-               throw new RepositoryException("Error of exo:auditHistory read", e);
-            }
             catch (IllegalStateException e)
-            {
-               throw new RepositoryException("Error of exo:auditHistory read", e);
-            }
-            catch (IOException e)
             {
                throw new RepositoryException("Error of exo:auditHistory read", e);
             }
