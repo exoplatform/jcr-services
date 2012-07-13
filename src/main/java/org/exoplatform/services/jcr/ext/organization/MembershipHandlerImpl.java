@@ -497,6 +497,40 @@ public class MembershipHandlerImpl extends JCROrgServiceHandler implements Membe
    }
 
    /**
+    * Migrates user memberships from old storage into new.
+    * @param oldUserNode 
+    *         the node where user properties are stored (from old structure)
+    * @throws Exception
+    */
+   void migrateMemberships(Node oldUserNode) throws Exception
+   {
+      Session session = oldUserNode.getSession();
+      NodeIterator iterator = oldUserNode.getNodes();
+
+      while (iterator.hasNext())
+      {
+         Node oldMembershipNode = iterator.nextNode();
+
+         if (oldMembershipNode.isNodeType(MigrationTool.JOS_USER_MEMBERSHIP))
+         {
+            String oldGroupUUID = utils.readString(oldMembershipNode, MigrationTool.JOS_GROUP);
+            String oldMembershipTypeUUID =
+               utils.readString(oldMembershipNode, MembershipProperties.JOS_MEMBERSHIP_TYPE);
+
+            String userName = oldUserNode.getName();
+            String groupId = utils.readString(session.getNodeByUUID(oldGroupUUID), MigrationTool.JOS_GROUP_ID);
+            String membershipTypeName = session.getNodeByUUID(oldMembershipTypeUUID).getName();
+
+            User user = service.getUserHandler().findUserByName(userName);
+            Group group = service.getGroupHandler().findGroupById(groupId);
+            MembershipType mt = service.getMembershipTypeHandler().findMembershipType(membershipTypeName);
+
+            linkMembership(user, group, mt, false);
+         }
+      }
+   }
+
+   /**
     * {@inheritDoc}
     */
    public Membership removeMembership(String id, boolean broadcast) throws Exception

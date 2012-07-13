@@ -76,11 +76,6 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
    public static final String STORAGE_PATH_DEFAULT = "/exo:organization";
 
    /**
-    * The service's name.
-    */
-   private static final String SERVICE_NAME = "JCROrganization";
-
-   /**
     * Repository service.
     */
    protected RepositoryService repositoryService;
@@ -116,19 +111,9 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
    protected JCRCacheHandler cacheHandler;
 
    /**
-    * The child node of group node where memeberships are stored.
-    */
-   public static final String JOS_MEMBERSHIP = "jos:memberships";
-
-   /**
     * The node to storage groups.
     */
    public static final String STORAGE_JOS_GROUPS = "jos:groups";
-
-   /**
-    * The group nodetype.
-    */
-   public static final String JOS_HIERARCHY_GROUP = "jos:hierarchyGroup";
 
    /**
     * The node to storage membership types.
@@ -136,14 +121,49 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
    public static final String STORAGE_JOS_MEMBERSHIP_TYPES = "jos:membershipTypes";
 
    /**
-    * The child node to storage user addition information.
+    * The node to storage users.
+    */
+   public static final String STORAGE_JOS_USERS = "jos:users";
+
+   /**
+    * The child node to storage user additional information.
     */
    public static final String JOS_PROFILE = "jos:profile";
 
    /**
-    * The node to storage users.
+    * The child node of group node where memberships are stored.
     */
-   public static final String STORAGE_JOS_USERS = "jos:users";
+   public static final String JOS_MEMBERSHIP = "jos:memberships";
+
+   /**
+    * The group nodetype.
+    */
+   public static final String JOS_HIERARCHY_GROUP_NODETYPE = "jos:hierarchyGroup-115";
+
+   /**
+    * The users nodetype.
+    */
+   public static final String JOS_USERS_NODETYPE = "jos:user-115";
+
+   /**
+    * The storage nodetype.
+    */
+   public static final String STORAGE_NODETYPE = "jos:organizationStorage-115";
+
+   /**
+    * The users storage nodetype.
+    */
+   public static final String STORAGE_JOS_USERS_NODETYPE = "jos:organizationUsers-115";
+
+   /**
+    * The groups storage nodetype.
+    */
+   public static final String STORAGE_JOS_GROUPS_NODETYPE = "jos:organizationGroups-115";
+
+   /**
+    * The membership types storage nodetype.
+    */
+   public static final String STORAGE_JOS_MEMBERSHIP_TYPES_NODETYPE = "jos:organizationMembershipTypes-115";
 
    /**
     * Default cache enabled.
@@ -196,9 +216,15 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
    @Override
    public void start()
    {
-      // create /exo:organization
       try
       {
+         MigrationTool migrationTool = new MigrationTool(this);
+         if (migrationTool.migrationRequired())
+         {
+            LOG.info("Detected old organization service structure.");
+            migrationTool.migrate();
+         }
+
          Session session = getStorageSession();
          try
          {
@@ -207,14 +233,7 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
          }
          catch (PathNotFoundException e)
          {
-            // will create new
-            Node storage = session.getRootNode().addNode(storagePath.substring(1), "jos:organizationStorage");
-
-            storage.addNode(STORAGE_JOS_USERS, "jos:organizationUsers");
-            storage.addNode(STORAGE_JOS_GROUPS, "jos:organizationGroups");
-            storage.addNode(STORAGE_JOS_MEMBERSHIP_TYPES, "jos:organizationMembershipTypes");
-
-            session.save(); // storage done configure
+            createStructure();
          }
          finally
          {
@@ -260,6 +279,30 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
       }
 
       return storagePath;
+   }
+
+   /**
+    * Creates storage structure.
+    * 
+    * @throws RepositoryException if any Exception is occurred
+    */
+   void createStructure() throws RepositoryException
+   {
+      Session session = getStorageSession();
+      try
+      {
+         Node storage = session.getRootNode().addNode(storagePath.substring(1), STORAGE_NODETYPE);
+
+         storage.addNode(STORAGE_JOS_USERS, STORAGE_JOS_USERS_NODETYPE);
+         storage.addNode(STORAGE_JOS_GROUPS, STORAGE_JOS_GROUPS_NODETYPE);
+         storage.addNode(STORAGE_JOS_MEMBERSHIP_TYPES, STORAGE_JOS_MEMBERSHIP_TYPES_NODETYPE);
+
+         session.save(); // storage done configure
+      }
+      finally
+      {
+         session.logout();
+      }
    }
 
    /**

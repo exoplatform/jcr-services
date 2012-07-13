@@ -501,6 +501,19 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
    }
 
    /**
+    * Method for user migration.
+    * 
+    * @param oldUserNode 
+    *         the node where user properties are stored (from old structure)
+    * @throws Exception
+    */
+   void migrateUser(Node oldUserNode) throws Exception
+   {
+      UserImpl user = readUser(oldUserNode);
+      createUser(user, false);
+   }
+
+   /**
     * Notifying listeners before user creation.
     * 
     * @param user 
