@@ -17,6 +17,8 @@
 
 package org.exoplatform.services.jcr.ext.organization;
 
+import org.exoplatform.services.jcr.core.ExtendedNode;
+import org.exoplatform.services.jcr.core.ExtendedSession;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 
@@ -42,10 +44,25 @@ public class MigrationTool
    /**
     * Path where old structure will be moved.
     */
-   private String oldStoragePath;
+   private String storagePathOld;
 
    /**
-    * The child node of user node where membership is stored (old structure).
+    * Path in old structure where user nodes stored.
+    */
+   private String usersStorageOld;
+
+   /**
+    * Path in old structure where group nodes stored.
+    */
+   private String groupsStorageOld;
+
+   /**
+    * Path in old structure where membershipTypes nodes stored.
+    */
+   private String membershipTypesStorageOld;
+
+   /**
+    * The child nodes of user node where memberships are stored (old structure).
     */
    public static final String JOS_USER_MEMBERSHIP = "jos:userMembership";
 
@@ -74,14 +91,23 @@ public class MigrationTool
     */
    public static final String JOS_GROUP_ID = "jos:groupId";
 
+   /**
+    * Logger.
+    */
    protected static final Log LOG = ExoLogger.getLogger("exo-jcr-services.MigrationTool");
 
    /**
     * MigrationTool constructor.
+    * @throws RepositoryException 
     */
-   MigrationTool(JCROrganizationServiceImpl service)
+   MigrationTool(JCROrganizationServiceImpl service) throws RepositoryException
    {
       this.service = service;
+
+      storagePathOld = service.getStoragePath() + "-old";
+      usersStorageOld = storagePathOld + "/" + JCROrganizationServiceImpl.STORAGE_JOS_USERS;
+      groupsStorageOld = storagePathOld + "/" + JCROrganizationServiceImpl.STORAGE_JOS_GROUPS;
+      membershipTypesStorageOld = storagePathOld + "/" + JCROrganizationServiceImpl.STORAGE_JOS_MEMBERSHIP_TYPES;
    }
 
    /**
@@ -97,9 +123,10 @@ public class MigrationTool
          moveOldStructure();
          service.createStructure();
 
-         migrateUsers();
-         migrateMembershipTypes();
+         //Migration order is important due to removal of nodes.
          migrateGroups();
+         migrateMembershipTypes();
+         migrateUsers();
          migrateProfiles();
          migrateMemberships();
 
@@ -121,11 +148,10 @@ public class MigrationTool
    boolean migrationRequired() throws RepositoryException
    {
       Session session = service.getStorageSession();
-      oldStoragePath = service.getStoragePath() + "-old";
 
       try
       {
-         if (session.itemExists(oldStoragePath))
+         if (session.itemExists(storagePathOld))
          {
             return true;
          }
@@ -152,24 +178,18 @@ public class MigrationTool
     */
    private void moveOldStructure() throws Exception
    {
-      Session session = service.getStorageSession();
+      ExtendedSession session = (ExtendedSession)service.getStorageSession();
       try
       {
-         try
-         {
-            if (session.itemExists(oldStoragePath))
-            {
-               session.getItem(service.getStoragePath()).remove();
-               return;
-            }
-         }
-         catch (PathNotFoundException e)
+         if (session.itemExists(storagePathOld))
          {
             return;
          }
-
-         session.move(service.getStoragePath(), oldStoragePath);
-         session.save();
+         else
+         {
+            session.move(service.getStoragePath(), storagePathOld, false);
+            session.save();
+         }
       }
       finally
       {
@@ -183,11 +203,39 @@ public class MigrationTool
     */
    private void removeOldStructure() throws RepositoryException
    {
-      Session session = service.getStorageSession();
+      ExtendedSession session = (ExtendedSession)service.getStorageSession();
       try
       {
-         session.getItem(oldStoragePath).remove();
-         session.save();
+         if (session.itemExists(storagePathOld))
+         {
+            NodeIterator usersIter = ((ExtendedNode)session.getItem(usersStorageOld)).getNodesLazily();
+            while (usersIter.hasNext())
+            {
+               Node currentUser = usersIter.nextNode();
+               currentUser.remove();
+               session.save();
+            }
+
+            NodeIterator groupsIter = ((ExtendedNode)session.getItem(groupsStorageOld)).getNodesLazily();
+            while (groupsIter.hasNext())
+            {
+               Node currentGroup = groupsIter.nextNode();
+               currentGroup.remove();
+               session.save();
+            }
+
+            NodeIterator membershipTypesIter =
+               ((ExtendedNode)session.getItem(membershipTypesStorageOld)).getNodesLazily();
+            while (membershipTypesIter.hasNext())
+            {
+               Node currentMembershipType = membershipTypesIter.nextNode();
+               currentMembershipType.remove();
+               session.save();
+            }
+
+            session.getItem(storagePathOld).remove();
+            session.save();
+         }
       }
       finally
       {
@@ -204,12 +252,14 @@ public class MigrationTool
       Session session = service.getStorageSession();
       try
       {
-         NodeIterator iterator =
-            ((Node)session.getItem(oldStoragePath)).getNode(JCROrganizationServiceImpl.STORAGE_JOS_USERS).getNodes();
-
-         while (iterator.hasNext())
+         if (session.itemExists(usersStorageOld))
          {
-            ((UserHandlerImpl)service.getUserHandler()).migrateUser(iterator.nextNode());
+            NodeIterator iterator = ((ExtendedNode)session.getItem(usersStorageOld)).getNodesLazily();
+            UserHandlerImpl uh = ((UserHandlerImpl)service.getUserHandler());
+            while (iterator.hasNext())
+            {
+               uh.migrateUser(iterator.nextNode());
+            }
          }
       }
       finally
@@ -227,14 +277,16 @@ public class MigrationTool
       Session session = service.getStorageSession();
       try
       {
-         NodeIterator iterator =
-            ((Node)session.getItem(oldStoragePath)).getNode(JCROrganizationServiceImpl.STORAGE_JOS_GROUPS).getNodes();
-         while (iterator.hasNext())
+         if (session.itemExists(groupsStorageOld))
          {
-            Node oldGroupNode = iterator.nextNode();
-            ((GroupHandlerImpl)service.getGroupHandler()).migrateGroup(oldGroupNode);
-
-            migrateGroups(oldGroupNode);
+            NodeIterator iterator = ((ExtendedNode)session.getItem(groupsStorageOld)).getNodesLazily();
+            GroupHandlerImpl gh = ((GroupHandlerImpl)service.getGroupHandler());
+            while (iterator.hasNext())
+            {
+               Node oldGroupNode = iterator.nextNode();
+               gh.migrateGroup(oldGroupNode);
+               migrateGroups(oldGroupNode);
+            }
          }
       }
       finally
@@ -249,11 +301,12 @@ public class MigrationTool
     */
    private void migrateGroups(Node startNode) throws Exception
    {
-      NodeIterator iterator = startNode.getNodes();
+      NodeIterator iterator = ((ExtendedNode)startNode).getNodesLazily();
+      GroupHandlerImpl gh = ((GroupHandlerImpl)service.getGroupHandler());
       while (iterator.hasNext())
       {
          Node oldGroupNode = iterator.nextNode();
-         ((GroupHandlerImpl)service.getGroupHandler()).migrateGroup(oldGroupNode);
+         gh.migrateGroup(oldGroupNode);
 
          migrateGroups(oldGroupNode);
       }
@@ -268,20 +321,21 @@ public class MigrationTool
       Session session = service.getStorageSession();
       try
       {
-         NodeIterator iterator =
-            ((Node)session.getItem(oldStoragePath)).getNode(JCROrganizationServiceImpl.STORAGE_JOS_MEMBERSHIP_TYPES)
-               .getNodes();
-         while (iterator.hasNext())
+         if (session.itemExists(membershipTypesStorageOld))
          {
-            Node oldTypeNode = iterator.nextNode();
-            ((MembershipTypeHandlerImpl)service.getMembershipTypeHandler()).migrateMembershipType(oldTypeNode);
+            NodeIterator iterator = ((ExtendedNode)session.getItem(membershipTypesStorageOld)).getNodesLazily();
+            MembershipTypeHandlerImpl mth = ((MembershipTypeHandlerImpl)service.getMembershipTypeHandler());
+            while (iterator.hasNext())
+            {
+               Node oldTypeNode = iterator.nextNode();
+               mth.migrateMembershipType(oldTypeNode);
+            }
          }
       }
       finally
       {
          session.logout();
       }
-
    }
 
    /**
@@ -293,12 +347,15 @@ public class MigrationTool
       Session session = service.getStorageSession();
       try
       {
-         NodeIterator iterator =
-            ((Node)session.getItem(oldStoragePath)).getNode(JCROrganizationServiceImpl.STORAGE_JOS_USERS).getNodes();
-         while (iterator.hasNext())
+         if (session.itemExists(usersStorageOld))
          {
-            Node oldUserNode = iterator.nextNode();
-            ((UserProfileHandlerImpl)service.getUserProfileHandler()).migrateProfile(oldUserNode);
+            NodeIterator iterator = ((ExtendedNode)session.getItem(usersStorageOld)).getNodesLazily();
+            UserProfileHandlerImpl uph = ((UserProfileHandlerImpl)service.getUserProfileHandler());
+            while (iterator.hasNext())
+            {
+               Node oldUserNode = iterator.nextNode();
+               uph.migrateProfile(oldUserNode);
+            }
          }
       }
       finally
@@ -317,18 +374,23 @@ public class MigrationTool
       Session session = service.getStorageSession();
       try
       {
-         NodeIterator iterator =
-            ((Node)session.getItem(oldStoragePath)).getNode(JCROrganizationServiceImpl.STORAGE_JOS_USERS).getNodes();
-         while (iterator.hasNext())
+         if (session.itemExists(usersStorageOld))
          {
-            Node oldUserNode = iterator.nextNode();
-            ((MembershipHandlerImpl)service.getMembershipHandler()).migrateMemberships(oldUserNode);
+            NodeIterator iterator = ((ExtendedNode)session.getItem(usersStorageOld)).getNodesLazily();
+            MembershipHandlerImpl mh = ((MembershipHandlerImpl)service.getMembershipHandler());
+            while (iterator.hasNext())
+            {
+               Node oldUserNode = iterator.nextNode();
+               mh.migrateMemberships(oldUserNode);
+               oldUserNode.remove();
+               session.save();
+            }
          }
       }
       finally
       {
          session.logout();
       }
-
    }
+
 }

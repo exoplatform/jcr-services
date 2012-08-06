@@ -19,7 +19,6 @@
 package org.exoplatform.services.jcr.ext.organization;
 
 import org.exoplatform.services.jcr.impl.core.RepositoryImpl;
-import org.exoplatform.services.jcr.impl.core.SessionImpl;
 
 import java.io.InputStream;
 
@@ -28,7 +27,6 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 /**
@@ -37,91 +35,194 @@ import javax.jcr.Session;
  */
 public class TestMigrationTool extends AbstractOrganizationServiceTest
 {
-   public void testMigrationTool() throws Exception
-   {
-      repository = (RepositoryImpl)repositoryService.getDefaultRepository();
-      Session sess = (SessionImpl)repository.login(credentials, "ws5");
-      TesterJCROrgService organizationService =
-         (TesterJCROrgService)container.getComponentInstanceOfType(TesterJCROrgService.class);
-      MigrationTool migrationTool = new MigrationTool((TesterJCROrgService)organizationService);
 
-      organizationService.saveStorageWorkspaceName();
-      organizationService.setStorageWorkspace("ws5");
+   private TesterJCROrgService testService;
 
-      loadDataFromDump(sess, "jcrorgservice114dump.xml");
-
-      assertTrue(migrationTool.migrationRequired());
-      migrationTool.migrate();
-
-      Node marryUserNode =
-         (Node)sess.getItem(JCROrganizationServiceImpl.STORAGE_PATH_DEFAULT + "/"
-            + JCROrganizationServiceImpl.STORAGE_JOS_USERS + "/marry");
-      assertUserMigration(marryUserNode);
-
-      Node administratorsGroupNode =
-         (Node)sess.getItem(JCROrganizationServiceImpl.STORAGE_PATH_DEFAULT + "/"
-            + JCROrganizationServiceImpl.STORAGE_JOS_GROUPS + "/platform/administrators");
-
-      assertGroupMigration(administratorsGroupNode);
-      assertMembershipsMigration(administratorsGroupNode, organizationService);
-      assertMembershipTypesMigration(sess);
-
-      organizationService.restoreStorageWorkspaceName();
-   }
-
+   /**
+    * Method that responsible for loading of old organization service structure from dump.
+    * @param sess is a valid Session object.
+    * @param dumpName is a name of file where dump is stored.
+    * @throws Exception if error occurs.
+    */
    private void loadDataFromDump(Session sess, String dumpName) throws Exception
    {
-
       if (sess.itemExists(JCROrganizationServiceImpl.STORAGE_PATH_DEFAULT))
       {
          sess.getItem(JCROrganizationServiceImpl.STORAGE_PATH_DEFAULT).remove();
+         sess.save();
       }
+
       InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(dumpName);
       sess.importXML("/", in, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
       sess.save();
    }
 
-   private void assertUserMigration(Node marryUserNode) throws RepositoryException
+   /**
+    * Method that prepares test structure.
+    * @throws Exception if error occurs.
+    */
+   private void createTestStructure() throws Exception
    {
-      assertTrue(marryUserNode.getProperty("jos:firstName").getString().equals("Marry"));
-      assertTrue(marryUserNode.getProperty("jos:lastName").getString().equals("Kelly"));
-      assertTrue(marryUserNode.isNodeType(JCROrganizationServiceImpl.JOS_USERS_NODETYPE));
-      assertTrue(marryUserNode.getNode(JCROrganizationServiceImpl.JOS_PROFILE).isNodeType("jos:userProfile-115"));
-
-      PropertyIterator iterator = marryUserNode.getNode(JCROrganizationServiceImpl.JOS_PROFILE).getProperties();
-      while (iterator.hasNext())
+      repository = (RepositoryImpl)repositoryService.getDefaultRepository();
+      testService = (TesterJCROrgService)container.getComponentInstanceOfType(TesterJCROrgService.class);
+      testService.saveStorageWorkspaceName();
+      testService.setStorageWorkspace("ws6");
+      Session sess = testService.getStorageSession();
+      try
       {
-         Property prop = iterator.nextProperty();
-         if (prop.getName().equals("jcr:primaryType"))
+         MigrationTool migrationTool = new MigrationTool(testService);
+
+         if (!sess.itemExists("/exo:organization"))
          {
-            continue;
+            loadDataFromDump(sess, "jcrorgservice114dump.xml");
+            assertTrue(migrationTool.migrationRequired());
+            migrationTool.migrate();
          }
-         assertTrue(prop.getName().startsWith("attr."));
       }
-   }
-
-   private void assertGroupMigration(Node administratorsGroupNode) throws RepositoryException
-   {
-      assertTrue(administratorsGroupNode.isNodeType(JCROrganizationServiceImpl.JOS_HIERARCHY_GROUP_NODETYPE));
-
-      NodeIterator iterat = administratorsGroupNode.getNodes();
-      while (iterat.hasNext())
+      finally
       {
-         Node nd = iterat.nextNode();
-         assertTrue(nd.isNodeType("jos:memberships-115"));
+         sess.logout();
+      }
+
+   }
+
+   /**
+    * Method that removes test structure.
+    * @throws Exception if error occurs.
+    */
+   private void removeTestStructure() throws Exception
+   {
+      repository = (RepositoryImpl)repositoryService.getDefaultRepository();
+      Session sess = testService.getStorageSession();
+
+      try
+      {
+         if (sess.itemExists("/exo:organization"))
+         {
+            sess.getItem("/exo:organization").remove();
+            sess.save();
+         }
+
+         testService.restoreStorageWorkspaceName();
+      }
+      finally
+      {
+         sess.logout();
       }
    }
 
-   private void assertMembershipsMigration(Node administratorsGroupNode, JCROrganizationServiceImpl organizationService)
-      throws Exception
+   /**
+    * Method that checks correct user node migration.
+    * @throws Exception if error occurs.
+    */
+   public void testUserMigration() throws Exception
    {
-      assertEquals(2, organizationService.getUserHandler().findUsersByGroup("/platform/administrators").getAll().size());
+      createTestStructure();
+      Session sess = testService.getStorageSession();
 
+      try
+      {
+         Node marryUserNode =
+            (Node)sess.getItem(JCROrganizationServiceImpl.STORAGE_PATH_DEFAULT + "/"
+               + JCROrganizationServiceImpl.STORAGE_JOS_USERS + "/marry");
+
+         assertTrue(marryUserNode.getProperty("jos:firstName").getString().equals("Marry"));
+         assertTrue(marryUserNode.getProperty("jos:lastName").getString().equals("Kelly"));
+         assertTrue(marryUserNode.isNodeType(JCROrganizationServiceImpl.JOS_USERS_NODETYPE));
+         assertTrue(marryUserNode.getNode(JCROrganizationServiceImpl.JOS_PROFILE).isNodeType("jos:userProfile-v2"));
+
+         PropertyIterator iterator = marryUserNode.getNode(JCROrganizationServiceImpl.JOS_PROFILE).getProperties();
+         while (iterator.hasNext())
+         {
+            Property prop = iterator.nextProperty();
+            if (prop.getName().equals("jcr:primaryType"))
+            {
+               continue;
+            }
+            assertTrue(prop.getName().startsWith("attr."));
+         }
+      }
+      finally
+      {
+         sess.logout();
+      }
+      removeTestStructure();
    }
 
-   private void assertMembershipTypesMigration(Session sess) throws RepositoryException
+   /**
+    * Method that checks correct group node migration.
+    * @throws Exception if error occurs.
+    */
+   public void testGroupMigration() throws Exception
    {
-      assertEquals(3, ((Node)sess.getItem("/exo:organization/jos:membershipTypes")).getNodes().getSize());
+      createTestStructure();
+      Session sess = testService.getStorageSession();
 
+      try
+      {
+
+         Node administratorsGroupNode =
+            (Node)sess.getItem(JCROrganizationServiceImpl.STORAGE_PATH_DEFAULT + "/"
+               + JCROrganizationServiceImpl.STORAGE_JOS_GROUPS + "/platform/administrators");
+
+         assertTrue(administratorsGroupNode.isNodeType(JCROrganizationServiceImpl.JOS_HIERARCHY_GROUP_NODETYPE));
+
+         NodeIterator iterat = administratorsGroupNode.getNodes();
+         while (iterat.hasNext())
+         {
+            Node nd = iterat.nextNode();
+            assertTrue(nd.isNodeType("jos:memberships-v2"));
+         }
+      }
+      finally
+      {
+         sess.logout();
+      }
+      removeTestStructure();
+   }
+
+   /**
+    * Method that checks correct userMembership node migration.
+    * @throws Exception if error occurs.
+    */
+   public void testMembershipsMigration() throws Exception
+   {
+      createTestStructure();
+      Session sess = testService.getStorageSession();
+
+      try
+      {
+         Node administratorsGroupNode =
+            (Node)sess.getItem(JCROrganizationServiceImpl.STORAGE_PATH_DEFAULT + "/"
+               + JCROrganizationServiceImpl.STORAGE_JOS_GROUPS + "/platform/administrators");
+
+         assertTrue(administratorsGroupNode.isNodeType(JCROrganizationServiceImpl.JOS_HIERARCHY_GROUP_NODETYPE));
+         assertEquals(2, testService.getUserHandler().findUsersByGroup("/platform/administrators").getAll().size());
+      }
+      finally
+      {
+         sess.logout();
+      }
+      removeTestStructure();
+   }
+
+   /**
+    * Method that checks correct membershipType node migration.
+    * @throws Exception if error occurs.
+    */
+   public void testMembershipTypesMigration() throws Exception
+   {
+      createTestStructure();
+      Session sess = testService.getStorageSession();
+
+      try
+      {
+         assertEquals(3, ((Node)sess.getItem("/exo:organization/jos:membershipTypes")).getNodes().getSize());
+      }
+      finally
+      {
+         sess.logout();
+      }
+      removeTestStructure();
    }
 }

@@ -138,32 +138,32 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
    /**
     * The group nodetype.
     */
-   public static final String JOS_HIERARCHY_GROUP_NODETYPE = "jos:hierarchyGroup-115";
+   public static final String JOS_HIERARCHY_GROUP_NODETYPE = "jos:hierarchyGroup-v2";
 
    /**
     * The users nodetype.
     */
-   public static final String JOS_USERS_NODETYPE = "jos:user-115";
+   public static final String JOS_USERS_NODETYPE = "jos:user-v2";
 
    /**
     * The storage nodetype.
     */
-   public static final String STORAGE_NODETYPE = "jos:organizationStorage-115";
+   public static final String STORAGE_NODETYPE = "jos:organizationStorage-v2";
 
    /**
     * The users storage nodetype.
     */
-   public static final String STORAGE_JOS_USERS_NODETYPE = "jos:organizationUsers-115";
+   public static final String STORAGE_JOS_USERS_NODETYPE = "jos:organizationUsers-v2";
 
    /**
     * The groups storage nodetype.
     */
-   public static final String STORAGE_JOS_GROUPS_NODETYPE = "jos:organizationGroups-115";
+   public static final String STORAGE_JOS_GROUPS_NODETYPE = "jos:organizationGroups-v2";
 
    /**
     * The membership types storage nodetype.
     */
-   public static final String STORAGE_JOS_MEMBERSHIP_TYPES_NODETYPE = "jos:organizationMembershipTypes-115";
+   public static final String STORAGE_JOS_MEMBERSHIP_TYPES_NODETYPE = "jos:organizationMembershipTypes-v2";
 
    /**
     * Default cache enabled.
@@ -192,7 +192,6 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
    {
       this.repositoryService = repositoryService;
       this.registryService = registryService;
-
       initializeParameters(initParams);
 
       this.cacheHandler = new JCRCacheHandler(cservice, this, cacheEnabled);

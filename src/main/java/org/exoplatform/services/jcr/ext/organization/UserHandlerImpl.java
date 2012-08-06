@@ -509,6 +509,14 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
     */
    void migrateUser(Node oldUserNode) throws Exception
    {
+
+      String userName = oldUserNode.getName();
+
+      if (findUserByName(userName) != null)
+      {
+         removeUser(userName, false);
+      }
+
       UserImpl user = readUser(oldUserNode);
       createUser(user, false);
    }

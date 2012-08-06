@@ -20,6 +20,7 @@ package org.exoplatform.services.jcr.ext.organization;
 
 import org.exoplatform.container.configuration.ConfigurationException;
 import org.exoplatform.container.xml.InitParams;
+import org.exoplatform.container.xml.ValueParam;
 import org.exoplatform.services.cache.CacheService;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.ext.registry.RegistryService;
@@ -33,28 +34,67 @@ public class TesterJCROrgService extends JCROrganizationServiceImpl
 
    private String originalWorkspaceName;
 
+   /**
+    * Overloaded parent constructor. Disables cache for testing purposes.
+    * @param params
+    * @param repositoryService
+    * @param cservice
+    * @throws ConfigurationException
+    */
    public TesterJCROrgService(InitParams params, RepositoryService repositoryService, CacheService cservice)
       throws ConfigurationException
    {
-      super(params, repositoryService, cservice);
+      super(disableCache(params), repositoryService, cservice);
    }
 
+   /**
+    * Overloaded parent constructor. Disables cache for testing purposes.
+    * @param initParams
+    * @param repositoryService
+    * @param registryService
+    * @param cservice
+    * @throws ConfigurationException
+    */
    public TesterJCROrgService(InitParams initParams, RepositoryService repositoryService,
       RegistryService registryService, CacheService cservice) throws ConfigurationException
    {
-      super(initParams, repositoryService, registryService, cservice);
+      super(disableCache(initParams), repositoryService, registryService, cservice);
    }
 
+   /**
+    * Disables cache. For testing purposes only.
+    * @param params InitParams.
+    * @return InitParams with disabled cache.
+    */
+   private static InitParams disableCache(InitParams params)
+   {
+      ValueParam cacheParam = new ValueParam();
+      cacheParam.setName(JCROrganizationServiceImpl.CACHE_ENABLED);
+      cacheParam.setValue("false");
+      params.addParam(cacheParam);
+      return params;
+   }
+
+   /**
+    * Saves current workspace used by OrganizationService.
+    */
    public void saveStorageWorkspaceName()
    {
       this.originalWorkspaceName = this.storageWorkspace;
    }
 
+   /**
+    * Sets current workspace used by OrganizationService.
+    * @param workspaceName
+    */
    public void setStorageWorkspace(String workspaceName)
    {
       this.storageWorkspace = workspaceName;
    }
 
+   /**
+    * Restores previously saved workspace.
+    */
    public void restoreStorageWorkspaceName()
    {
       this.storageWorkspace = this.originalWorkspaceName;

@@ -280,6 +280,12 @@ public class MembershipTypeHandlerImpl extends JCROrgServiceHandler implements M
    void migrateMembershipType(Node oldMembershipTypeNode) throws Exception
    {
       MembershipType membershipType = readMembershipType(oldMembershipTypeNode);
+
+      if (findMembershipType(membershipType.getName()) != null)
+      {
+         removeMembershipType(membershipType.getName(), false);
+      }
+
       createMembershipType(membershipType, false);
    }
 

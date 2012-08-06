@@ -397,11 +397,16 @@ public class GroupHandlerImpl extends JCROrgServiceHandler implements GroupHandl
       String label = utils.readString(oldGroupNode, GroupProperties.JOS_LABEL);
       String parentId = utils.readString(oldGroupNode, MigrationTool.JOS_PARENT_ID);
 
-      Group group = new GroupImpl(groupName, parentId);
+      GroupImpl group = new GroupImpl(groupName, parentId);
       group.setDescription(desc);
       group.setLabel(label);
 
       Group parentGroup = findGroupById(group.getParentId());
+
+      if (findGroupById(group.getId()) != null)
+      {
+         removeGroup(group, false);
+      }
 
       addChild(parentGroup, group, false);
    }

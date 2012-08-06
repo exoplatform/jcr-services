@@ -251,8 +251,7 @@ public class UserProfileHandlerImpl extends JCROrgServiceHandler implements User
       Node attrNode = null;
       try
       {
-         attrNode =
-            oldUserNode.getNode(JCROrganizationServiceImpl.JOS_PROFILE + "/" + MigrationTool.JOS_ATTRIBUTES);
+         attrNode = oldUserNode.getNode(JCROrganizationServiceImpl.JOS_PROFILE + "/" + MigrationTool.JOS_ATTRIBUTES);
       }
       catch (PathNotFoundException e)
       {
@@ -270,6 +269,11 @@ public class UserProfileHandlerImpl extends JCROrgServiceHandler implements User
          {
             userProfile.setAttribute(prop.getName(), prop.getString());
          }
+      }
+
+      if (findUserProfileByName(userProfile.getUserName()) != null)
+      {
+         removeUserProfile(userProfile.getUserName(), false);
       }
 
       saveUserProfile(userProfile, false);
