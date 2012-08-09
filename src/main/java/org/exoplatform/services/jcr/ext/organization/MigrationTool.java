@@ -94,7 +94,7 @@ public class MigrationTool
    /**
     * Logger.
     */
-   protected static final Log LOG = ExoLogger.getLogger("exo-jcr-services.MigrationTool");
+   private static final Log LOG = ExoLogger.getLogger("exo-jcr-services.MigrationTool");
 
    /**
     * MigrationTool constructor.
@@ -134,7 +134,7 @@ public class MigrationTool
 
          LOG.info("Migration completed.");
       }
-      catch (Exception e)
+      catch (Exception e)//NOSONAR
       {
          throw new RepositoryException("Migration failed", e);
       }
