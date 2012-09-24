@@ -13,7 +13,7 @@
               <property name="dialect" value="hsqldb"/>
               <property name="db-structure-type" value="isolated" />
               <property name="max-buffer-size" value="200k"/>
-              <property name="swap-directory" value="target/temp/swap/ws"/>
+              <property name="swap-directory" value="target/temp/db1/swap/ws"/>
             </properties>
           </container>
             <cache enabled="true"
@@ -25,7 +25,7 @@
             </cache>          
           <query-handler class="org.exoplatform.services.jcr.impl.core.query.lucene.SearchIndex">
             <properties>
-              <property name="index-dir" value="target/temp/index/ws" />
+              <property name="index-dir" value="target/temp/db1/index/ws" />
             </properties>
           </query-handler>
           <lock-manager class="org.exoplatform.services.jcr.impl.core.lock.jbosscache.CacheableLockManagerImpl">
@@ -52,7 +52,7 @@
               <property name="dialect" value="hsqldb"/>
               <property name="db-structure-type" value="isolated" />
               <property name="max-buffer-size" value="200k"/>
-              <property name="swap-directory" value="target/temp/swap/ws1"/>
+              <property name="swap-directory" value="target/temp/db1/swap/ws1"/>
             </properties>
           </container>
             <cache enabled="true"
@@ -64,7 +64,7 @@
             </cache>   
           <query-handler class="org.exoplatform.services.jcr.impl.core.query.lucene.SearchIndex">
             <properties>
-              <property name="index-dir" value="target/temp/index/ws1" />
+              <property name="index-dir" value="target/temp/db1/index/ws1" />
             </properties>
           </query-handler>
           <lock-manager class="org.exoplatform.services.jcr.impl.core.lock.jbosscache.CacheableLockManagerImpl">
@@ -91,7 +91,7 @@
               <property name="dialect" value="hsqldb"/>
               <property name="db-structure-type" value="isolated" />
               <property name="max-buffer-size" value="200k"/>
-              <property name="swap-directory" value="target/temp/swap/ws2"/>
+              <property name="swap-directory" value="target/temp/db1/swap/ws2"/>
             </properties>
           </container>
             <cache enabled="true"
@@ -103,7 +103,7 @@
             </cache> 
           <query-handler class="org.exoplatform.services.jcr.impl.core.query.lucene.SearchIndex">
             <properties>
-              <property name="index-dir" value="target/temp/index/ws2" />
+              <property name="index-dir" value="target/temp/db1/index/ws2" />
             </properties>
           </query-handler>
           <lock-manager class="org.exoplatform.services.jcr.impl.core.lock.jbosscache.CacheableLockManagerImpl">
@@ -130,7 +130,7 @@
               <property name="dialect" value="hsqldb"/>
               <property name="db-structure-type" value="isolated" />
               <property name="max-buffer-size" value="200k"/>
-              <property name="swap-directory" value="target/temp/swap/ws3"/>
+              <property name="swap-directory" value="target/temp/db1/swap/ws3"/>
             </properties>
           </container>
             <cache enabled="true"
@@ -142,7 +142,7 @@
             </cache>  
           <query-handler class="org.exoplatform.services.jcr.impl.core.query.lucene.SearchIndex">
             <properties>
-              <property name="index-dir" value="target/temp/index/ws3" />
+              <property name="index-dir" value="target/temp/db1/index/ws3" />
             </properties>
           </query-handler>
           <lock-manager class="org.exoplatform.services.jcr.impl.core.lock.jbosscache.CacheableLockManagerImpl">
@@ -169,7 +169,7 @@
               <property name="dialect" value="hsqldb"/>
               <property name="db-structure-type" value="isolated" />
               <property name="max-buffer-size" value="200k"/>
-              <property name="swap-directory" value="target/temp/swap/ws4"/>
+              <property name="swap-directory" value="target/temp/db1/swap/ws4"/>
             </properties>
           </container>
             <cache enabled="true"
@@ -181,7 +181,7 @@
             </cache>  
           <query-handler class="org.exoplatform.services.jcr.impl.core.query.lucene.SearchIndex">
             <properties>
-              <property name="index-dir" value="target/temp/index/ws4" />
+              <property name="index-dir" value="target/temp/db1/index/ws4" />
             </properties>
           </query-handler>
           <lock-manager class="org.exoplatform.services.jcr.impl.core.lock.jbosscache.CacheableLockManagerImpl">
@@ -208,7 +208,7 @@
               <property name="dialect" value="hsqldb"/>
               <property name="db-structure-type" value="isolated" />
               <property name="max-buffer-size" value="200k"/>
-              <property name="swap-directory" value="target/temp/swap/ws5"/>
+              <property name="swap-directory" value="target/temp/db1/swap/ws5"/>
             </properties>
           </container>
             <cache enabled="true"
@@ -220,7 +220,7 @@
             </cache>  
           <query-handler class="org.exoplatform.services.jcr.impl.core.query.lucene.SearchIndex">
             <properties>
-              <property name="index-dir" value="target/temp/index/ws5" />
+              <property name="index-dir" value="target/temp/db1/index/ws5" />
             </properties>
           </query-handler>
           <lock-manager class="org.exoplatform.services.jcr.impl.core.lock.jbosscache.CacheableLockManagerImpl">
@@ -247,7 +247,7 @@
               <property name="dialect" value="hsqldb"/>
               <property name="db-structure-type" value="isolated" />
               <property name="max-buffer-size" value="200k"/>
-              <property name="swap-directory" value="target/temp/swap/ws1"/>
+              <property name="swap-directory" value="target/temp/db1/swap/ws6"/>
             </properties>
           </container>
             <cache enabled="false"
@@ -259,7 +259,7 @@
             </cache>   
           <query-handler class="org.exoplatform.services.jcr.impl.core.query.lucene.SearchIndex">
             <properties>
-              <property name="index-dir" value="target/temp/index/ws1" />
+              <property name="index-dir" value="target/temp/db1/index/ws6" />
             </properties>
           </query-handler>
           <lock-manager class="org.exoplatform.services.jcr.impl.core.lock.jbosscache.CacheableLockManagerImpl">
@@ -294,7 +294,7 @@
               <property name="dialect" value="hsqldb"/>
               <property name="db-structure-type" value="isolated" />
               <property name="max-buffer-size" value="200k"/>
-              <property name="swap-directory" value="target/temp2/swap/ws"/>
+              <property name="swap-directory" value="target/temp/db2/swap/ws"/>
             </properties>
           </container>
             <cache enabled="true"
@@ -306,7 +306,7 @@
             </cache>
           <query-handler class="org.exoplatform.services.jcr.impl.core.query.lucene.SearchIndex">
             <properties>
-              <property name="index-dir" value="target/temp2/index/ws" />
+              <property name="index-dir" value="target/temp/db2/index/ws" />
             </properties>
           </query-handler>
           <lock-manager class="org.exoplatform.services.jcr.impl.core.lock.jbosscache.CacheableLockManagerImpl">
