@@ -61,7 +61,6 @@ import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -112,11 +111,6 @@ public class AuditServiceImpl implements AuditService, Startable
    private RegistryService registryService;
 
    /**
-    * RepositoryService.
-    */
-   private RepositoryService repositoryService;
-
-   /**
     * Logger.
     */
    private static final Log LOG = ExoLogger.getLogger("exo-jcr-services.AuditService");
@@ -153,7 +147,6 @@ public class AuditServiceImpl implements AuditService, Startable
    {
       this.initParams = initParams;
       this.registryService = registryService;
-      this.repositoryService = repService;
    }
 
    /**
@@ -203,11 +196,8 @@ public class AuditServiceImpl implements AuditService, Startable
 
       NodeData auditHistory = auditSession.getAuditHistoryNodeData();
       if (auditHistory == null)
-         throw new PathNotFoundException("Audit history not found for " + currentItem.getPath());
-
-      if (auditHistory == null)
       {
-         throw new RepositoryException("Audit history for " + currentItem.getPath() + "not found");
+         throw new PathNotFoundException("Audit history not found for " + currentItem.getPath());
       }
 
       // make path to the AUDITHISTORY_LASTRECORD property

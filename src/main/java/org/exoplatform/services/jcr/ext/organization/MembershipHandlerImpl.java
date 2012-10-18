@@ -659,14 +659,6 @@ public class MembershipHandlerImpl extends JCROrgServiceHandler implements Membe
    }
 
    /**
-    * Gets membership entity from cache.
-    */
-   private MembershipImpl getFromCache(String key)
-   {
-      return (MembershipImpl)cache.get(key, CacheType.MEMBERSHIP);
-   }
-
-   /**
     * Removes membership entities from cache.
     */
    private void removeFromCache(Membership membership)
