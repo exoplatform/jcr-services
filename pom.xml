@@ -8,7 +8,7 @@
 
   <modelVersion>4.0.0</modelVersion>
   <artifactId>exo-jcr-services</artifactId>
-  <version>1.14.9-CR02-SNAPSHOT</version>
+  <version>1.14.9-GA</version>
   <packaging>jar</packaging>
   <name>eXo JCR :: Ext :: Services</name>
   <url>http://www.exoplatform.org</url>
