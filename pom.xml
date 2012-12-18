@@ -57,47 +57,11 @@
   
   <dependencies>
     <dependency>
-      <groupId>org.exoplatform.jcr</groupId>
-      <artifactId>exo.jcr.component.core</artifactId>
-      <version>${org.exoplatform.jcr.version}</version>
-      <scope>compile</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>xerces</groupId>
-          <artifactId>xerces</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
       <groupId>org.exoplatform.kernel</groupId>
       <artifactId>exo.kernel.commons.test</artifactId>
       <version>${org.exoplatform.kernel.version}</version>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.exoplatform.core</groupId>
-      <artifactId>exo.core.component.script.groovy</artifactId>
-      <version>${org.exoplatform.core.version}</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.exoplatform.ws</groupId>
-      <artifactId>exo.ws.rest.core</artifactId>
-      <version>${org.exoplatform.ws.version}</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.exoplatform.ws</groupId>
-      <artifactId>exo.ws.rest.ext</artifactId>
-      <version>${org.exoplatform.ws.version}</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.exoplatform.ws</groupId>
-      <artifactId>exo.ws.commons</artifactId>
-      <version>${org.exoplatform.ws.version}</version>
-      <scope>compile</scope>
-    </dependency>        
+    </dependency>     
     <dependency>
       <groupId>org.exoplatform.jcr</groupId>
       <artifactId>exo.jcr.component.ext</artifactId>
@@ -116,12 +80,6 @@
       <artifactId>slf4j-log4j12</artifactId>
       <version>1.6.1</version>         
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>commons-chain</groupId>
-      <artifactId>commons-chain</artifactId>
-      <version>1.2</version>
-      <scope>compile</scope>
     </dependency>    
     <dependency>
       <groupId>commons-io</groupId>
@@ -139,6 +97,7 @@
       <groupId>org.wikbook</groupId>
       <artifactId>wikbook.docbkxstyle</artifactId>
       <version>${wikbook.version}</version>
+      <scope>provided</scope>
     </dependency>    
   </dependencies>
   <build>
