@@ -208,8 +208,8 @@ public class AuditServiceImpl implements AuditService, Startable
 
       // exo:auditRecord
       List<AccessControlEntry> access = new ArrayList<AccessControlEntry>();
-      access.add(new AccessControlEntry(IdentityConstants.ANY, PermissionType.SET_PROPERTY));
-      access.add(new AccessControlEntry(IdentityConstants.ANY, PermissionType.READ));
+      access.add(new AccessControlEntry("*:/platform/users", PermissionType.SET_PROPERTY));
+      access.add(new AccessControlEntry("*:/platform/users", PermissionType.READ));
 
       for (String identity : adminIdentitys)
       {
@@ -392,9 +392,9 @@ public class AuditServiceImpl implements AuditService, Startable
       InternalQName aiName = new InternalQName(null, ((ItemImpl)node).getData().getIdentifier());
       // exo:auditHistory
       List<AccessControlEntry> access = new ArrayList<AccessControlEntry>();
-      access.add(new AccessControlEntry(IdentityConstants.ANY, PermissionType.ADD_NODE));
-      access.add(new AccessControlEntry(IdentityConstants.ANY, PermissionType.READ));
-      access.add(new AccessControlEntry(IdentityConstants.ANY, PermissionType.SET_PROPERTY));
+      access.add(new AccessControlEntry("*:/platform/users", PermissionType.ADD_NODE));
+      access.add(new AccessControlEntry("*:/platform/users", PermissionType.READ));
+      access.add(new AccessControlEntry("*:/platform/users", PermissionType.SET_PROPERTY));
 
       for (String identity : adminIdentitys)
       {
@@ -668,14 +668,14 @@ public class AuditServiceImpl implements AuditService, Startable
             // nodeData: /exo:audit with UUID = AUDIT_STORAGE_ID
             // its primaryType exo:auditStorage
             List<AccessControlEntry> access = new ArrayList<AccessControlEntry>();
-            access.add(new AccessControlEntry(IdentityConstants.ANY, PermissionType.ADD_NODE));
+            access.add(new AccessControlEntry("*:/platform/users", PermissionType.ADD_NODE));
+            access.add(new AccessControlEntry("*:/platform/users", PermissionType.READ));
+            access.add(new AccessControlEntry("*:/platform/users", PermissionType.SET_PROPERTY));
 
             for (String identity : adminIdentitys)
             {
-               access.add(new AccessControlEntry(identity, PermissionType.READ));
+               access.add(new AccessControlEntry(identity, PermissionType.REMOVE));
             }
-
-            access.add(new AccessControlEntry(IdentityConstants.ANY, PermissionType.REMOVE));
 
             AccessControlList exoAuditAccessControlList = new AccessControlList(IdentityConstants.SYSTEM, access);
 
