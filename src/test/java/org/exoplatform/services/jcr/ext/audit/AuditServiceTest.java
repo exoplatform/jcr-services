@@ -27,22 +27,12 @@ import org.exoplatform.services.jcr.impl.ext.action.SessionActionCatalog;
 import org.exoplatform.services.jcr.observation.ExtendedEventType;
 import org.exoplatform.services.security.IdentityConstants;
 
+import javax.jcr.*;
+import javax.jcr.observation.Event;
 import java.io.StringBufferInputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.util.Map;
-
-import javax.jcr.AccessDeniedException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.Property;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
-import javax.jcr.Value;
-import javax.jcr.observation.Event;
 
 /**
  * Created by The eXo Platform SAS .
@@ -61,11 +51,11 @@ public class AuditServiceTest extends BaseStandaloneTest {
 
   protected Session                    exo1Session;
 
+  protected Session                    exo2Session;
+
   protected Session                    adminSession;
 
   protected NodeImpl                   auditServiceTestRoot;
-
-  protected Map<ActionMatcher, Action> oldActions;
 
   protected Session                    exo2AdminSession;
 
@@ -84,7 +74,7 @@ public class AuditServiceTest extends BaseStandaloneTest {
     exo1Session = repository.login(new SimpleCredentials("marry", "exo".toCharArray()));
     exo2AdminSession = repository.login(new SimpleCredentials("john", "exo".toCharArray()));
     adminSession = repository.login(new SimpleCredentials("root", "exo".toCharArray()));
-
+    exo2Session=   repository.login(new SimpleCredentials("demo", "exo".toCharArray()));
     NodeImpl rootAdmin = (NodeImpl) adminSession.getRootNode();
 
     // TOOD: JCR-1305, uncomment next code
@@ -380,6 +370,16 @@ public class AuditServiceTest extends BaseStandaloneTest {
     exo1Session.save();
 
     try {
+      NodeImpl rootNode2 = (NodeImpl) exo2Session.getRootNode().getNode(ROOT_PATH);
+      ExtendedNode node2= (ExtendedNode) rootNode2.getNode("testAuditHistory");
+      service.removeHistory(node2);
+      exo2Session.save();
+      fail();
+    } catch (AccessDeniedException e) {
+
+    }
+
+    try {
       service.removeHistory(node1);
       exo1Session.save();
     } catch (AccessDeniedException e) {
@@ -406,14 +406,24 @@ public class AuditServiceTest extends BaseStandaloneTest {
 
     }
 
-    // exo2
-    Node auditStorage3;
     try {
-      auditStorage3 = exo1Session.getNodeByUUID(AuditService.AUDIT_STORAGE_ID);
+      Node auditStorage3 = exo1Session.getNodeByUUID(AuditService.AUDIT_STORAGE_ID);
+      auditStorage3.remove();
+      exo1Session.save();
       fail();
+
     } catch (AccessDeniedException e) {
-      // ok
+
     }
+
+    try {
+       Node auditStorage3 = exo2AdminSession.getNodeByUUID(AuditService.AUDIT_STORAGE_ID);
+       auditStorage3.remove();
+       exo2AdminSession.save();
+
+     } catch (AccessDeniedException e) {
+       fail();
+      }
   }
 
   /**
