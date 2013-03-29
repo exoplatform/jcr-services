@@ -91,14 +91,24 @@ public class AuditServiceImpl implements AuditService, Startable
 {
 
    /**
-    * The name of parameter that contain admin indentity.
+    * The name of parameter that contains admin indentity.
     */
    private static final String ADMIN_INDENTITY = "adminIdentity";
 
    /**
-    * Contain passed value of admin indentity in parameters.
+    * The name of parameter that contains default indentity.
+    */
+   private static final String DEFAULT_INDENTITY = "defaultIdentity";
+
+   /**
+    * Contains the value of the parameter "adminIdentity".
     */
    private String adminIdentity;
+
+   /**
+    * Contains the value of the parameter "defaultIdentity".
+    */
+   private String defaultIdentity;
 
    /**
     * Initialization parameters.
@@ -208,8 +218,8 @@ public class AuditServiceImpl implements AuditService, Startable
 
       // exo:auditRecord
       List<AccessControlEntry> access = new ArrayList<AccessControlEntry>();
-      access.add(new AccessControlEntry(IdentityConstants.ANY, PermissionType.SET_PROPERTY));
-      access.add(new AccessControlEntry(IdentityConstants.ANY, PermissionType.READ));
+      access.add(new AccessControlEntry(defaultIdentity, PermissionType.SET_PROPERTY));
+      access.add(new AccessControlEntry(defaultIdentity, PermissionType.READ));
 
       for (String identity : adminIdentitys)
       {
@@ -392,9 +402,9 @@ public class AuditServiceImpl implements AuditService, Startable
       InternalQName aiName = new InternalQName(null, ((ItemImpl)node).getData().getIdentifier());
       // exo:auditHistory
       List<AccessControlEntry> access = new ArrayList<AccessControlEntry>();
-      access.add(new AccessControlEntry(IdentityConstants.ANY, PermissionType.ADD_NODE));
-      access.add(new AccessControlEntry(IdentityConstants.ANY, PermissionType.READ));
-      access.add(new AccessControlEntry(IdentityConstants.ANY, PermissionType.SET_PROPERTY));
+      access.add(new AccessControlEntry(defaultIdentity, PermissionType.ADD_NODE));
+      access.add(new AccessControlEntry(defaultIdentity, PermissionType.READ));
+      access.add(new AccessControlEntry(defaultIdentity, PermissionType.SET_PROPERTY));
 
       for (String identity : adminIdentitys)
       {
@@ -668,14 +678,13 @@ public class AuditServiceImpl implements AuditService, Startable
             // nodeData: /exo:audit with UUID = AUDIT_STORAGE_ID
             // its primaryType exo:auditStorage
             List<AccessControlEntry> access = new ArrayList<AccessControlEntry>();
-            access.add(new AccessControlEntry(IdentityConstants.ANY, PermissionType.ADD_NODE));
+            access.add(new AccessControlEntry(defaultIdentity, PermissionType.ADD_NODE));
+            access.add(new AccessControlEntry(defaultIdentity, PermissionType.REMOVE));
 
             for (String identity : adminIdentitys)
             {
                access.add(new AccessControlEntry(identity, PermissionType.READ));
             }
-
-            access.add(new AccessControlEntry(IdentityConstants.ANY, PermissionType.REMOVE));
 
             AccessControlList exoAuditAccessControlList = new AccessControlList(IdentityConstants.SYSTEM, access);
 
@@ -755,6 +764,10 @@ public class AuditServiceImpl implements AuditService, Startable
       setAttributeSmart(element, "value", adminIdentity);
       root.appendChild(element);
 
+      element = doc.createElement(DEFAULT_INDENTITY);
+      setAttributeSmart(element, "value", defaultIdentity);
+      root.appendChild(element);
+
       RegistryEntry serviceEntry = new RegistryEntry(doc);
       registryService.createEntry(sessionProvider, RegistryService.EXO_SERVICES, serviceEntry);
    }
@@ -778,6 +791,14 @@ public class AuditServiceImpl implements AuditService, Startable
       adminIdentity = getAttributeSmart(element, "value");
 
       LOG.info("Admin identity is read from RegistryService");
+
+      entryPath = RegistryService.EXO_SERVICES + "/" + SERVICE_NAME + "/" + DEFAULT_INDENTITY;
+      registryEntry = registryService.getEntry(sessionProvider, entryPath);
+      doc = registryEntry.getDocument();
+      element = doc.getDocumentElement();
+      defaultIdentity= getAttributeSmart(element, "value");
+
+      LOG.info("Default identity is read from RegistryService");
 
       checkParams();
    }
@@ -824,11 +845,17 @@ public class AuditServiceImpl implements AuditService, Startable
       {
          ValueParam valParam = initParams.getValueParam(ADMIN_INDENTITY);
          if (valParam != null)
+         {
             adminIdentity = valParam.getValue();
+            LOG.info("Admin identity is read from configuration file");
+         }
+         ValueParam defaultIdentityParam = initParams.getValueParam(DEFAULT_INDENTITY);
+         if (defaultIdentityParam != null)
+         {
+            defaultIdentity = defaultIdentityParam.getValue();
+            LOG.info("Default identity is read from configuration file");
+         }
       }
-
-      LOG.info("Admin identity is read from configuration file");
-
       checkParams();
    }
 
@@ -856,6 +883,10 @@ public class AuditServiceImpl implements AuditService, Startable
       while (listTokenizer.hasMoreTokens())
       {
          adminIdentitys.add(listTokenizer.nextToken());
+      }
+      if (defaultIdentity == null)
+      {
+         defaultIdentity = IdentityConstants.ANY;
       }
 
    }
