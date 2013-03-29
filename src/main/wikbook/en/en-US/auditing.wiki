@@ -38,6 +38,10 @@ h2. Audit Service configuration
        <name>adminIdentity</name>
        <value>*:/admin</value>
      </value-param>
+     <value-param>
+       <name>defaultIdentity</name>
+       <value>*:/user</value>
+     </value-param>
   </init-params>
 </component>
 {code}
@@ -48,6 +52,10 @@ adminIdentity is a special person or group, which may view internal audit inform
 
 {info}
 Only members of adminIdentity can remove exo:auditable nodes.
+{info}
+
+{info}
+defaultIdentity is a user or group can add/read audit history and audit records, this parameter is optional (default value is ANY).
 {info}
 
 h2. AuditHistory class
