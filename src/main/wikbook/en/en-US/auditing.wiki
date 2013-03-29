@@ -55,7 +55,8 @@ Only members of adminIdentity can remove exo:auditable nodes.
 {info}
 
 {info}
-defaultIdentity is a user or group can add/read audit history and audit records, this parameter is optional (default value is ANY).
+The defaultIdentity is the identity that will be able to add and read audit history and audit records. Please make sure that the value of this parameter will be an identity that is shared by all the admin identities like any or *:/platform/users otherwise the admin identites could not be able to remove the audit history and audit records which is actually the main purpose of them.
+This parameter is optional (default value is ANY).
 {info}
 
 h2. AuditHistory class

@@ -91,24 +91,24 @@ public class AuditServiceImpl implements AuditService, Startable
 {
 
    /**
-    * The name of parameter that contain admin indentity.
+    * The name of parameter that contains admin indentity.
     */
    private static final String ADMIN_INDENTITY = "adminIdentity";
 
    /**
-    * The name of parameter that contain default indentity.
+    * The name of parameter that contains default indentity.
     */
    private static final String DEFAULT_INDENTITY = "defaultIdentity";
 
    /**
-    * Contain passed value of admin indentity in parameters.
+    * Contains the value of the parameter "adminIdentity".
     */
    private String adminIdentity;
 
    /**
-    * Contain passed value of default indentity in parameters.
+    * Contains the value of the parameter "defaultIdentity".
     */
-   private String defaultIdentity = IdentityConstants.ANY;
+   private String defaultIdentity;
 
    /**
     * Initialization parameters.
@@ -798,7 +798,7 @@ public class AuditServiceImpl implements AuditService, Startable
       element = doc.getDocumentElement();
       defaultIdentity= getAttributeSmart(element, "value");
 
-      LOG.info("default identity is read from RegistryService");
+      LOG.info("Default identity is read from RegistryService");
 
       checkParams();
    }
@@ -853,11 +853,9 @@ public class AuditServiceImpl implements AuditService, Startable
          if (defaultIdentityParam != null)
          {
             defaultIdentity = defaultIdentityParam.getValue();
-            LOG.info("default identity is read from configuration file");
+            LOG.info("Default identity is read from configuration file");
          }
       }
-
-
       checkParams();
    }
 
@@ -885,6 +883,10 @@ public class AuditServiceImpl implements AuditService, Startable
       while (listTokenizer.hasMoreTokens())
       {
          adminIdentitys.add(listTokenizer.nextToken());
+      }
+      if (defaultIdentity == null)
+      {
+         defaultIdentity = IdentityConstants.ANY;
       }
 
    }
