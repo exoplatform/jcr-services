@@ -743,8 +743,7 @@ public class AuditServiceTest extends BaseStandaloneTest {
     return filePlan;
   }
   
-  public void testStartupWithOldDataStructure() throws Exception
-  {
+  public void testStartupWithOldDataStructure() throws Exception {
      RegistryService registry = (RegistryService) container.getComponentInstanceOfType(RegistryService.class);
      String pathDefault = RegistryService.EXO_SERVICES + "/Audit/defaultIdentity";
      String pathAdmin = RegistryService.EXO_SERVICES + "/Audit/adminIdentity";
