@@ -91,12 +91,12 @@ public class AuditServiceImpl implements AuditService, Startable
 {
 
    /**
-    * The name of parameter that contains admin indentity.
+    * The name of parameter that contains admin identity.
     */
    private static final String ADMIN_INDENTITY = "adminIdentity";
 
    /**
-    * The name of parameter that contains default indentity.
+    * The name of parameter that contains default identity.
     */
    private static final String DEFAULT_INDENTITY = "defaultIdentity";
 
@@ -792,13 +792,22 @@ public class AuditServiceImpl implements AuditService, Startable
 
       LOG.info("Admin identity is read from RegistryService");
 
-      entryPath = RegistryService.EXO_SERVICES + "/" + SERVICE_NAME + "/" + DEFAULT_INDENTITY;
-      registryEntry = registryService.getEntry(sessionProvider, entryPath);
-      doc = registryEntry.getDocument();
-      element = doc.getDocumentElement();
-      defaultIdentity= getAttributeSmart(element, "value");
+      try
+      {
+         entryPath = RegistryService.EXO_SERVICES + "/" + SERVICE_NAME + "/" + DEFAULT_INDENTITY;
+         registryEntry = registryService.getEntry(sessionProvider, entryPath);
+         doc = registryEntry.getDocument();
+         element = doc.getDocumentElement();
+         defaultIdentity= getAttributeSmart(element, "value");
 
-      LOG.info("Default identity is read from RegistryService");
+         LOG.info("Default identity is read from RegistryService");
+      }
+      catch (PathNotFoundException e)
+      {
+         LOG.debug("The admin identity exists but not the default identity, so we will recreate it");
+         registryService.removeEntry(sessionProvider, RegistryService.EXO_SERVICES + "/" + SERVICE_NAME);
+         throw e;
+      }
 
       checkParams();
    }
