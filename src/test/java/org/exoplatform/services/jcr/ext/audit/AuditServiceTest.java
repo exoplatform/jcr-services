@@ -16,23 +16,35 @@
  */
 package org.exoplatform.services.jcr.ext.audit;
 
-import org.exoplatform.services.command.action.Action;
-import org.exoplatform.services.command.action.ActionMatcher;
 import org.exoplatform.services.jcr.access.PermissionType;
 import org.exoplatform.services.jcr.core.ExtendedNode;
 import org.exoplatform.services.jcr.datamodel.InternalQName;
 import org.exoplatform.services.jcr.ext.BaseStandaloneTest;
+import org.exoplatform.services.jcr.ext.common.SessionProvider;
+import org.exoplatform.services.jcr.ext.registry.RegistryEntry;
+import org.exoplatform.services.jcr.ext.registry.RegistryService;
 import org.exoplatform.services.jcr.impl.core.NodeImpl;
 import org.exoplatform.services.jcr.impl.ext.action.SessionActionCatalog;
 import org.exoplatform.services.jcr.observation.ExtendedEventType;
 import org.exoplatform.services.security.IdentityConstants;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-import javax.jcr.*;
-import javax.jcr.observation.Event;
 import java.io.StringBufferInputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
+import javax.jcr.Value;
+import javax.jcr.observation.Event;
 
 /**
  * Created by The eXo Platform SAS .
@@ -729,6 +741,52 @@ public class AuditServiceTest extends BaseStandaloneTest {
     filePlan.setProperty("rma:processDestruction", processDestruction);
     filePlan.setProperty("rma:vitalRecordReviewPeriod", vitalRecordReview);
     return filePlan;
+  }
+  
+  public void testStartupWithOldDataStructure() throws Exception
+  {
+     RegistryService registry = (RegistryService) container.getComponentInstanceOfType(RegistryService.class);
+     String pathDefault = RegistryService.EXO_SERVICES + "/Audit/defaultIdentity";
+     String pathAdmin = RegistryService.EXO_SERVICES + "/Audit/adminIdentity";
+     SessionProvider sessionProvider = SessionProvider.createSystemProvider();
+     try {
+        // A value is expected for the default identity
+        RegistryEntry registryEntry = registry.getEntry(sessionProvider, pathDefault);
+        Document doc = registryEntry.getDocument();
+        Element element = doc.getDocumentElement();
+        String defaultIdentity;
+        assertNotNull(defaultIdentity = element.getAttribute( "value"));
+        
+        // A value is expected for the admin identity
+        registryEntry = registry.getEntry(sessionProvider, pathAdmin);
+        doc = registryEntry.getDocument();
+        element = doc.getDocumentElement();
+        String adminIdentity;
+        assertNotNull(adminIdentity = element.getAttribute( "value"));
+        
+        // We remove the new entry to simulate old data structure
+        registry.removeEntry(sessionProvider, pathDefault);
+        
+        AuditServiceImpl as = (AuditServiceImpl) service;
+        // We restart the service to make sure that it doesn't fail at startup
+        as.stop();
+        as.start();
+        
+        // The same value is expected for the default identity
+        registryEntry = registry.getEntry(sessionProvider, pathDefault);
+        doc = registryEntry.getDocument();
+        element = doc.getDocumentElement();
+        assertEquals(defaultIdentity, element.getAttribute( "value"));
+
+        // The same value is expected for the admin identity
+        registryEntry = registry.getEntry(sessionProvider, pathAdmin);
+        doc = registryEntry.getDocument();
+        element = doc.getDocumentElement();
+        assertEquals(adminIdentity, element.getAttribute( "value"));
+     }
+     finally {
+        sessionProvider.close();   
+     }
   }
   
   @Override
