@@ -265,4 +265,16 @@
       </childNodeDefinition>
     </childNodeDefinitions>
   </nodeType>
+
+  <nodeType name="jos:disabled" isMixin="true">
+    <propertyDefinitions>
+      <propertyDefinition name="jos:disabled" requiredType="Boolean"
+        autoCreated="true" mandatory="false" onParentVersion="COPY"
+        protected="true" multiple="false">
+        <defaultValues>
+         <defaultValue>true</defaultValue>
+        </defaultValues>
+      </propertyDefinition>
+    </propertyDefinitions>
+  </nodeType>
 </nodeTypes>

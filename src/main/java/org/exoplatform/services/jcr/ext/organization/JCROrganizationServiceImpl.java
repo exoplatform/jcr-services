@@ -146,6 +146,11 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
    public static final String JOS_USERS_NODETYPE = "jos:user-v2";
 
    /**
+    * The mixin type and property used as a marker to indicate that a node is disabled.
+    */
+   public static final String JOS_DISABLED = "jos:disabled";
+
+   /**
     * The storage nodetype.
     */
    public static final String STORAGE_NODETYPE = "jos:organizationStorage-v2";

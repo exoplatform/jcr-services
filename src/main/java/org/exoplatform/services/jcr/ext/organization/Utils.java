@@ -57,7 +57,7 @@ public class Utils
     *          the parent node
     * @param propertyName
     *          the property name to read from
-    * @return the string value if property exists and null otherwise
+    * @return the date value if property exists or null otherwise
     * @throws OrganizationServiceException
     *           if unexpected exception is occurred during reading
     */
@@ -88,7 +88,7 @@ public class Utils
     *          the parent node
     * @param propertyName
     *          the property name to read from
-    * @return the string value if property exists and null otherwise
+    * @return the string value if property exists or null otherwise
     * @throws OrganizationServiceException
     *           if unexpected exception is occurred during reading
     */

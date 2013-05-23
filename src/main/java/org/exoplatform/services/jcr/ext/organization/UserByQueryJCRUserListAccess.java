@@ -48,9 +48,9 @@ public class UserByQueryJCRUserListAccess extends JCRUserListAccess
     * UserByQueryJCRUserListAccess constructor.
     */
    public UserByQueryJCRUserListAccess(JCROrganizationServiceImpl service,
-      org.exoplatform.services.organization.Query query) throws RepositoryException
+      org.exoplatform.services.organization.Query query, boolean enabledOnly) throws RepositoryException
    {
-      super(service);
+      super(service, enabledOnly);
       this.query = query;
    }
 
@@ -118,6 +118,11 @@ public class UserByQueryJCRUserListAccess extends JCRUserListAccess
       if (query.getToLoginDate() != null)
       {
          addDateStatement(context, UserProperties.JOS_LAST_LOGIN_TIME, "<=", query.getToLoginDate());
+      }
+
+      if (enabledOnly)
+      {
+         context.statement.append(" AND ").append(JCROrganizationServiceImpl.JOS_DISABLED).append(" IS NULL");
       }
 
       return (QueryImpl)session.getWorkspace().getQueryManager().createQuery(context.statement.toString(), Query.SQL);

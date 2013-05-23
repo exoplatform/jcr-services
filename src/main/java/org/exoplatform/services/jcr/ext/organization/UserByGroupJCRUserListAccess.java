@@ -25,6 +25,7 @@ import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.query.Query;
 
 /**
  * Created by The eXo Platform SAS.
@@ -43,9 +44,9 @@ public class UserByGroupJCRUserListAccess extends JCRUserListAccess
    /**
     * UserByGroupJCRUserListAccess constructor.
     */
-   public UserByGroupJCRUserListAccess(JCROrganizationServiceImpl service, String groupId) throws RepositoryException
+   public UserByGroupJCRUserListAccess(JCROrganizationServiceImpl service, String groupId, boolean enabledOnly) throws RepositoryException
    {
-      super(service);
+      super(service, enabledOnly);
       refUsers = getRefUsersNode(groupId);
    }
 
@@ -54,7 +55,21 @@ public class UserByGroupJCRUserListAccess extends JCRUserListAccess
     */
    protected int getSize(Session session) throws Exception
    {
-      return refUsers == null ? 0 : (int)refUsers.getNodesCount();
+      if (refUsers == null)
+         return 0;
+      long result = refUsers.getNodesCount();
+      if (enabledOnly)
+      {
+         StringBuilder statement = new StringBuilder("SELECT * FROM nt:base WHERE");
+         statement.append(" jcr:path LIKE '").append(refUsers.getPath()).append("/%'");
+         statement.append(" AND NOT jcr:path LIKE '").append(refUsers.getPath()).append("/%/%'");
+         statement.append(" AND ").append(JCROrganizationServiceImpl.JOS_DISABLED).append(" IS NOT NULL");
+
+         // We remove the total amount of disabled users
+         result -= session.getWorkspace().getQueryManager()
+            .createQuery(statement.toString(), Query.SQL).execute().getNodes().getSize();
+      }
+      return (int)result;
    }
 
    /**
