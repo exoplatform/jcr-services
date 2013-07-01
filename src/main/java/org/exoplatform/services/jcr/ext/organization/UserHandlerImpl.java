@@ -19,7 +19,9 @@ package org.exoplatform.services.jcr.ext.organization;
 import org.exoplatform.commons.utils.LazyPageList;
 import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.commons.utils.SecurityHelper;
+import org.exoplatform.services.organization.CacheHandler;
 import org.exoplatform.services.organization.CacheHandler.CacheType;
+import org.exoplatform.services.organization.DisabledUserException;
 import org.exoplatform.services.organization.ExtendedUserHandler;
 import org.exoplatform.services.organization.Query;
 import org.exoplatform.services.organization.User;
@@ -160,6 +162,11 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
       {
          return false;
       }
+      boolean enabled = userNode.canAddMixin(JCROrganizationServiceImpl.JOS_DISABLED);
+      if (!enabled)
+      {
+         throw new DisabledUserException(userName);
+      }
 
       if (pe == null)
       {
@@ -243,59 +250,32 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
     */
    public User findUserByName(String userName) throws Exception
    {
-      User user = getFromCache(userName);
-      if (user != null)
-      {
-         return user;
-      }
-
-      Session session = service.getStorageSession();
-      try
-      {
-         Node userNode;
-         try
-         {
-            userNode = utils.getUserNode(session, userName);
-         }
-         catch (PathNotFoundException e)
-         {
-            return null;
-         }
-
-         user = readUser(userNode);
-         putInCache(user);
-
-         return user;
-      }
-      finally
-      {
-         session.logout();
-      }
+      return findUserByName(userName, true);
    }
 
    /**
     * {@inheritDoc}
     */
-   public LazyPageList findUsers(org.exoplatform.services.organization.Query query) throws Exception
+   public LazyPageList<User> findUsers(org.exoplatform.services.organization.Query query) throws Exception
    {
-      return query.isEmpty() ? new LazyPageList(new SimpleJCRUserListAccess(service), 10) : new LazyPageList(
-         new UserByQueryJCRUserListAccess(service, query), 10);
+      return query.isEmpty() ? new LazyPageList<User>(new SimpleJCRUserListAccess(service, true), 10)
+         : new LazyPageList<User>(new UserByQueryJCRUserListAccess(service, query, true), 10);
    }
 
    /**
     * {@inheritDoc}
     */
-   public LazyPageList findUsersByGroup(String groupId) throws Exception
+   public LazyPageList<User> findUsersByGroup(String groupId) throws Exception
    {
-      return new LazyPageList(new UserByGroupJCRUserListAccess(service, groupId), 10);
+      return new LazyPageList<User>(new UserByGroupJCRUserListAccess(service, groupId, true), 10);
    }
 
    /**
     * {@inheritDoc}
     */
-   public LazyPageList getUserPageList(int pageSize) throws Exception
+   public LazyPageList<User> getUserPageList(int pageSize) throws Exception
    {
-      return new LazyPageList(new SimpleJCRUserListAccess(service), pageSize);
+      return new LazyPageList<User>(new SimpleJCRUserListAccess(service, true), pageSize);
    }
 
    /**
@@ -303,7 +283,7 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
     */
    public ListAccess<User> findAllUsers() throws Exception
    {
-      return new SimpleJCRUserListAccess(service);
+      return findAllUsers(true);
    }
 
    /**
@@ -311,7 +291,7 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
     */
    public ListAccess<User> findUsersByGroupId(String groupId) throws Exception
    {
-      return new UserByGroupJCRUserListAccess(service, groupId);
+      return findUsersByGroupId(groupId, true);
    }
 
    /**
@@ -319,7 +299,7 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
     */
    public ListAccess<User> findUsersByQuery(Query query) throws Exception
    {
-      return query.isEmpty() ? new SimpleJCRUserListAccess(service) : new UserByQueryJCRUserListAccess(service, query);
+      return findUsersByQuery(query, true);
    }
 
    /**
@@ -385,6 +365,8 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
     */
    public void saveUser(User user, boolean broadcast) throws Exception
    {
+      if (user != null && !user.isEnabled())
+         throw new DisabledUserException(user.getUserName());
       Session session = service.getStorageSession();
       try
       {
@@ -448,6 +430,130 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
       }
    }
 
+   
+
+   /**
+    * {@inheritDoc}
+    */
+   public User setEnabled(String userName, boolean enabled, boolean broadcast) throws Exception,
+      UnsupportedOperationException
+   {
+      User foundUser = findUserByName(userName, false);
+
+      if (foundUser == null || foundUser.isEnabled() == enabled)
+      {
+         return foundUser;
+      }
+      Session session = service.getStorageSession();
+      try
+      {
+         ((UserImpl)foundUser).setEnabled(enabled);
+         if (broadcast)
+            preSetEnabled(foundUser);
+         Node node = getUserNode(session, (UserImpl)foundUser);
+         if (enabled)
+         {
+            if (!node.canAddMixin(JCROrganizationServiceImpl.JOS_DISABLED))
+            {
+               node.removeMixin(JCROrganizationServiceImpl.JOS_DISABLED);
+               PropertyIterator pi = node.getReferences();
+               while (pi.hasNext())
+               {
+                  Node n = pi.nextProperty().getParent();
+                  if (!n.canAddMixin(JCROrganizationServiceImpl.JOS_DISABLED))
+                  {
+                     n.removeMixin(JCROrganizationServiceImpl.JOS_DISABLED);
+                  }
+               }
+            }
+         }
+         else
+         {
+            if (node.canAddMixin(JCROrganizationServiceImpl.JOS_DISABLED))
+            {
+               node.addMixin(JCROrganizationServiceImpl.JOS_DISABLED);
+               PropertyIterator pi = node.getReferences();
+               while (pi.hasNext())
+               {
+                  Node n = pi.nextProperty().getParent();
+                  if (n.canAddMixin(JCROrganizationServiceImpl.JOS_DISABLED))
+                  {
+                     n.addMixin(JCROrganizationServiceImpl.JOS_DISABLED);
+                  }
+               }
+            }
+         }
+         session.save();
+         if (broadcast)
+            postSetEnabled(foundUser);
+         putInCache(foundUser);
+      }
+      finally
+      {
+         session.logout();
+      }
+
+      return foundUser;
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public User findUserByName(String userName, boolean enabledOnly) throws Exception
+   {
+      User user = getFromCache(userName);
+      if (user != null)
+         return !enabledOnly || user.isEnabled() ? user : null;
+
+      Session session = service.getStorageSession();
+      try
+      {
+         Node userNode;
+         try
+         {
+            userNode = utils.getUserNode(session, userName);
+         }
+         catch (PathNotFoundException e)
+         {
+            return null;
+         }
+
+         user = readUser(userNode);
+         putInCache(user);
+
+         return !enabledOnly || user.isEnabled() ? user : null;
+      }
+      finally
+      {
+         session.logout();
+      }
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public ListAccess<User> findUsersByGroupId(String groupId, boolean enabledOnly) throws Exception
+   {
+      return new UserByGroupJCRUserListAccess(service, groupId, enabledOnly);
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public ListAccess<User> findAllUsers(boolean enabledOnly) throws Exception
+   {
+      return new SimpleJCRUserListAccess(service, enabledOnly);
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public ListAccess<User> findUsersByQuery(Query query, boolean enabledOnly) throws Exception
+   {
+      return query.isEmpty() ? new SimpleJCRUserListAccess(service, enabledOnly) : new UserByQueryJCRUserListAccess(
+         service, query, enabledOnly);
+   }
+
    /**
     * Read user properties from the node in the storage.
     * 
@@ -466,6 +572,7 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
       String firstName = utils.readString(userNode, UserProperties.JOS_FIRST_NAME);
       String lastName = utils.readString(userNode, UserProperties.JOS_LAST_NAME);
       String displayName = utils.readString(userNode, UserProperties.JOS_DISPLAY_NAME);
+      boolean enabled = userNode.canAddMixin(JCROrganizationServiceImpl.JOS_DISABLED);
 
       user.setInternalId(userNode.getUUID());
       user.setCreatedDate(creationDate);
@@ -475,6 +582,7 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
       user.setFirstName(firstName);
       user.setLastName(lastName);
       user.setDisplayName(displayName);
+      user.setEnabled(enabled);
 
       return user;
    }
@@ -512,7 +620,7 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
 
       String userName = oldUserNode.getName();
 
-      if (findUserByName(userName) != null)
+      if (findUserByName(userName, false) != null)
       {
          removeUser(userName, false);
       }
@@ -592,6 +700,35 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
    }
 
    /**
+    * Notifying listeners before enabling/disabling a user.
+    * 
+    * @param user 
+    *          the user which is used in enabling/disabling operation
+    * @throws Exception 
+    *          if any listener failed to handle the event
+    */
+   private void preSetEnabled(User user) throws Exception
+   {
+      for (UserEventListener listener : listeners)
+         listener.preSetEnabled(user);
+   }
+
+
+   /**
+    * Notifying listeners after enabling/disabling a user.
+    * 
+    * @param user 
+    *          the user which is used in enabling/disabling operation
+    * @throws Exception 
+    *          if any listener failed to handle the event
+    */
+   private void postSetEnabled(User user) throws Exception
+   {
+      for (UserEventListener listener : listeners)
+         listener.postSetEnabled(user);
+   }
+
+   /**
     * Remove user from cache.
     */
    private void removeFromCache(String userName)
@@ -605,7 +742,7 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
    private void removeAllRelatedFromCache(String userName)
    {
       cache.remove(userName, CacheType.USER_PROFILE);
-      cache.remove(cache.USER_PREFIX + userName, CacheType.MEMBERSHIP);
+      cache.remove(CacheHandler.USER_PREFIX + userName, CacheType.MEMBERSHIP);
    }
 
    /**
@@ -621,7 +758,7 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
     */
    private void moveMembershipsInCache(String oldName, String newName)
    {
-      cache.move(cache.USER_PREFIX + oldName, cache.USER_PREFIX + newName, CacheType.MEMBERSHIP);
+      cache.move(CacheHandler.USER_PREFIX + oldName, CacheHandler.USER_PREFIX + newName, CacheType.MEMBERSHIP);
    }
 
    /**

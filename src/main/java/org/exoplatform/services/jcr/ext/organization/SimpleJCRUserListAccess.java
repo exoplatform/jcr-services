@@ -22,6 +22,7 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.query.Query;
 
 /**
  * Created by The eXo Platform SAS.
@@ -40,9 +41,9 @@ public class SimpleJCRUserListAccess extends JCRUserListAccess
    /**
     * JCRUserListAccess constructor.
     */
-   public SimpleJCRUserListAccess(JCROrganizationServiceImpl service) throws RepositoryException
+   public SimpleJCRUserListAccess(JCROrganizationServiceImpl service, boolean enabledOnly) throws RepositoryException
    {
-      super(service);
+      super(service, enabledOnly);
       usersStorageNode = getUsersStorageNode();
    }
 
@@ -51,7 +52,20 @@ public class SimpleJCRUserListAccess extends JCRUserListAccess
     */
    protected int getSize(Session session) throws Exception
    {
-      return (int)usersStorageNode.getNodesCount();
+      long result = usersStorageNode.getNodesCount();
+      if (enabledOnly)
+      {
+         StringBuilder statement = new StringBuilder("SELECT * FROM ");
+         statement.append(JCROrganizationServiceImpl.JOS_USERS_NODETYPE).append(" WHERE");
+         statement.append(" jcr:path LIKE '").append(usersStorageNode.getPath()).append("/%'");
+         statement.append(" AND NOT jcr:path LIKE '").append(usersStorageNode.getPath()).append("/%/%'");
+         statement.append(" AND ").append(JCROrganizationServiceImpl.JOS_DISABLED).append(" IS NOT NULL");
+
+         // We remove the total amount of disabled users
+         result -= session.getWorkspace().getQueryManager()
+            .createQuery(statement.toString(), Query.SQL).execute().getNodes().getSize();
+      }
+      return (int)result;
    }
 
    /**

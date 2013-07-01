@@ -17,6 +17,8 @@
 package org.exoplatform.services.jcr.ext.organization;
 
 import org.exoplatform.commons.utils.ListAccess;
+import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
 import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.services.organization.User;
 import org.exoplatform.services.organization.UserHandler;
@@ -34,6 +36,10 @@ import javax.jcr.Session;
  */
 public abstract class JCRUserListAccess implements ListAccess<User>
 {
+   /**
+    * Logger.
+    */
+   protected static final Log LOG = ExoLogger.getLogger("exo-jcr-services.JCRUserListAccess");
 
    /**
     * Default value of page size. 
@@ -61,13 +67,19 @@ public abstract class JCRUserListAccess implements ListAccess<User>
    protected NodeIterator iterator;
 
    /**
+    * Indicates whether or not only the enabled users are expected
+    */
+   protected final boolean enabledOnly;
+
+   /**
     * JCRListAccess constructor.
     */
-   public JCRUserListAccess(JCROrganizationServiceImpl service) throws RepositoryException
+   public JCRUserListAccess(JCROrganizationServiceImpl service, boolean enabledOnly) throws RepositoryException
    {
       this.service = service;
       this.uHandler = (UserHandlerImpl)service.getUserHandler();
       this.utils = new Utils(service);
+      this.enabledOnly = enabledOnly;
    }
 
    /**
@@ -92,7 +104,10 @@ public abstract class JCRUserListAccess implements ListAccess<User>
 
          while (iterator.hasNext() && processed != length)
          {
-            entities[processed++] = (User)readObject(iterator.nextNode());
+            Node n = iterator.nextNode();
+            if (!accept(n))
+               continue;
+            entities[processed++] = (User)readObject(n);
          }
 
          if (processed != length)
@@ -174,4 +189,37 @@ public abstract class JCRUserListAccess implements ListAccess<User>
     */
    protected abstract int getSize(Session session) throws Exception;
 
+   /**
+     * Tests whether or not the specified node should be
+     * included in the node list.
+     *
+     * @param node  The node to be tested
+     * @return <code>true</code> if and only if <code>node</code>
+     *          should be included
+    */
+   protected boolean accept(Node node)
+   {
+      try
+      {
+         return !enabledOnly || node.canAddMixin(JCROrganizationServiceImpl.JOS_DISABLED);
+      }
+      catch (RepositoryException e)
+      {
+         if (LOG.isDebugEnabled())
+         {
+            String path = "unknown";
+            try
+            {
+               path = node.getPath();
+            }
+            catch (RepositoryException e1)
+            {
+               LOG.debug("Could not get the node of the node: " + node, e1);
+            }
+            LOG.debug("Could not know if the mixin type " + JCROrganizationServiceImpl.JOS_DISABLED
+               + " has been added to the node " + path, e);
+         }
+         return true;
+      }
+   }
 }

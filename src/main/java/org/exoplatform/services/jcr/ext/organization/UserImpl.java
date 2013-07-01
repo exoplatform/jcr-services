@@ -78,6 +78,11 @@ public class UserImpl implements User, ExtendedCloneable
    private String internalId;
 
    /**
+    * Indicates whether the user is enabled or not
+    */
+   private boolean enabled = true;
+
+   /**
     * UserImpl constructor.
     */
    UserImpl()
@@ -257,6 +262,23 @@ public class UserImpl implements User, ExtendedCloneable
    public void setUserName(String s)
    {
       userName = s;
+   }
+
+   /**
+    * @return <code>true</code> if the user is enabled, <code>false</code> otherwise
+    */
+   public boolean isEnabled()
+   {
+      return enabled;
+   }
+
+   /**
+    * Set it to <code>true</code> to enable the user, 
+    * <code>false</code> otherwise
+    */
+   void setEnabled(Boolean enabled)
+   {
+      this.enabled = enabled;
    }
 
    /**

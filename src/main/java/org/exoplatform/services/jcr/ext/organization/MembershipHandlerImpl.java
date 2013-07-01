@@ -466,24 +466,23 @@ public class MembershipHandlerImpl extends JCROrgServiceHandler implements Membe
     */
    public void linkMembership(User user, Group group, MembershipType m, boolean broadcast) throws Exception
    {
+      if (user == null)
+      {
+         throw new InvalidNameException("Can not create membership record because user is null");
+      }
+
+      if (group == null)
+      {
+         throw new InvalidNameException("Can not create membership record because group is null");
+      }
+
+      if (m == null)
+      {
+         throw new InvalidNameException("Can not create membership record because membership type is null");
+      }
       Session session = service.getStorageSession();
       try
       {
-         if (user == null)
-         {
-            throw new InvalidNameException("Can not create membership record because user is null");
-         }
-
-         if (group == null)
-         {
-            throw new InvalidNameException("Can not create membership record because group is null");
-         }
-
-         if (m == null)
-         {
-            throw new InvalidNameException("Can not create membership record because type is null");
-         }
-
          MembershipImpl membership = new MembershipImpl();
          membership.setMembershipType(m.getName());
          membership.setGroupId(group.getId());
