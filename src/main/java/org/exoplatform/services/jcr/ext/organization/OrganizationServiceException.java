@@ -29,6 +29,11 @@ public class OrganizationServiceException extends Exception
 {
 
    /**
+    * The serial version UID
+    */
+   private static final long serialVersionUID = -4144453302333115329L;
+
+   /**
     * OrganizationServiceException constructor.
     * 
     * @param message

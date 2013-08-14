@@ -133,7 +133,7 @@ public class UserProfileHandlerImpl extends JCROrgServiceHandler implements User
    /**
     * {@inheritDoc}
     */
-   public Collection findUserProfiles() throws Exception
+   public Collection<UserProfile> findUserProfiles() throws Exception
    {
       List<UserProfile> profiles = new ArrayList<UserProfile>();
 

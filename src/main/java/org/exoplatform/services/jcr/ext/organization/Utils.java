@@ -17,6 +17,7 @@
 package org.exoplatform.services.jcr.ext.organization;
 
 import org.exoplatform.services.organization.Group;
+import org.exoplatform.services.organization.MembershipTypeHandler;
 
 import java.util.Date;
 
@@ -36,7 +37,6 @@ import javax.jcr.ValueFormatException;
  * Date: 7 10 2008
  * 
  * @author <a href="mailto:anatoliy.bazko@exoplatform.com.ua">Anatoliy Bazko</a>
- * @version $Id: ReadHandler.java 111 2008-11-11 11:11:11Z $
  */
 public class Utils
 {
@@ -117,7 +117,12 @@ public class Utils
     */
    String composeMembershipId(Node groupNode, Node refUserNode, Node refTypeNode) throws RepositoryException
    {
-      return groupNode.getUUID() + ',' + refUserNode.getName() + ',' + refTypeNode.getName();
+      return groupNode.getUUID()
+         + ','
+         + refUserNode.getName()
+         + ','
+         + (refTypeNode.getName().equals(JCROrganizationServiceImpl.JOS_MEMBERSHIP_TYPE_ANY)
+            ? MembershipTypeHandler.ANY_MEMBERSHIP_TYPE.getName() : refTypeNode.getName());
    }
 
    /**
@@ -200,7 +205,12 @@ public class Utils
     */
    String getMembershipTypeNodePath(String name) throws RepositoryException
    {
-      return service.getStoragePath() + "/" + JCROrganizationServiceImpl.STORAGE_JOS_MEMBERSHIP_TYPES + "/" + name;
+      return service.getStoragePath()
+         + "/"
+         + JCROrganizationServiceImpl.STORAGE_JOS_MEMBERSHIP_TYPES
+         + "/"
+         + (name.equals(MembershipTypeHandler.ANY_MEMBERSHIP_TYPE.getName())
+            ? JCROrganizationServiceImpl.JOS_MEMBERSHIP_TYPE_ANY : name);
    }
 
    /**

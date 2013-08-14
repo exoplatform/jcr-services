@@ -111,12 +111,12 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
    protected JCRCacheHandler cacheHandler;
 
    /**
-    * The node to storage groups.
+    * The node to store groups.
     */
    public static final String STORAGE_JOS_GROUPS = "jos:groups";
 
    /**
-    * The node to storage membership types.
+    * The node to store membership types.
     */
    public static final String STORAGE_JOS_MEMBERSHIP_TYPES = "jos:membershipTypes";
 
@@ -126,7 +126,7 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
    public static final String STORAGE_JOS_USERS = "jos:users";
 
    /**
-    * The child node to storage user additional information.
+    * The child node to store user additional information.
     */
    public static final String JOS_PROFILE = "jos:profile";
 
@@ -134,6 +134,11 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
     * The child node of group node where memberships are stored.
     */
    public static final String JOS_MEMBERSHIP = "jos:memberships";
+
+   /**
+    * The node that identifies the membership type * or any.
+    */
+   public static final String JOS_MEMBERSHIP_TYPE_ANY = "jos:membershipTypeAny";
 
    /**
     * The group nodetype.
@@ -299,7 +304,8 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
 
          storage.addNode(STORAGE_JOS_USERS, STORAGE_JOS_USERS_NODETYPE);
          storage.addNode(STORAGE_JOS_GROUPS, STORAGE_JOS_GROUPS_NODETYPE);
-         storage.addNode(STORAGE_JOS_MEMBERSHIP_TYPES, STORAGE_JOS_MEMBERSHIP_TYPES_NODETYPE);
+         Node storageTypesNode = storage.addNode(STORAGE_JOS_MEMBERSHIP_TYPES, STORAGE_JOS_MEMBERSHIP_TYPES_NODETYPE);
+         storageTypesNode.addNode(JOS_MEMBERSHIP_TYPE_ANY);
 
          session.save(); // storage done configure
       }

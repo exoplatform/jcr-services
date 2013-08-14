@@ -28,6 +28,7 @@ import org.exoplatform.services.organization.MembershipEventListener;
 import org.exoplatform.services.organization.MembershipEventListenerHandler;
 import org.exoplatform.services.organization.MembershipHandler;
 import org.exoplatform.services.organization.MembershipType;
+import org.exoplatform.services.organization.MembershipTypeHandler;
 import org.exoplatform.services.organization.User;
 import org.exoplatform.services.organization.impl.mock.SimpleMembershipListAccess;
 import org.exoplatform.services.security.PermissionConstants;
@@ -125,7 +126,7 @@ public class MembershipHandlerImpl extends JCROrgServiceHandler implements Membe
       }
       catch (PathNotFoundException e)
       {
-         throw new InvalidNameException("The user " + membership.getUserName() + " not exists");
+         throw new InvalidNameException("The user " + membership.getUserName() + " does not exist");
       }
 
       Node groupNode;
@@ -135,17 +136,20 @@ public class MembershipHandlerImpl extends JCROrgServiceHandler implements Membe
       }
       catch (PathNotFoundException e)
       {
-         throw new InvalidNameException("The group " + membership.getGroupId() + " not exists");
+         throw new InvalidNameException("The group " + membership.getGroupId() + " does not exist");
       }
 
       Node typeNode;
+      String membershipType =
+         membership.getMembershipType().equals(MembershipTypeHandler.ANY_MEMBERSHIP_TYPE.getName())
+            ? JCROrganizationServiceImpl.JOS_MEMBERSHIP_TYPE_ANY : membership.getMembershipType();
       try
       {
-         typeNode = utils.getMembershipTypeNode(session, membership.getMembershipType());
+         typeNode = utils.getMembershipTypeNode(session, membershipType);
       }
       catch (PathNotFoundException e)
       {
-         throw new InvalidNameException("The membership type " + membership.getMembershipType() + " not exists");
+         throw new InvalidNameException("The membership type " + membership.getMembershipType() + " does not exist");
       }
 
       Node membershipStorageNode = groupNode.getNode(JCROrganizationServiceImpl.JOS_MEMBERSHIP);
@@ -164,7 +168,7 @@ public class MembershipHandlerImpl extends JCROrgServiceHandler implements Membe
       Node refTypeNode;
       try
       {
-         refTypeNode = refUserNode.addNode(membership.getMembershipType());
+         refTypeNode = refUserNode.addNode(membershipType);
          refTypeNode.setProperty(MembershipProperties.JOS_MEMBERSHIP_TYPE, typeNode);
       }
       catch (ItemExistsException e)
@@ -231,7 +235,9 @@ public class MembershipHandlerImpl extends JCROrgServiceHandler implements Membe
 
       Node groupNode = session.getNodeByUUID(ids.groupNodeId);
       Node refUserNode = groupNode.getNode(JCROrganizationServiceImpl.JOS_MEMBERSHIP).getNode(ids.userName);
-      Node refTypeNode = refUserNode.getNode(ids.type);
+      Node refTypeNode =
+         refUserNode.getNode(ids.type.equals(MembershipTypeHandler.ANY_MEMBERSHIP_TYPE.getName())
+            ? JCROrganizationServiceImpl.JOS_MEMBERSHIP_TYPE_ANY : ids.type);
 
       String groupId = utils.getGroupIds(groupNode).groupId;
 
@@ -279,7 +285,9 @@ public class MembershipHandlerImpl extends JCROrgServiceHandler implements Membe
          Node groupNode = utils.getGroupNode(session, groupId);
 
          Node refUserNode = groupNode.getNode(JCROrganizationServiceImpl.JOS_MEMBERSHIP).getNode(userName);
-         Node refTypeNode = refUserNode.getNode(type);
+         Node refTypeNode =
+            refUserNode.getNode(type.equals(MembershipTypeHandler.ANY_MEMBERSHIP_TYPE.getName())
+               ? JCROrganizationServiceImpl.JOS_MEMBERSHIP_TYPE_ANY : type);
 
          String id = utils.composeMembershipId(groupNode, refUserNode, refTypeNode);
 
@@ -302,7 +310,7 @@ public class MembershipHandlerImpl extends JCROrgServiceHandler implements Membe
    /**
     * {@inheritDoc}
     */
-   public Collection findMembershipsByGroup(Group group) throws Exception
+   public Collection<Membership> findMembershipsByGroup(Group group) throws Exception
    {
       Session session = service.getStorageSession();
       try
@@ -318,7 +326,7 @@ public class MembershipHandlerImpl extends JCROrgServiceHandler implements Membe
    /**
     * Use this method to find all the membership in a group. 
     */
-   private Collection findMembershipsByGroup(Session session, Group group) throws Exception
+   private Collection<Membership> findMembershipsByGroup(Session session, Group group) throws Exception
    {
       Node groupNode;
       NodeIterator refUsers;
@@ -353,7 +361,7 @@ public class MembershipHandlerImpl extends JCROrgServiceHandler implements Membe
    /**
     * {@inheritDoc}
     */
-   public Collection findMembershipsByUser(String userName) throws Exception
+   public Collection<Membership> findMembershipsByUser(String userName) throws Exception
    {
       Session session = service.getStorageSession();
       try
@@ -400,7 +408,7 @@ public class MembershipHandlerImpl extends JCROrgServiceHandler implements Membe
    /**
     * {@inheritDoc}
     */
-   public Collection findMembershipsByUserAndGroup(String userName, String groupId) throws Exception
+   public Collection<Membership> findMembershipsByUserAndGroup(String userName, String groupId) throws Exception
    {
       Session session = service.getStorageSession();
       try
@@ -416,7 +424,7 @@ public class MembershipHandlerImpl extends JCROrgServiceHandler implements Membe
    /**
     * Use this method to find all the memberships of an user in a group.
     */
-   private Collection findMembershipsByUserAndGroup(Session session, String userName, String groupId) throws Exception
+   private Collection<Membership> findMembershipsByUserAndGroup(Session session, String userName, String groupId) throws Exception
    {
       Node groupNode;
       Node refUserNode;
@@ -437,7 +445,7 @@ public class MembershipHandlerImpl extends JCROrgServiceHandler implements Membe
    /**
     * Use this method to find all the memberships of an user in a group.
     */
-   private Collection findMembershipsByUserAndGroup(Session session, Node refUserNode, Node groupNode) throws Exception
+   private Collection<Membership> findMembershipsByUserAndGroup(Session session, Node refUserNode, Node groupNode) throws Exception
    {
       List<Membership> memberships = new ArrayList<Membership>();
 
@@ -451,7 +459,8 @@ public class MembershipHandlerImpl extends JCROrgServiceHandler implements Membe
 
          MembershipImpl membership = new MembershipImpl();
          membership.setUserName(refUserNode.getName());
-         membership.setMembershipType(refTypeNode.getName());
+         membership.setMembershipType((refTypeNode.getName().equals(JCROrganizationServiceImpl.JOS_MEMBERSHIP_TYPE_ANY)
+            ? MembershipTypeHandler.ANY_MEMBERSHIP_TYPE.getName() : refTypeNode.getName()));
          membership.setGroupId(groupId);
          membership.setId(id);
 
@@ -593,7 +602,7 @@ public class MembershipHandlerImpl extends JCROrgServiceHandler implements Membe
    void removeMembership(Node refUserNode, Node refTypeNode) throws Exception
    {
       refTypeNode.remove();
-      if (refUserNode.hasNodes())
+      if (!refUserNode.hasNodes())
       {
          refUserNode.remove();
       }
@@ -602,7 +611,7 @@ public class MembershipHandlerImpl extends JCROrgServiceHandler implements Membe
    /**
     * {@inheritDoc}
     */
-   public Collection removeMembershipByUser(String userName, boolean broadcast) throws Exception
+   public Collection<Membership> removeMembershipByUser(String userName, boolean broadcast) throws Exception
    {
       Session session = service.getStorageSession();
       try
@@ -618,7 +627,7 @@ public class MembershipHandlerImpl extends JCROrgServiceHandler implements Membe
    /**
     * Remove memberships entities related to current user.
     */
-   private Collection removeMembershipByUser(Session session, String userName, boolean broadcast) throws Exception
+   private Collection<Membership> removeMembershipByUser(Session session, String userName, boolean broadcast) throws Exception
    {
       MembershipsByUserWrapper mWrapper = findMembershipsByUser(session, userName);
 

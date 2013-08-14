@@ -217,7 +217,7 @@ public class TestMigrationTool extends AbstractOrganizationServiceTest
 
       try
       {
-         assertEquals(3, ((Node)sess.getItem("/exo:organization/jos:membershipTypes")).getNodes().getSize());
+         assertEquals(4, ((Node)sess.getItem("/exo:organization/jos:membershipTypes")).getNodes().getSize());
       }
       finally
       {

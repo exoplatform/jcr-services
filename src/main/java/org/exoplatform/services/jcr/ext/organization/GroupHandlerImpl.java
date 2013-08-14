@@ -24,6 +24,7 @@ import org.exoplatform.services.organization.Group;
 import org.exoplatform.services.organization.GroupEventListener;
 import org.exoplatform.services.organization.GroupEventListenerHandler;
 import org.exoplatform.services.organization.GroupHandler;
+import org.exoplatform.services.organization.MembershipTypeHandler;
 import org.exoplatform.services.security.PermissionConstants;
 
 import java.util.ArrayList;
@@ -178,7 +179,7 @@ public class GroupHandlerImpl extends JCROrgServiceHandler implements GroupHandl
    /**
     * {@inheritDoc}
     */
-   public Collection findGroupByMembership(String userName, String membershipType) throws Exception
+   public Collection<Group> findGroupByMembership(String userName, String membershipType) throws Exception
    {
       List<Group> groups = new ArrayList<Group>();
 
@@ -199,7 +200,9 @@ public class GroupHandlerImpl extends JCROrgServiceHandler implements GroupHandl
          while (refUserProps.hasNext())
          {
             Node refUserNode = refUserProps.nextProperty().getParent();
-            if (membershipType == null || refUserNode.hasNode(membershipType))
+            if (membershipType == null
+               || refUserNode.hasNode(membershipType.equals(MembershipTypeHandler.ANY_MEMBERSHIP_TYPE.getName())
+                  ? JCROrganizationServiceImpl.JOS_MEMBERSHIP_TYPE_ANY : membershipType))
             {
                Node groupNode = refUserNode.getParent().getParent();
                groups.add(readGroup(groupNode));
@@ -217,7 +220,47 @@ public class GroupHandlerImpl extends JCROrgServiceHandler implements GroupHandl
    /**
     * {@inheritDoc}
     */
-   public Collection findGroups(Group parent) throws Exception
+   public Collection<Group> resolveGroupByMembership(String userName, String membershipType) throws Exception
+   {
+      List<Group> groups = new ArrayList<Group>();
+
+      Session session = service.getStorageSession();
+      try
+      {
+         Node userNode;
+         try
+         {
+            userNode = utils.getUserNode(session, userName);
+         }
+         catch (PathNotFoundException e)
+         {
+            return new ArrayList<Group>();
+         }
+
+         PropertyIterator refUserProps = userNode.getReferences();
+         while (refUserProps.hasNext())
+         {
+            Node refUserNode = refUserProps.nextProperty().getParent();
+            if (membershipType == null || refUserNode.hasNode(membershipType)
+               || refUserNode.hasNode(JCROrganizationServiceImpl.JOS_MEMBERSHIP_TYPE_ANY))
+            {
+               Node groupNode = refUserNode.getParent().getParent();
+               groups.add(readGroup(groupNode));
+            }
+         }
+      }
+      finally
+      {
+         session.logout();
+      }
+
+      return groups;
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public Collection<Group> findGroups(Group parent) throws Exception
    {
       Session session = service.getStorageSession();
       try
@@ -237,7 +280,7 @@ public class GroupHandlerImpl extends JCROrgServiceHandler implements GroupHandl
     *          if true, the search should be recursive. It means go down to the tree 
     *          until bottom will reach
     */
-   private Collection findGroups(Session session, Group parent, boolean recursive) throws Exception
+   private Collection<Group> findGroups(Session session, Group parent, boolean recursive) throws Exception
    {
       List<Group> groups = new ArrayList<Group>();
       String parentId = parent == null ? "" : parent.getId();
@@ -265,7 +308,7 @@ public class GroupHandlerImpl extends JCROrgServiceHandler implements GroupHandl
    /**
     * {@inheritDoc}
     */
-   public Collection findGroupsOfUser(String user) throws Exception
+   public Collection<Group> findGroupsOfUser(String user) throws Exception
    {
       return findGroupByMembership(user, null);
    }
@@ -273,7 +316,7 @@ public class GroupHandlerImpl extends JCROrgServiceHandler implements GroupHandl
    /**
     * {@inheritDoc}
     */
-   public Collection getAllGroups() throws Exception
+   public Collection<Group> getAllGroups() throws Exception
    {
       Session session = service.getStorageSession();
       try

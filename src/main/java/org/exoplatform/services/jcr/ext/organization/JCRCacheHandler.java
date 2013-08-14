@@ -20,8 +20,6 @@ package org.exoplatform.services.jcr.ext.organization;
 
 import org.exoplatform.services.cache.CacheService;
 import org.exoplatform.services.jcr.config.RepositoryConfigurationException;
-import org.exoplatform.services.log.ExoLogger;
-import org.exoplatform.services.log.Log;
 import org.exoplatform.services.organization.CacheHandler;
 
 import java.io.Serializable;
@@ -40,8 +38,6 @@ import javax.jcr.RepositoryException;
 public class JCRCacheHandler extends CacheHandler
 {
    private static char DELIMITER = ':';
-
-   private static final Log LOG = ExoLogger.getLogger("exo-jcr-services.JCRCacheHandler");
 
    private final JCROrganizationServiceImpl jcrOrganizationServiceImpl;
 

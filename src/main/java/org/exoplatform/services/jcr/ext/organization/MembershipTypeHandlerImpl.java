@@ -77,6 +77,11 @@ public class MembershipTypeHandlerImpl extends JCROrgServiceHandler implements M
     */
    public MembershipType createMembershipType(MembershipType mt, boolean broadcast) throws Exception
    {
+      if (mt.getName().equals(ANY_MEMBERSHIP_TYPE.getName()))
+      {
+         throw new IllegalArgumentException("The * membership cannot be managed by the API");
+      }
+
       Session session = service.getStorageSession();
       try
       {
@@ -171,7 +176,7 @@ public class MembershipTypeHandlerImpl extends JCROrgServiceHandler implements M
    /**
     * {@inheritDoc}
     */
-   public Collection findMembershipTypes() throws Exception
+   public Collection<MembershipType> findMembershipTypes() throws Exception
    {
       List<MembershipType> types = new ArrayList<MembershipType>();
 
@@ -198,6 +203,11 @@ public class MembershipTypeHandlerImpl extends JCROrgServiceHandler implements M
     */
    public MembershipType removeMembershipType(String name, boolean broadcast) throws Exception
    {
+      if (name.equals(ANY_MEMBERSHIP_TYPE.getName()))
+      {
+         throw new IllegalArgumentException("The * membership cannot be managed by the API");
+      }
+
       Session session = service.getStorageSession();
       try
       {
@@ -260,6 +270,11 @@ public class MembershipTypeHandlerImpl extends JCROrgServiceHandler implements M
     */
    public MembershipType saveMembershipType(MembershipType mt, boolean broadcast) throws Exception
    {
+      if (mt.getName().equals(ANY_MEMBERSHIP_TYPE.getName()))
+      {
+         throw new IllegalArgumentException("The * membership cannot be managed by the API");
+      }
+
       Session session = service.getStorageSession();
       try
       {
@@ -370,7 +385,8 @@ public class MembershipTypeHandlerImpl extends JCROrgServiceHandler implements M
    private MembershipType readMembershipType(Node node) throws Exception
    {
       MembershipTypeImpl mt = new MembershipTypeImpl();
-      mt.setName(node.getName());
+      mt.setName(node.getName().equals(JCROrganizationServiceImpl.JOS_MEMBERSHIP_TYPE_ANY) ? ANY_MEMBERSHIP_TYPE
+         .getName() : node.getName());
       mt.setInternalId(node.getUUID());
       mt.setDescription(utils.readString(node, MembershipTypeProperties.JOS_DESCRIPTION));
 
