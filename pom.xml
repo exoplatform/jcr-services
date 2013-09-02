@@ -351,16 +351,6 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <argLine>${env.MAVEN_OPTS} -Djava.security.manager=org.exoplatform.commons.test.TestSecurityManager -Djava.security.policy=${project.build.directory}/test-classes/test.policy</argLine>
-          <systemProperties>
-             <!--
-                This property allow to define if we should skip testing
-                login and logaout time processing 
-             -->  
-             <property>
-                <name>orgservice.test.configuration.skipDateTests</name>
-                <value>true</value>
-             </property>
-          </systemProperties>
           <!-- Including Organization Service TCK-->
           <includes>
               <include>org/exoplatform/services/tck/organization/Test*.java</include>
