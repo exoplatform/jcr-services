@@ -178,7 +178,12 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
             new String(pe.encrypt(utils.readString(userNode, UserProperties.JOS_PASSWORD).getBytes()));
          authenticated = encryptedPassword.equals(password);
       }
-
+      if (authenticated)
+      {
+         Calendar lastLoginTime = Calendar.getInstance();
+         userNode.setProperty(UserProperties.JOS_LAST_LOGIN_TIME, lastLoginTime);
+         session.save();
+      }
       return authenticated;
    }
 
