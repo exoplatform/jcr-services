@@ -201,7 +201,7 @@ public class GroupHandlerImpl extends JCROrgServiceHandler implements GroupHandl
          {
             Node refUserNode = refUserProps.nextProperty().getParent();
             if (membershipType == null
-               || refUserNode.hasNode(membershipType.equals(MembershipTypeHandler.ANY_MEMBERSHIP_TYPE.getName())
+               || refUserNode.hasNode(membershipType.equals(MembershipTypeHandler.ANY_MEMBERSHIP_TYPE)
                   ? JCROrganizationServiceImpl.JOS_MEMBERSHIP_TYPE_ANY : membershipType))
             {
                Node groupNode = refUserNode.getParent().getParent();

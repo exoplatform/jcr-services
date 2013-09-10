@@ -77,11 +77,6 @@ public class MembershipTypeHandlerImpl extends JCROrgServiceHandler implements M
     */
    public MembershipType createMembershipType(MembershipType mt, boolean broadcast) throws Exception
    {
-      if (mt.getName().equals(ANY_MEMBERSHIP_TYPE.getName()))
-      {
-         throw new IllegalArgumentException("The * membership cannot be managed by the API");
-      }
-
       Session session = service.getStorageSession();
       try
       {
@@ -100,7 +95,8 @@ public class MembershipTypeHandlerImpl extends JCROrgServiceHandler implements M
       throws Exception
    {
       Node storageTypesNode = utils.getMembershipTypeStorageNode(session);
-      Node typeNode = storageTypesNode.addNode(mt.getName());
+      Node typeNode = storageTypesNode.addNode(mt.getName().equals(MembershipTypeHandler.ANY_MEMBERSHIP_TYPE)
+         ? JCROrganizationServiceImpl.JOS_MEMBERSHIP_TYPE_ANY : mt.getName());
 
       mt.setInternalId(typeNode.getUUID());
 
@@ -189,6 +185,7 @@ public class MembershipTypeHandlerImpl extends JCROrgServiceHandler implements M
             MembershipType type = readMembershipType(membershipTypes.nextNode());
             types.add(type);
          }
+         Collections.sort(types, MembershipTypeHandler.COMPARATOR);
       }
       finally
       {
@@ -203,11 +200,6 @@ public class MembershipTypeHandlerImpl extends JCROrgServiceHandler implements M
     */
    public MembershipType removeMembershipType(String name, boolean broadcast) throws Exception
    {
-      if (name.equals(ANY_MEMBERSHIP_TYPE.getName()))
-      {
-         throw new IllegalArgumentException("The * membership cannot be managed by the API");
-      }
-
       Session session = service.getStorageSession();
       try
       {
@@ -270,11 +262,6 @@ public class MembershipTypeHandlerImpl extends JCROrgServiceHandler implements M
     */
    public MembershipType saveMembershipType(MembershipType mt, boolean broadcast) throws Exception
    {
-      if (mt.getName().equals(ANY_MEMBERSHIP_TYPE.getName()))
-      {
-         throw new IllegalArgumentException("The * membership cannot be managed by the API");
-      }
-
       Session session = service.getStorageSession();
       try
       {
@@ -319,7 +306,9 @@ public class MembershipTypeHandlerImpl extends JCROrgServiceHandler implements M
          preSave(mType, isNew);
       }
 
-      String oldType = mtNode.getName();
+      String oldType =
+         mtNode.getName().equals(JCROrganizationServiceImpl.JOS_MEMBERSHIP_TYPE_ANY) ? ANY_MEMBERSHIP_TYPE : mtNode
+            .getName();
       String newType = mType.getName();
 
       if (!oldType.equals(newType))
@@ -385,8 +374,8 @@ public class MembershipTypeHandlerImpl extends JCROrgServiceHandler implements M
    private MembershipType readMembershipType(Node node) throws Exception
    {
       MembershipTypeImpl mt = new MembershipTypeImpl();
-      mt.setName(node.getName().equals(JCROrganizationServiceImpl.JOS_MEMBERSHIP_TYPE_ANY) ? ANY_MEMBERSHIP_TYPE
-         .getName() : node.getName());
+      mt.setName(node.getName().equals(JCROrganizationServiceImpl.JOS_MEMBERSHIP_TYPE_ANY) ? ANY_MEMBERSHIP_TYPE : node
+         .getName());
       mt.setInternalId(node.getUUID());
       mt.setDescription(utils.readString(node, MembershipTypeProperties.JOS_DESCRIPTION));
 

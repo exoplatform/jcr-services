@@ -141,7 +141,7 @@ public class MembershipHandlerImpl extends JCROrgServiceHandler implements Membe
 
       Node typeNode;
       String membershipType =
-         membership.getMembershipType().equals(MembershipTypeHandler.ANY_MEMBERSHIP_TYPE.getName())
+         membership.getMembershipType().equals(MembershipTypeHandler.ANY_MEMBERSHIP_TYPE)
             ? JCROrganizationServiceImpl.JOS_MEMBERSHIP_TYPE_ANY : membership.getMembershipType();
       try
       {
@@ -236,7 +236,7 @@ public class MembershipHandlerImpl extends JCROrgServiceHandler implements Membe
       Node groupNode = session.getNodeByUUID(ids.groupNodeId);
       Node refUserNode = groupNode.getNode(JCROrganizationServiceImpl.JOS_MEMBERSHIP).getNode(ids.userName);
       Node refTypeNode =
-         refUserNode.getNode(ids.type.equals(MembershipTypeHandler.ANY_MEMBERSHIP_TYPE.getName())
+         refUserNode.getNode(ids.type.equals(MembershipTypeHandler.ANY_MEMBERSHIP_TYPE)
             ? JCROrganizationServiceImpl.JOS_MEMBERSHIP_TYPE_ANY : ids.type);
 
       String groupId = utils.getGroupIds(groupNode).groupId;
@@ -286,7 +286,7 @@ public class MembershipHandlerImpl extends JCROrgServiceHandler implements Membe
 
          Node refUserNode = groupNode.getNode(JCROrganizationServiceImpl.JOS_MEMBERSHIP).getNode(userName);
          Node refTypeNode =
-            refUserNode.getNode(type.equals(MembershipTypeHandler.ANY_MEMBERSHIP_TYPE.getName())
+            refUserNode.getNode(type.equals(MembershipTypeHandler.ANY_MEMBERSHIP_TYPE)
                ? JCROrganizationServiceImpl.JOS_MEMBERSHIP_TYPE_ANY : type);
 
          String id = utils.composeMembershipId(groupNode, refUserNode, refTypeNode);
@@ -460,7 +460,7 @@ public class MembershipHandlerImpl extends JCROrgServiceHandler implements Membe
          MembershipImpl membership = new MembershipImpl();
          membership.setUserName(refUserNode.getName());
          membership.setMembershipType((refTypeNode.getName().equals(JCROrganizationServiceImpl.JOS_MEMBERSHIP_TYPE_ANY)
-            ? MembershipTypeHandler.ANY_MEMBERSHIP_TYPE.getName() : refTypeNode.getName()));
+            ? MembershipTypeHandler.ANY_MEMBERSHIP_TYPE : refTypeNode.getName()));
          membership.setGroupId(groupId);
          membership.setId(id);
 

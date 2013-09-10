@@ -122,7 +122,7 @@ public class Utils
          + refUserNode.getName()
          + ','
          + (refTypeNode.getName().equals(JCROrganizationServiceImpl.JOS_MEMBERSHIP_TYPE_ANY)
-            ? MembershipTypeHandler.ANY_MEMBERSHIP_TYPE.getName() : refTypeNode.getName());
+            ? MembershipTypeHandler.ANY_MEMBERSHIP_TYPE : refTypeNode.getName());
    }
 
    /**
@@ -209,7 +209,7 @@ public class Utils
          + "/"
          + JCROrganizationServiceImpl.STORAGE_JOS_MEMBERSHIP_TYPES
          + "/"
-         + (name.equals(MembershipTypeHandler.ANY_MEMBERSHIP_TYPE.getName())
+         + (name.equals(MembershipTypeHandler.ANY_MEMBERSHIP_TYPE)
             ? JCROrganizationServiceImpl.JOS_MEMBERSHIP_TYPE_ANY : name);
    }
 
