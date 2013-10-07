@@ -21,7 +21,7 @@ import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.container.xml.PropertiesParam;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ExtendedNode;
-import org.exoplatform.services.jcr.ext.app.ThreadLocalSessionProviderService;
+import org.exoplatform.services.jcr.ext.app.SessionProviderService;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.services.jcr.ext.resource.NodeRepresentation;
 import org.exoplatform.services.jcr.ext.resource.NodeRepresentationService;
@@ -105,7 +105,7 @@ public class RESTArtifactLoaderService implements ResourceContainer
    /**
     * Keeps SessionProvider for user.
     */
-   private ThreadLocalSessionProviderService sessionProviderService;
+   private SessionProviderService sessionProviderService;
 
    /**
     * RepositoryService.
@@ -117,7 +117,7 @@ public class RESTArtifactLoaderService implements ResourceContainer
     *          the initialized parameters. Set repository name, workspace name, root node for Maven
     *          repository, username(optional) and password (optional).
     * @param sessionProviderService
-    *          the ThreadLocalSessionProviderService.
+    *          the SessionProviderService.
     * @param repositoryService
     *          the RepositoryService.
     * @param nodeRepresentationService
@@ -125,7 +125,7 @@ public class RESTArtifactLoaderService implements ResourceContainer
     * @throws Exception
     *           if any errors occur or not valid configuration.
     */
-   public RESTArtifactLoaderService(InitParams initParams, ThreadLocalSessionProviderService sessionProviderService,
+   public RESTArtifactLoaderService(InitParams initParams, SessionProviderService sessionProviderService,
       RepositoryService repositoryService, NodeRepresentationService nodeRepresentationService,
       ExoContainerContext context) throws Exception
    {
