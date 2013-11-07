@@ -84,7 +84,7 @@
             <name>namespaces</name>
             <property name="dc" value="http://purl.org/dc/elements/1.1/"/>
             <property name="jos" value="http://www.exoplatform.com/jcr-services/organization-service/1.0/"/>
-            <property name="rma" value="http://www.rma.com/jcr/"/>            
+            <property name="rma" value="http://www.rma.com/jcr/"/>
             <property name="publication" value="http://www.exoplatform.com/jcr/publication/1.1/"/>
           </properties-param>
         </init-params>
