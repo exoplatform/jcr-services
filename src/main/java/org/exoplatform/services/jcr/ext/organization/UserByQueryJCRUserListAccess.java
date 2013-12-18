@@ -18,6 +18,7 @@ package org.exoplatform.services.jcr.ext.organization;
 
 import org.exoplatform.services.jcr.ext.organization.UserHandlerImpl.UserProperties;
 import org.exoplatform.services.jcr.impl.core.query.QueryImpl;
+import org.exoplatform.services.organization.UserStatus;
 
 import java.sql.Timestamp;
 import java.util.Date;
@@ -48,9 +49,9 @@ public class UserByQueryJCRUserListAccess extends JCRUserListAccess
     * UserByQueryJCRUserListAccess constructor.
     */
    public UserByQueryJCRUserListAccess(JCROrganizationServiceImpl service,
-      org.exoplatform.services.organization.Query query, boolean enabledOnly) throws RepositoryException
+      org.exoplatform.services.organization.Query query, UserStatus status) throws RepositoryException
    {
-      super(service, enabledOnly);
+      super(service, status);
       this.query = query;
    }
 
@@ -120,9 +121,13 @@ public class UserByQueryJCRUserListAccess extends JCRUserListAccess
          addDateStatement(context, UserProperties.JOS_LAST_LOGIN_TIME, "<=", query.getToLoginDate());
       }
 
-      if (enabledOnly)
+      if (status != UserStatus.BOTH)
       {
-         context.statement.append(" AND ").append(JCROrganizationServiceImpl.JOS_DISABLED).append(" IS NULL");
+         context.statement.append(" AND ").append(JCROrganizationServiceImpl.JOS_DISABLED);
+         if (status == UserStatus.ENABLED)
+            context.statement.append(" IS NULL");
+         else
+            context.statement.append(" IS NOT NULL");
       }
 
       return (QueryImpl)session.getWorkspace().getQueryManager().createQuery(context.statement.toString(), Query.SQL);

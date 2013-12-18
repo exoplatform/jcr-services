@@ -22,6 +22,7 @@ import org.exoplatform.services.log.Log;
 import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.services.organization.User;
 import org.exoplatform.services.organization.UserHandler;
+import org.exoplatform.services.organization.UserStatus;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -67,19 +68,19 @@ public abstract class JCRUserListAccess implements ListAccess<User>
    protected NodeIterator iterator;
 
    /**
-    * Indicates whether or not only the enabled users are expected
+    * Indicates the expected status of the users
     */
-   protected final boolean enabledOnly;
+   protected final UserStatus status;
 
    /**
     * JCRListAccess constructor.
     */
-   public JCRUserListAccess(JCROrganizationServiceImpl service, boolean enabledOnly) throws RepositoryException
+   public JCRUserListAccess(JCROrganizationServiceImpl service, UserStatus status) throws RepositoryException
    {
       this.service = service;
       this.uHandler = (UserHandlerImpl)service.getUserHandler();
       this.utils = new Utils(service);
-      this.enabledOnly = enabledOnly;
+      this.status = status;
    }
 
    /**
@@ -201,7 +202,7 @@ public abstract class JCRUserListAccess implements ListAccess<User>
    {
       try
       {
-         return !enabledOnly || node.canAddMixin(JCROrganizationServiceImpl.JOS_DISABLED);
+         return status == UserStatus.BOTH || status.matches(node.canAddMixin(JCROrganizationServiceImpl.JOS_DISABLED));
       }
       catch (RepositoryException e)
       {

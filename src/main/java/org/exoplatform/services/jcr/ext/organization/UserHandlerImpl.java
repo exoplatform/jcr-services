@@ -28,6 +28,7 @@ import org.exoplatform.services.organization.User;
 import org.exoplatform.services.organization.UserEventListener;
 import org.exoplatform.services.organization.UserEventListenerHandler;
 import org.exoplatform.services.organization.UserHandler;
+import org.exoplatform.services.organization.UserStatus;
 import org.exoplatform.services.security.PasswordEncrypter;
 import org.exoplatform.services.security.PermissionConstants;
 
@@ -255,7 +256,7 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
     */
    public User findUserByName(String userName) throws Exception
    {
-      return findUserByName(userName, true);
+      return findUserByName(userName, UserStatus.ENABLED);
    }
 
    /**
@@ -263,8 +264,8 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
     */
    public LazyPageList<User> findUsers(org.exoplatform.services.organization.Query query) throws Exception
    {
-      return query.isEmpty() ? new LazyPageList<User>(new SimpleJCRUserListAccess(service, true), 10)
-         : new LazyPageList<User>(new UserByQueryJCRUserListAccess(service, query, true), 10);
+      return query.isEmpty() ? new LazyPageList<User>(new SimpleJCRUserListAccess(service, UserStatus.ENABLED), 10)
+         : new LazyPageList<User>(new UserByQueryJCRUserListAccess(service, query, UserStatus.ENABLED), 10);
    }
 
    /**
@@ -272,7 +273,7 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
     */
    public LazyPageList<User> findUsersByGroup(String groupId) throws Exception
    {
-      return new LazyPageList<User>(new UserByGroupJCRUserListAccess(service, groupId, true), 10);
+      return new LazyPageList<User>(new UserByGroupJCRUserListAccess(service, groupId, UserStatus.ENABLED), 10);
    }
 
    /**
@@ -280,7 +281,7 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
     */
    public LazyPageList<User> getUserPageList(int pageSize) throws Exception
    {
-      return new LazyPageList<User>(new SimpleJCRUserListAccess(service, true), pageSize);
+      return new LazyPageList<User>(new SimpleJCRUserListAccess(service, UserStatus.ENABLED), pageSize);
    }
 
    /**
@@ -288,7 +289,7 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
     */
    public ListAccess<User> findAllUsers() throws Exception
    {
-      return findAllUsers(true);
+      return findAllUsers(UserStatus.ENABLED);
    }
 
    /**
@@ -296,7 +297,7 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
     */
    public ListAccess<User> findUsersByGroupId(String groupId) throws Exception
    {
-      return findUsersByGroupId(groupId, true);
+      return findUsersByGroupId(groupId, UserStatus.ENABLED);
    }
 
    /**
@@ -304,7 +305,7 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
     */
    public ListAccess<User> findUsersByQuery(Query query) throws Exception
    {
-      return findUsersByQuery(query, true);
+      return findUsersByQuery(query, UserStatus.ENABLED);
    }
 
    /**
@@ -443,7 +444,7 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
    public User setEnabled(String userName, boolean enabled, boolean broadcast) throws Exception,
       UnsupportedOperationException
    {
-      User foundUser = findUserByName(userName, false);
+      User foundUser = findUserByName(userName, UserStatus.BOTH);
 
       if (foundUser == null || foundUser.isEnabled() == enabled)
       {
@@ -504,11 +505,11 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
    /**
     * {@inheritDoc}
     */
-   public User findUserByName(String userName, boolean enabledOnly) throws Exception
+   public User findUserByName(String userName, UserStatus status) throws Exception
    {
       User user = getFromCache(userName);
       if (user != null)
-         return !enabledOnly || user.isEnabled() ? user : null;
+         return status.matches(user.isEnabled()) ? user : null;
 
       Session session = service.getStorageSession();
       try
@@ -526,7 +527,7 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
          user = readUser(userNode);
          putInCache(user);
 
-         return !enabledOnly || user.isEnabled() ? user : null;
+         return status.matches(user.isEnabled()) ? user : null;
       }
       finally
       {
@@ -537,26 +538,26 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
    /**
     * {@inheritDoc}
     */
-   public ListAccess<User> findUsersByGroupId(String groupId, boolean enabledOnly) throws Exception
+   public ListAccess<User> findUsersByGroupId(String groupId, UserStatus status) throws Exception
    {
-      return new UserByGroupJCRUserListAccess(service, groupId, enabledOnly);
+      return new UserByGroupJCRUserListAccess(service, groupId, status);
    }
 
    /**
     * {@inheritDoc}
     */
-   public ListAccess<User> findAllUsers(boolean enabledOnly) throws Exception
+   public ListAccess<User> findAllUsers(UserStatus status) throws Exception
    {
-      return new SimpleJCRUserListAccess(service, enabledOnly);
+      return new SimpleJCRUserListAccess(service, status);
    }
 
    /**
     * {@inheritDoc}
     */
-   public ListAccess<User> findUsersByQuery(Query query, boolean enabledOnly) throws Exception
+   public ListAccess<User> findUsersByQuery(Query query, UserStatus status) throws Exception
    {
-      return query.isEmpty() ? new SimpleJCRUserListAccess(service, enabledOnly) : new UserByQueryJCRUserListAccess(
-         service, query, enabledOnly);
+      return query.isEmpty() ? new SimpleJCRUserListAccess(service, status) : new UserByQueryJCRUserListAccess(
+         service, query, status);
    }
 
    /**
@@ -595,7 +596,7 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
    /**
     * Write user properties from the node to the storage.
     * 
-    * @param useNode
+    * @param node
     *          the node where user properties are stored
     * @return {@link User}
     */
@@ -625,7 +626,7 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
 
       String userName = oldUserNode.getName();
 
-      if (findUserByName(userName, false) != null)
+      if (findUserByName(userName, UserStatus.BOTH) != null)
       {
          removeUser(userName, false);
       }

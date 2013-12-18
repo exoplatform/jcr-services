@@ -17,6 +17,7 @@
 package org.exoplatform.services.jcr.ext.organization;
 
 import org.exoplatform.services.jcr.core.ExtendedNode;
+import org.exoplatform.services.organization.UserStatus;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -41,9 +42,9 @@ public class SimpleJCRUserListAccess extends JCRUserListAccess
    /**
     * JCRUserListAccess constructor.
     */
-   public SimpleJCRUserListAccess(JCROrganizationServiceImpl service, boolean enabledOnly) throws RepositoryException
+   public SimpleJCRUserListAccess(JCROrganizationServiceImpl service, UserStatus status) throws RepositoryException
    {
-      super(service, enabledOnly);
+      super(service, status);
       usersStorageNode = getUsersStorageNode();
    }
 
@@ -53,13 +54,17 @@ public class SimpleJCRUserListAccess extends JCRUserListAccess
    protected int getSize(Session session) throws Exception
    {
       long result = usersStorageNode.getNodesCount();
-      if (enabledOnly)
+      if (status != UserStatus.BOTH)
       {
          StringBuilder statement = new StringBuilder("SELECT * FROM ");
          statement.append(JCROrganizationServiceImpl.JOS_USERS_NODETYPE).append(" WHERE");
          statement.append(" jcr:path LIKE '").append(usersStorageNode.getPath()).append("/%'");
          statement.append(" AND NOT jcr:path LIKE '").append(usersStorageNode.getPath()).append("/%/%'");
-         statement.append(" AND ").append(JCROrganizationServiceImpl.JOS_DISABLED).append(" IS NOT NULL");
+         statement.append(" AND ").append(JCROrganizationServiceImpl.JOS_DISABLED);
+         if (status == UserStatus.ENABLED)
+            statement.append(" IS NOT NULL");
+         else
+            statement.append(" IS NULL");
 
          // We remove the total amount of disabled users
          result -= session.getWorkspace().getQueryManager()
