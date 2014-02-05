@@ -121,7 +121,7 @@ public class UserByQueryJCRUserListAccess extends JCRUserListAccess
          addDateStatement(context, UserProperties.JOS_LAST_LOGIN_TIME, "<=", query.getToLoginDate());
       }
 
-      if (status != UserStatus.BOTH)
+      if (status != UserStatus.ANY)
       {
          context.statement.append(" AND ").append(JCROrganizationServiceImpl.JOS_DISABLED);
          if (status == UserStatus.ENABLED)

@@ -202,7 +202,7 @@ public abstract class JCRUserListAccess implements ListAccess<User>
    {
       try
       {
-         return status == UserStatus.BOTH || status.matches(node.canAddMixin(JCROrganizationServiceImpl.JOS_DISABLED));
+         return status == UserStatus.ANY || status.matches(node.canAddMixin(JCROrganizationServiceImpl.JOS_DISABLED));
       }
       catch (RepositoryException e)
       {

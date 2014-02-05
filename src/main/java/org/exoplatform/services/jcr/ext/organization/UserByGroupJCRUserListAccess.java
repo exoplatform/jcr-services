@@ -59,7 +59,7 @@ public class UserByGroupJCRUserListAccess extends JCRUserListAccess
       if (refUsers == null)
          return 0;
       long result = refUsers.getNodesCount();
-      if (status != UserStatus.BOTH)
+      if (status != UserStatus.ANY)
       {
          StringBuilder statement = new StringBuilder("SELECT * FROM nt:base WHERE");
          statement.append(" jcr:path LIKE '").append(refUsers.getPath()).append("/%'");

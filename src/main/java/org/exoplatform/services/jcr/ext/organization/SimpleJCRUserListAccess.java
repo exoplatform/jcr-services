@@ -54,7 +54,7 @@ public class SimpleJCRUserListAccess extends JCRUserListAccess
    protected int getSize(Session session) throws Exception
    {
       long result = usersStorageNode.getNodesCount();
-      if (status != UserStatus.BOTH)
+      if (status != UserStatus.ANY)
       {
          StringBuilder statement = new StringBuilder("SELECT * FROM ");
          statement.append(JCROrganizationServiceImpl.JOS_USERS_NODETYPE).append(" WHERE");

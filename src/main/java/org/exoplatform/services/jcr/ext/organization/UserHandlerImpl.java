@@ -444,7 +444,7 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
    public User setEnabled(String userName, boolean enabled, boolean broadcast) throws Exception,
       UnsupportedOperationException
    {
-      User foundUser = findUserByName(userName, UserStatus.BOTH);
+      User foundUser = findUserByName(userName, UserStatus.ANY);
 
       if (foundUser == null || foundUser.isEnabled() == enabled)
       {
@@ -626,7 +626,7 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
 
       String userName = oldUserNode.getName();
 
-      if (findUserByName(userName, UserStatus.BOTH) != null)
+      if (findUserByName(userName, UserStatus.ANY) != null)
       {
          removeUser(userName, false);
       }
