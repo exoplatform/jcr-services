@@ -450,56 +450,58 @@ public class UserHandlerImpl extends JCROrgServiceHandler implements UserHandler
       {
          return foundUser;
       }
-      Session session = service.getStorageSession();
-      try
+      synchronized (foundUser.getUserName())
       {
-         ((UserImpl)foundUser).setEnabled(enabled);
-         if (broadcast)
-            preSetEnabled(foundUser);
-         Node node = getUserNode(session, (UserImpl)foundUser);
-         if (enabled)
+         Session session = service.getStorageSession();
+         try
          {
-            if (!node.canAddMixin(JCROrganizationServiceImpl.JOS_DISABLED))
+            ((UserImpl)foundUser).setEnabled(enabled);
+            if (broadcast)
+               preSetEnabled(foundUser);
+            Node node = getUserNode(session, (UserImpl)foundUser);
+            if (enabled)
             {
-               node.removeMixin(JCROrganizationServiceImpl.JOS_DISABLED);
-               PropertyIterator pi = node.getReferences();
-               while (pi.hasNext())
+               if (!node.canAddMixin(JCROrganizationServiceImpl.JOS_DISABLED))
                {
-                  Node n = pi.nextProperty().getParent();
-                  if (!n.canAddMixin(JCROrganizationServiceImpl.JOS_DISABLED))
+                  node.removeMixin(JCROrganizationServiceImpl.JOS_DISABLED);
+                  PropertyIterator pi = node.getReferences();
+                  while (pi.hasNext())
                   {
-                     n.removeMixin(JCROrganizationServiceImpl.JOS_DISABLED);
+                     Node n = pi.nextProperty().getParent();
+                     if (!n.canAddMixin(JCROrganizationServiceImpl.JOS_DISABLED))
+                     {
+                        n.removeMixin(JCROrganizationServiceImpl.JOS_DISABLED);
+                     }
                   }
                }
             }
-         }
-         else
-         {
-            if (node.canAddMixin(JCROrganizationServiceImpl.JOS_DISABLED))
+            else
             {
-               node.addMixin(JCROrganizationServiceImpl.JOS_DISABLED);
-               PropertyIterator pi = node.getReferences();
-               while (pi.hasNext())
+               if (node.canAddMixin(JCROrganizationServiceImpl.JOS_DISABLED))
                {
-                  Node n = pi.nextProperty().getParent();
-                  if (n.canAddMixin(JCROrganizationServiceImpl.JOS_DISABLED))
+                  node.addMixin(JCROrganizationServiceImpl.JOS_DISABLED);
+                  PropertyIterator pi = node.getReferences();
+                  while (pi.hasNext())
                   {
-                     n.addMixin(JCROrganizationServiceImpl.JOS_DISABLED);
+                     Node n = pi.nextProperty().getParent();
+                     if (n.canAddMixin(JCROrganizationServiceImpl.JOS_DISABLED))
+                     {
+                        n.addMixin(JCROrganizationServiceImpl.JOS_DISABLED);
+                     }
                   }
                }
             }
+            session.save();
+            if (broadcast)
+               postSetEnabled(foundUser);
+            putInCache(foundUser);
          }
-         session.save();
-         if (broadcast)
-            postSetEnabled(foundUser);
-         putInCache(foundUser);
+         finally
+         {
+            session.logout();
+         }
+         return foundUser;
       }
-      finally
-      {
-         session.logout();
-      }
-
-      return foundUser;
    }
 
    /**

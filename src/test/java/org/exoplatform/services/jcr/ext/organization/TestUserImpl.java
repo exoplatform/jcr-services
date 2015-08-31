@@ -19,6 +19,8 @@
 package org.exoplatform.services.jcr.ext.organization;
 
 import org.exoplatform.services.organization.User;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -44,5 +46,58 @@ public class TestUserImpl extends AbstractOrganizationServiceTest
       // we should to find user with new name but not with old one
       assertNotNull(uHandler.findUserByName(newUserName));
       assertNull(uHandler.findUserByName(userName));
+   }
+
+   public void testEnableUserConcurrently() throws Exception
+   {
+
+      List<Thread> threads = new ArrayList<Thread>();
+
+      for (int i = 0; i < 10; i++)
+      {
+         createUser(userName + i);
+         uHandler.setEnabled(userName + i, false, false); // Disable the user.
+         threads.add(new Thread(new A(userName + i)));
+         threads.add(new Thread(new A(userName + i)));
+         threads.add(new Thread(new A(userName + i)));
+      }
+
+
+      for (Thread a : threads)
+      {
+         a.start();
+      }
+
+      for (Thread a : threads)
+      {
+         a.join();
+      }
+      for (int i = 0; i < 10; i++)
+      {
+         User user= uHandler.findUserByName(userName+i);
+         assertTrue(user.isEnabled());
+      }
+   }
+
+   class A implements Runnable
+   {
+      private String name;
+
+      public A(String userName)
+      {
+         this.name = userName;
+      }
+
+      public void run()
+      {
+         try
+         {
+            uHandler.setEnabled(name, true, false); // Concurrency enabling the user.
+         }
+         catch (Exception e)//NOSONAR
+         {
+            e.printStackTrace();//NOSONAR
+         }
+      }
    }
 }
