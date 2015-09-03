@@ -50,6 +50,18 @@ public class MembershipTypeImpl implements MembershipType, ExtendedCloneable
    /**
     * MembershipTypeImpl constructor.
     */
+
+   /**
+    * The created date.
+    */
+   private Date createdDate;
+
+   /**
+    * The modified date.
+    */
+   private Date modifiedDate;
+
+
    MembershipTypeImpl()
    {
    }
@@ -69,7 +81,7 @@ public class MembershipTypeImpl implements MembershipType, ExtendedCloneable
     */
    public Date getCreatedDate()
    {
-      return null;
+      return createdDate;
    }
 
    /**
@@ -85,7 +97,7 @@ public class MembershipTypeImpl implements MembershipType, ExtendedCloneable
     */
    public Date getModifiedDate()
    {
-      return null;
+      return modifiedDate;
    }
 
    /**
@@ -125,6 +137,7 @@ public class MembershipTypeImpl implements MembershipType, ExtendedCloneable
     */
    public void setCreatedDate(Date d)
    {
+      this.createdDate =d;
    }
 
    /**
@@ -140,6 +153,7 @@ public class MembershipTypeImpl implements MembershipType, ExtendedCloneable
     */
    public void setModifiedDate(Date d)
    {
+      this.modifiedDate =d;
    }
 
    /**

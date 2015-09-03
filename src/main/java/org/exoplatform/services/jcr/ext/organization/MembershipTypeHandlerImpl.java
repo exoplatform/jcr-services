@@ -62,6 +62,16 @@ public class MembershipTypeHandlerImpl extends JCROrgServiceHandler implements M
        * Membership type property that contains description.
        */
       public static final String JOS_DESCRIPTION = "jos:description";
+
+      /**
+       * Membership type property that contains created date.
+       */
+      public static final String EXO_DATE_CREATED  = "exo:dateCreated";
+
+      /**
+       * Membership type property that contains modified date.
+       */
+      public static final String EXO_DATE_MODIFIED = "exo:dateModified";
    }
 
    /**
@@ -368,7 +378,7 @@ public class MembershipTypeHandlerImpl extends JCROrgServiceHandler implements M
    /**
     * Reads membership type from the node.
     * 
-    * @param mtNode
+    * @param node
     *          the node where membership type properties are stored
     */
    private MembershipType readMembershipType(Node node) throws Exception
@@ -378,6 +388,8 @@ public class MembershipTypeHandlerImpl extends JCROrgServiceHandler implements M
          .getName());
       mt.setInternalId(node.getUUID());
       mt.setDescription(utils.readString(node, MembershipTypeProperties.JOS_DESCRIPTION));
+      mt.setCreatedDate(utils.readDate(node, MembershipTypeProperties.EXO_DATE_CREATED));
+      mt.setModifiedDate(utils.readDate(node, MembershipTypeProperties.EXO_DATE_MODIFIED));
 
       return mt;
    }
@@ -392,6 +404,9 @@ public class MembershipTypeHandlerImpl extends JCROrgServiceHandler implements M
     */
    private void writeMembershipType(MembershipType membershipType, Node mtNode) throws Exception
    {
+      if (!mtNode.isNodeType("exo:datetime")) {
+         mtNode.addMixin("exo:datetime");
+      }
       mtNode.setProperty(MembershipTypeProperties.JOS_DESCRIPTION, membershipType.getDescription());
    }
 

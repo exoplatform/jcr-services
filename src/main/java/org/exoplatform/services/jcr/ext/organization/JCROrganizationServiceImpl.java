@@ -141,6 +141,11 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
    public static final String JOS_MEMBERSHIP_TYPE_ANY = "jos:membershipTypeAny";
 
    /**
+    * The node that identifies the membership type * or any.
+    */
+   private static final String JOS_DESCRIPTION_TYPE_ANY = "Any membership type";
+
+   /**
     * The group nodetype.
     */
    public static final String JOS_HIERARCHY_GROUP_NODETYPE = "jos:hierarchyGroup-v2";
@@ -305,7 +310,8 @@ public class JCROrganizationServiceImpl extends BaseOrganizationService implemen
          storage.addNode(STORAGE_JOS_USERS, STORAGE_JOS_USERS_NODETYPE);
          storage.addNode(STORAGE_JOS_GROUPS, STORAGE_JOS_GROUPS_NODETYPE);
          Node storageTypesNode = storage.addNode(STORAGE_JOS_MEMBERSHIP_TYPES, STORAGE_JOS_MEMBERSHIP_TYPES_NODETYPE);
-         storageTypesNode.addNode(JOS_MEMBERSHIP_TYPE_ANY);
+         Node anyNode = storageTypesNode.addNode(JOS_MEMBERSHIP_TYPE_ANY);
+         anyNode.setProperty(MembershipTypeHandlerImpl.MembershipTypeProperties.JOS_DESCRIPTION, JOS_DESCRIPTION_TYPE_ANY);
 
          session.save(); // storage done configure
       }
