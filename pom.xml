@@ -30,7 +30,7 @@
 
   <modelVersion>4.0.0</modelVersion>
   <artifactId>exo-jcr-services</artifactId>
-  <version>1.16.x-SNAPSHOT</version>
+  <version>1.17.x-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>eXo JCR :: Ext :: Services</name>
   <description>Exoplatform SAS 'eXo JCR Ext Services' project.</description>
@@ -45,8 +45,8 @@
      <org.exoplatform.kernel.version>2.5.x-SNAPSHOT</org.exoplatform.kernel.version>
      <org.exoplatform.core.version>2.6.x-SNAPSHOT</org.exoplatform.core.version>
      <org.exoplatform.ws.version>2.4.x-SNAPSHOT</org.exoplatform.ws.version>
-     <org.exoplatform.jcr.version>1.16.x-SNAPSHOT</org.exoplatform.jcr.version>
-     
+     <org.exoplatform.jcr.version>1.17.x-SNAPSHOT</org.exoplatform.jcr.version>
+
      <wikbook.source>${pom.basedir}/src/main/wikbook</wikbook.source>
      <wikbook.target>${project.build.directory}/wikbook</wikbook.target>
      <wikbook.version>0.9.26</wikbook.version>
@@ -320,7 +320,7 @@
             </execution>
          </executions>
       </plugin>
-      
+
       <!-- Adding Organization Service TCK resources and test sources-->
       <plugin>
          <groupId>org.codehaus.mojo</groupId>
@@ -340,7 +340,7 @@
                      </resource>
                   </resources>
                </configuration>
-            </execution> 
+            </execution>
             <execution>
                <id>add-test-source</id>
                <phase>generate-test-sources</phase>
@@ -355,7 +355,7 @@
             </execution>
          </executions>
       </plugin>
-      
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
