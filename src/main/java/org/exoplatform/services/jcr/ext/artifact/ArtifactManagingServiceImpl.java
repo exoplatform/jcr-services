@@ -78,7 +78,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 /**
- * Created by The eXo Platform SAS .<br/>
+ * Created by The eXo Platform SAS .<br>
  * Service responsible for Administration Maven repository the served JCR structure inside
  * workspaceName is: rootPath (maven-root)/ ---part-of-group-folder1/ (nt:folder + exo:groupId)
  * ---part-of-group-foldern/ ------artifact-root-folder/(nt:folder + exo:artifactId)
@@ -124,7 +124,7 @@ public class ArtifactManagingServiceImpl
    private List<String> listErrorPom = new ArrayList<String>();
 
    /**
-    * @param params
+    * @param initParams
     * @param repositoryService
     * @param registryService
     * @throws RepositoryConfigurationException

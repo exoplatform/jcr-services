@@ -156,9 +156,10 @@ public class RESTArtifactLoaderService implements ResourceContainer
     * 
     * @param mavenPath
     *          the relative part of requested URL.
-    * @param base
-    *          the base URL.
-    * @return @see {@link Response}.
+    * @param uriInfo
+    * @param view
+    * @param gadget
+    * @return {@link Response}.
     */
    @GET
    @Path("/{path:.*}/")
@@ -245,9 +246,10 @@ public class RESTArtifactLoaderService implements ResourceContainer
    /**
     * Browsing of root node of Maven repository.
     * 
-    * @param base
-    *          the base URL.
-    * @return @see {@link Response}.
+    * @param uriInfo
+    * @param view
+    * @param gadget
+    * @return {@link Response}.
     */
    @GET
    public Response getRootNodeList(final @Context UriInfo uriInfo, final @QueryParam("view") String view,

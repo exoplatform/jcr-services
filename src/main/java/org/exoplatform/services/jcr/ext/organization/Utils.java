@@ -33,7 +33,7 @@ import javax.jcr.ValueFormatException;
  * 
  * Created by The eXo Platform SAS.
  * 
- * <br/>
+ * <br>
  * Date: 7 10 2008
  * 
  * @author <a href="mailto:anatoliy.bazko@exoplatform.com.ua">Anatoliy Bazko</a>

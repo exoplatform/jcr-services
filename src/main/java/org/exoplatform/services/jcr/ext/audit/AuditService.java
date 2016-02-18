@@ -81,7 +81,7 @@ public interface AuditService {
   /**
    * Creates audit history for given node. Throws an exception, if history already present.
    * 
-   * @param item
+   * @param node
    * @throws RepositoryException
    */
   void createHistory(Node node) throws RepositoryException;
@@ -89,7 +89,7 @@ public interface AuditService {
   /**
    * Deletes audit history.
    * 
-   * @param item
+   * @param node
    * @throws RepositoryException
    */
   void removeHistory(Node node) throws RepositoryException;
@@ -97,7 +97,8 @@ public interface AuditService {
   /**
    * Adds new audit record.
    * 
-   * @param item
+   * @param previousItem
+   * @param currentItem
    * @param eventType
    * @throws RepositoryException
    */
@@ -106,7 +107,7 @@ public interface AuditService {
   /**
    * Get node audit history.
    * 
-   * @param item
+   * @param node
    * @return audit history of this item
    * @throws RepositoryException
    * @throws UnsupportedOperationException if item(parent) is not auditable
@@ -116,7 +117,7 @@ public interface AuditService {
   /**
    * Check if node has audit history.
    * 
-   * @param item
+   * @param node
    * @return true if audit history for this item exists
    */
   boolean hasHistory(Node node);

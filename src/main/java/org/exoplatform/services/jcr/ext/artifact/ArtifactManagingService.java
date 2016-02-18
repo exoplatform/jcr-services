@@ -51,7 +51,8 @@ public interface ArtifactManagingService {
    *          the session provider
    * @param artifact
    *          descriptor
-   * @param jarFile
+   * @param jarIStream
+   * @param pomIStream
    * @throws RepositoryException
    */
 
@@ -86,7 +87,7 @@ public interface ArtifactManagingService {
    * 
    * @param sp
    *          the session provider
-   * @param in
+   * @param zipInputStream
    *          input stream which contains artifact related files
    * @throws RepositoryException
    */
@@ -109,7 +110,7 @@ public interface ArtifactManagingService {
    *          the session provider
    * @param parentFolder
    *          the folder which children we need to get
-   * @param out
+   * @param zipOutputStream
    *          output stream to export to
    * @throws RepositoryException
    */

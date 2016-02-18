@@ -19,7 +19,7 @@ package org.exoplatform.services.jcr.ext.organization;
 /**
  * Created by The eXo Platform SAS.
  * 
- * <br/>
+ * <br>
  * Date: 22.08.2008
  * 
  * @author <a href="mailto:peter.nedonosko@exoplatform.com.ua">Peter Nedonosko</a>

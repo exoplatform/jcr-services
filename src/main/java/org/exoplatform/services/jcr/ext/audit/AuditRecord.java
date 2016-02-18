@@ -99,8 +99,8 @@ public class AuditRecord implements Comparable<AuditRecord> {
   }
 
   /**
-   * Returns version UUID related to this audit record. <br/>
-   * Use Session.getNodeByUUID(String) to obtain the version Node instance. <br/>
+   * Returns version UUID related to this audit record. <br>
+   * Use Session.getNodeByUUID(String) to obtain the version Node instance. <br>
    * NOTE: Version UUID will has no sense if version will be removed.
    * 
    * @return String with version UUID or null if auditable node was not
@@ -112,7 +112,7 @@ public class AuditRecord implements Comparable<AuditRecord> {
 
   /**
    * Returns version name related to this audit record. Version name for
-   * information purpose only. <br/>
+   * information purpose only. <br>
    * NOTE: Version name can be helpful after the version will be removed.
    * 
    * @return String in format VERSION_NAME 'VERSION_LABEL_1' 'VERSION_LABEL_2'

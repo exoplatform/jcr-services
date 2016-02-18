@@ -23,7 +23,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 /**
- * Created by The eXo Platform SAS. <br/>
+ * Created by The eXo Platform SAS. <br>
  * Date: 21 Nov 2008
  * 
  * @author <a href="dkatayev@gmail.com">Dmytro Katayev</a>
@@ -39,9 +39,12 @@ public class CRCGenerator {
    * @param in
    *          stream to generate CheckSum
    * @param algo
-   *          algorithm name according to the <a href=
-   *          "http://java.sun.com/j2se/1.4.2/docs/guide/security/CryptoSpec.html#AppA" >Java
-   *          Cryptography Architecture API Specification & Reference</a>
+   *          algorithm name according to the
+   *          {@literal
+   *          <a href= "http://java.sun.com/j2se/1.4.2/docs/guide/security/CryptoSpec.html#AppA">
+   *            Java Cryptography Architecture API Specification & Reference
+   *          </a>
+   *          }
    * @return hexadecimal string checksun representation
    * @throws NoSuchAlgorithmException
    * @throws IOException
