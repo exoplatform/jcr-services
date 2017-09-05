@@ -30,7 +30,7 @@
 
   <modelVersion>4.0.0</modelVersion>
   <artifactId>exo-jcr-services</artifactId>
-  <version>1.17.x-SNAPSHOT</version>
+  <version>1.17.3</version>
   <packaging>jar</packaging>
   <name>eXo PLF:: JCR :: Ext :: Services</name>
   <description>Exoplatform SAS 'eXo JCR Ext Services' project.</description>
@@ -39,7 +39,7 @@
     <connection>scm:git:git://github.com/exoplatform/jcr-services.git</connection>
     <developerConnection>scm:git:git@github.com:exoplatform/jcr-services.git</developerConnection>
     <url>https://fisheye.exoplatform.org/browse/jcr-services-dev</url>
-    <tag>HEAD</tag>
+    <tag>1.17.3</tag>
   </scm>
 
   <properties>
